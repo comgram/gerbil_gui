@@ -160,23 +160,28 @@ def line_to(ex,ey,d):
 def line(sx,sy, ex,ey, d):
     global Settings
     block_start("BEGIN: line(%.3f,%.3f,%.3f,%.3f,%.3f" % (sx,sy, ex,ey, d))
-        up()
-        move(sx,sy)
-        down()
-        line_to(ex,ey,d)
+    up()
+    move(sx,sy)
+    down()
+    line_to(ex,ey,d)
     block_end()
 def square(bx,by,tx,ty,d):
     block_start("BEGIN: square(%.3f,%.3f,%.3f,%.3f,%.3f" % (bx,by,tx,ty,d))
-        up()
-        move(bx,by)
-        down()
-        line_to(bx,ty,d)
-        line_to(tx,ty,d)
-        line_to(tx,by,d)
-        line_to(bx,by,d)
+    up()
+    move(bx,by)
+    down()
+    line_to(bx,ty,d)
+    line_to(tx,ty,d)
+    line_to(tx,by,d)
+    line_to(bx,by,d)
     block_end();
+def arc_to(sx,sy,ex,ey,c):
+    comment("ARC is not yet implemented")
 
-receiver()
+    
+receiver("test.ngc")
 write_header()
-line(10,10,20,20, -3)
-square(10,10,20,20, -4)
+line(10,10,50,50, -3)
+square(10,10,50,50, -4)
+line(50,10,10,50,-2)
+done()
