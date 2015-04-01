@@ -1,17 +1,4 @@
 import sys
-Settings = {
-    'header': "G17 G21 G90 G94 G54;header\n",
-    'ignoreZ': False,
-    'port': sys.stdout,
-    'feed_speed': 300,
-    'max_feed_speed': 400,
-    'debug': True,
-    'debug_gcode': True,
-    'material': {
-        'width': 0,
-        'length': 0,
-        'depth': 0
-    },
 '''
     When considering a bit, think of it like this.
     Does the point specified mean the center of the
@@ -26,8 +13,22 @@ Settings = {
 
     center_edge is the default.
 '''
+Settings = {
+    'header': "G17 G21 G90 G94 G54;header\n",
+    'ignoreZ': False,
+    'port': sys.stdout,
+    'feed_speed': 300,
+    'max_feed_speed': 400,
+    'debug': True,
+    'debug_gcode': True,
+    'material': {
+        'width': 0,
+        'length': 0,
+        'depth': 0
+    },
+
     'bit': {
-        'diameter': 0,
+        'diameter': 2,
         'length': 0,
         'type': 'flat',
         'v_angle': 0,
@@ -113,8 +114,7 @@ def done():
     global Settings
     emit("M2")
     if Settings['port'] is not sys.stdout:
-        Settings['port'].close()
-        
+        Settings['port'].close()        
 def emit(txt=";Nothing Emitted\n"):
     global Settings
     global State
@@ -124,6 +124,7 @@ def emit(txt=";Nothing Emitted\n"):
             Settings['port'].write(" ")  
         Settings['port'].write(txt)
         Settings['port'].write("\n")
+            
 '''
     USE THESE TO PRETTY UP GCODE!!
 
@@ -178,10 +179,33 @@ def square(bx,by,tx,ty,d):
 def arc_to(sx,sy,ex,ey,c):
     comment("ARC is not yet implemented")
 
+''' Basic Milling Functions '''
+
+def pocket(sx,sy,ex,ey,d):
+    global Settings
+    block_start("Pocket")
+    inc = Settings['bit']['diameter'] / 2
+    cx = sx + ((ex - sx) / 2)
+    cy = sy + ((ey - sy) / 2 )
     
+    nsx = cx - inc
+    nsy = cy - inc
+    nex = cx + inc
+    ney = cy + inc
+    square(sx,sy,ex,ey,d)
+    while nsx > sx and nsy > sy:
+        square(nsx,nsy,nex,ney,d)
+        nsx -= inc
+        nsy -= inc
+        nex += inc
+        ney += inc
+    block_end("Pocket")
+
+''' Basic Gerometry Functions Test '''
 receiver("test.ngc")
 write_header()
 line(10,10,50,50, -3)
 square(10,10,50,50, -4)
 line(50,10,10,50,-2)
+pocket(55,55, 100,100,-2)
 done()
