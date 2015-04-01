@@ -6,9 +6,11 @@
 import argparse
 import logging
 import sys
+import time
 
 from classes.session import Session
 from classes.svg import SVG
+from classes.grbl import GRBL
 from lib import stipple
 from lib import pixel2laser as p2l
 
@@ -89,7 +91,12 @@ def main():
         p2l.do(args.in_file, args.out_file)
         
     elif subcmd == "stream":
-        print "to be implemented soon"
+        grbl = GRBL()
+        grbl.start()
+        for i in range(0,2):
+            time.sleep(3)
+            grbl.write("$$\r\n")
+        grbl.stop()
         
     elif subcmd == "bbox":
         print "to be implemented soon"
