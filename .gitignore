@@ -1,7 +1,3 @@
-*.png
-*.jpg
-*.svg
-
 *~
 *.tmp
 *.kate-swp
@@ -14,9 +10,3 @@
 *.ngc
 *.txt
 *.pyc
-
-*.sol
-*.wgt
-*.crd
-
-data
