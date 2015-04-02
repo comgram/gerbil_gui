@@ -1,6 +1,7 @@
 import logging
 import time
 import re
+import multiprocessing
 
 from classes.rs232 import RS232
 
@@ -26,6 +27,8 @@ class GRBL:
         self.streaming_completed = False
         self.streaming_eof_reached = False
         
+
+        
       
     def cnect(self):
         logging.info("%s connecting to %s", self.name, self.ifacepath)
@@ -33,12 +36,22 @@ class GRBL:
         self.iface.start()
         time.sleep(1)
         self.reset()
+        self.status_polling_process = multiprocessing.Process(target=self.poll_state)
+        self.status_polling_process.start()
         
     def set_streamingfile(self, filename):
         self.gcodefile = open(filename)
         
     def reset(self):
         self.iface.write("\x18") # Ctrl-X
+        
+    def poll_state(self):
+        while True:
+            self.get_state()
+            time.sleep(0.2)
+        
+    def get_state(self):
+        self.iface.write("?")
         
     def stream(self):
         logging.info("%s starting to stream %s", self.name, self.gcodefile)
