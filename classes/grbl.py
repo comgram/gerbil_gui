@@ -20,10 +20,11 @@ class GRBL:
         
         self.gcodefile = None
         self.gcodefile_currentline = 0
-        self.gcodeblock = None
+        self.current_gcodeblock = None
         
         self.streaming_active = False
         self.streaming_completed = False
+        self.streaming_eof_reached = False
         
       
     def cnect(self):
@@ -42,57 +43,70 @@ class GRBL:
     def stream(self):
         logging.info("%s starting to stream %s", self.name, self.gcodefile)
         self.streaming_active = True
-        self.maybe_send_next_line(self.name)
+        self.streaming_completed = False
+        self.streaming_eof_reached = False
+        self.fill_buffer()
         
-    def maybe_send_next_line(self, calledfrom):
-        sending = False
-        if self.streaming_active == True and self.gcodeblock == None:
-            self.gcodeblock = self.gcodefile.readline().strip()
-            if self.gcodeblock == "":
-                self.streaming_active = False
-                self.streaming_completed = True
+    def fill_buffer(self):
+        sent = True
+        while sent == True:
+          sent = self.maybe_send_next_line()
+        
+        
+        
+    def maybe_send_next_line(self):
+        will_send = False
+        if (self.streaming_active == True and
+            self.streaming_eof_reached == False and
+            self.current_gcodeblock == None):
+            
+            self.current_gcodeblock = self.gcodefile.readline().strip()
+            if self.current_gcodeblock == "":
+                self.current_gcodeblock = None
+                self.streaming_eof_reached = True
                 return False
             
-        free_bytes = self.rx_buffer_size - sum(self.rx_buffer_fill)
+        if self.current_gcodeblock != None:
+            want_bytes = len(self.current_gcodeblock) + 1 # +1 because \n
+            free_bytes = self.rx_buffer_size - sum(self.rx_buffer_fill)
+            
+            will_send = free_bytes >= want_bytes
+            
+            #logging.info("MAYBE buf=%s fill=%s fill=%s free=%s want=%s, will_send=%s", self.rx_buffer_size, self.rx_buffer_fill, sum(self.rx_buffer_fill), free_bytes, want_bytes, will_send)
         
-        sending = free_bytes > (len(self.gcodeblock) + 1)
-        logging.info("MAYBE buf=%s fill=%s fill=%s free=%s want=%s", self.rx_buffer_size, self.rx_buffer_fill, sum(self.rx_buffer_fill), free_bytes, len(self.gcodeblock))
+        if will_send == True:
+            self.rx_buffer_fill.append(len(self.current_gcodeblock) + 1) # +1 means \n
+            self.iface.write(self.current_gcodeblock + "\n")
+            self.current_gcodeblock = None
         
-        if sending == True:
-            # current gcodeblock can be sent
-            self.rx_buffer_fill.append(len(self.gcodeblock) + 1) # +1 means \n
-            #self.name = str(len(self.gcodeblock))
-            #logging.info("APPENDING %s", self.rx_buffer_fill)
-            self.iface.write(self.gcodeblock + "\n")
-            self.gcodeblock = None
-        
-        
-        return sending
+        return will_send
     
-    def do_pop(self):
-        print("popping1", self.rx_buffer_fill)
-        self.rx_buffer_fill.pop(0)
-        print("popping2", self.rx_buffer_fill)
+    def rx_buffer_fill_pop(self):
+        if len(self.rx_buffer_fill) > 0:
+            self.rx_buffer_fill.pop(0)
+        
+        if self.streaming_eof_reached == True and len(self.rx_buffer_fill) == 0:
+            self.streaming_completed = True
+            self.streaming_active = False
+            print("STREAM COMPLETE")
 
         
     def onread(self, line):
-        logging.info("GRBL %s: <----- %s", self.name, line)
+        #logging.info("GRBL %s: <----- %s", self.name, line)
         if len(line) > 0:
             if line[0] == "<":
                 self.update_state(line)
             elif "Grbl " in line:
                 self.on_bootup()
             elif line == "ok":
-                #logging.info("%s OK", self.name)
-                if self.streaming_active == True:
-                  #del self.rx_buffer_fill[0]
-                  self.do_pop()
-                  self.maybe_send_next_line("onread" + self.name)
-                  self.maybe_send_next_line("onread" + self.name)
+                self.rx_buffer_fill_pop()
+                self.fill_buffer()
             elif "error" in line:
                 self.streaming_active = False
+                logging.info("GRBL %s: <----- %s", self.name, line)
             elif "to unlock" in line:
                 self.streaming_active = False
+                logging.info("GRBL %s: <----- %s", self.name, line)
                 
                 
     def on_bootup(self):

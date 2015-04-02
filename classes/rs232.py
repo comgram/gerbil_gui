@@ -42,7 +42,7 @@ class RS232:
         
     def write(self, data):
         if len(data) > 0:
-            logging.info("RS232 %s:     -----------> %ibytes %s", self.name, len(data), data)
+            logging.info("RS232 %s:     -----------> %ibytes %s", self.name, len(data), data.strip())
             self.serialport.write(data)
         else:
             logging.info("RS232 %s: nothing to write", self.name)
