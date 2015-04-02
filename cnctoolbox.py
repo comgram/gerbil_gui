@@ -78,6 +78,11 @@ def main():
         metavar='DEV_NODE',
         help='Interface node in /dev file system. E.g. /dev/ttyACM0'
         )
+    stream_parser.add_argument(
+        'gcodefile',
+        metavar='GCODE_FILE',
+        help='File to stream'
+        )
     
     # define arguments for the 'bbox' subcommand
     bbox_parser = subparsers.add_parser("bbox", help="Calculates the bounding box of a gcode file")
@@ -97,10 +102,8 @@ def main():
         
     elif subcmd == "stream":
         grbl = GRBL("grbl1", args.dev_node)
+        grbl.set_streamingfile(args.gcodefile) # must be set before calling cnct()!
         grbl.cnect()
-        time.sleep(1)
-        grbl.reset()
-        grbl.test()
         
     elif subcmd == "bbox":
         print "to be implemented soon"

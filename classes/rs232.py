@@ -13,8 +13,11 @@ class RS232:
         self.buf_receive = ""
         
     def start(self):
-        logging.info("%s connecting to %s", self.name, self.path)
+        logging.info("RS232 %s: connecting to %s", self.name, self.path)
         self.serialport = serial.Serial(self.path, self.baud, timeout=None)
+        self.serialport.flushInput()
+        self.serialport.flushOutput()
+        time.sleep(1)
         self.serial_process = multiprocessing.Process(target=self.receiving)
         self.serial_process.start()
         print self.serial_process, self.serial_process.is_alive()
@@ -22,24 +25,27 @@ class RS232:
     def stop(self):
         self.cleanup()
         
-        logging.info("%s disconnecting from %s", self.name, self.path)
+        logging.info("RS232 %s: disconnecting from %s", self.name, self.path)
         self.serialport.close()
         self.serial_process.terminate()
         time.sleep(1)
         isalive = self.serial_process.is_alive()
         if isalive == False:
-            logging.info("%s has successfully terminated", self.serial_process)
+            logging.info("RS232 %s: has successfully terminated", self.serial_process)
         else:
             logging.info("WARNING! %s has not terminated within 1 second", self.serial_process)
         
     def cleanup(self):
-        logging.info("%s: cleaning up before disconnecting", self.name)
+        logging.info("RS232 %s: cleaning up before disconnecting", self.name)
         self.write("!\r\n") # feed hold
-        logging.info("%s: ready to be disconnected", self.name)
+        logging.info("RS232 %s: ready to be disconnected", self.name)
         
     def write(self, data):
-        logging.info("%s writing %s", self.name, data)
-        self.serialport.write(data)
+        if len(data) > 0:
+            logging.info("RS232 %s:     -----------> %ibytes %s", self.name, len(data), data)
+            self.serialport.write(data)
+        else:
+            logging.info("RS232 %s: nothing to write", self.name)
 
     def receiving(self):
         while True:
