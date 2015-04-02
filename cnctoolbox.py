@@ -73,6 +73,11 @@ def main():
     
     # define arguments for the 'stream' subcommand
     stream_parser = subparsers.add_parser("stream", help="Streams a gcode file to GRBL.")
+    stream_parser.add_argument(
+        'dev_node',
+        metavar='DEV_NODE',
+        help='Interface node in /dev file system. E.g. /dev/ttyACM0'
+        )
     
     # define arguments for the 'bbox' subcommand
     bbox_parser = subparsers.add_parser("bbox", help="Calculates the bounding box of a gcode file")
@@ -91,12 +96,11 @@ def main():
         p2l.do(args.in_file, args.out_file)
         
     elif subcmd == "stream":
-        grbl = GRBL()
-        grbl.start()
-        for i in range(0,2):
-            time.sleep(3)
-            grbl.write("$$\r\n")
-        grbl.stop()
+        grbl = GRBL("grbl1", args.dev_node)
+        grbl.cnect()
+        time.sleep(1)
+        grbl.reset()
+        grbl.test()
         
     elif subcmd == "bbox":
         print "to be implemented soon"
