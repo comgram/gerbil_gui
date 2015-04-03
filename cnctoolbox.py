@@ -104,12 +104,14 @@ def main():
         grbl = GRBL("grbl1", args.dev_node)
         grbl.set_streamingfile(args.gcodefile) # must be set before calling cnct()!
         grbl.cnect()
+        time.sleep(2)
+        grbl.execute()
         
     elif subcmd == "bbox":
-        print "to be implemented soon"
+        print("to be implemented soon")
         
     elif subcmd == "scale":
-        print "to be implemented soon"
+        print("to be implemented soon")
 
 
 if __name__ == "__main__":

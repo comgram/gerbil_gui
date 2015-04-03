@@ -1,7 +1,7 @@
 import logging
 import time
 import re
-import multiprocessing
+#import multiprocessing
 
 from classes.rs232 import RS232
 
@@ -17,6 +17,11 @@ class GRBL:
         self.cwpos = (0, 0, 0)
         
         self.rx_buffer_size = 128
+        
+
+        #self.manager = Manager()
+        #self.rx_buffer_fill = self.manager.list()
+        #self.rx_buffer_fill = Queue()
         self.rx_buffer_fill = []
         
         self.gcodefile = None
@@ -36,6 +41,8 @@ class GRBL:
         self.iface.start()
         time.sleep(1)
         self.reset()
+
+    def polling_start():
         self.status_polling_process = multiprocessing.Process(target=self.poll_state)
         self.status_polling_process.start()
         
@@ -53,12 +60,20 @@ class GRBL:
     def get_state(self):
         self.iface.write("?")
         
-    def stream(self):
+    def execute(self):
         logging.info("%s starting to stream %s", self.name, self.gcodefile)
+        
+        self.streaming_process = multiprocessing.Process(target=self.stream)
+        self.streaming_process.start()
+        
+
+        
+    def stream(self):
         self.streaming_active = True
         self.streaming_completed = False
         self.streaming_eof_reached = False
         self.fill_buffer()
+        
         
     def fill_buffer(self):
         sent = True
@@ -68,6 +83,9 @@ class GRBL:
         
         
     def maybe_send_next_line(self):
+        bf = self.rx_buffer_fill
+        print("MAYBE", bf)
+        
         will_send = False
         if (self.streaming_active == True and
             self.streaming_eof_reached == False and
@@ -81,31 +99,36 @@ class GRBL:
             
         if self.current_gcodeblock != None:
             want_bytes = len(self.current_gcodeblock) + 1 # +1 because \n
-            free_bytes = self.rx_buffer_size - sum(self.rx_buffer_fill)
+            free_bytes = self.rx_buffer_size - sum(bf)
             
             will_send = free_bytes >= want_bytes
             
-            #logging.info("MAYBE buf=%s fill=%s fill=%s free=%s want=%s, will_send=%s", self.rx_buffer_size, self.rx_buffer_fill, sum(self.rx_buffer_fill), free_bytes, want_bytes, will_send)
+            logging.info("MAYBE buf=%s fill=%s fill=%s free=%s want=%s, will_send=%s", self.rx_buffer_size, bf, sum(bf), free_bytes, want_bytes, will_send)
         
         if will_send == True:
-            self.rx_buffer_fill.append(len(self.current_gcodeblock) + 1) # +1 means \n
+            bf.append(len(self.current_gcodeblock) + 1) # +1 means \n
             self.iface.write(self.current_gcodeblock + "\n")
             self.current_gcodeblock = None
         
         return will_send
     
     def rx_buffer_fill_pop(self):
-        if len(self.rx_buffer_fill) > 0:
-            self.rx_buffer_fill.pop(0)
+        bf = self.rx_buffer_fill
+        logging.info("rx_buffer_fill_pop %s %s", bf, len(bf))
+        if len(bf) > 0:
+            logging.info("POP %s", bf)
+            bf.pop(0)
+            logging.info("POP %s", bf)
         
-        if self.streaming_eof_reached == True and len(self.rx_buffer_fill) == 0:
+        if self.streaming_eof_reached == True and len(bf) == 0:
             self.streaming_completed = True
             self.streaming_active = False
             print("STREAM COMPLETE")
 
         
     def onread(self, line):
-        #logging.info("GRBL %s: <----- %s", self.name, line)
+        bf = self.rx_buffer_fill
+        logging.info("GRBL %s: <----- %s", self.name, line)
         if len(line) > 0:
             if line[0] == "<":
                 self.update_state(line)
@@ -113,6 +136,9 @@ class GRBL:
                 self.on_bootup()
             elif line == "ok":
                 self.rx_buffer_fill_pop()
+                #print("ONREAD", type(rx))
+                #gotten = rx.get()
+                #print("ONREAD", gotten)
                 self.fill_buffer()
             elif "error" in line:
                 self.streaming_active = False
@@ -120,12 +146,14 @@ class GRBL:
             elif "to unlock" in line:
                 self.streaming_active = False
                 logging.info("GRBL %s: <----- %s", self.name, line)
+            else:
+                logging.info("grbl sent something unsupported %s", line)
                 
                 
     def on_bootup(self):
         logging.info("%s has booted!", self.name)
         self.booted = True
-        self.stream()
+        #self.execute()
             
     def update_state(self, line):
         m = re.match("<(.*?),MPos:(.*?),WPos:(.*?)>", line)

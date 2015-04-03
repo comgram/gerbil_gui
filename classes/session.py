@@ -26,10 +26,10 @@ class Session:
     def add(self, name="", path=""):
         fileName, fileExtension = os.path.splitext(path)
         if fileExtension == '.svg':
-            print "Adding emitter for " + path
+            print("Adding emitter for " + path)
             self.emitters.append(SVG(name,path))
         else:
-            print "Adding machine for " + path
+            print("Adding machine for " + path)
             self.machines.append(Machine(name,path))
         return self
     

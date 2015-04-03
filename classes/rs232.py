@@ -18,9 +18,10 @@ class RS232:
         self.serialport.flushInput()
         self.serialport.flushOutput()
         time.sleep(1)
+        
         self.serial_process = multiprocessing.Process(target=self.receiving)
         self.serial_process.start()
-        print self.serial_process, self.serial_process.is_alive()
+        print(self.serial_process, self.serial_process.is_alive())
         
     def stop(self):
         self.cleanup()
@@ -43,21 +44,28 @@ class RS232:
     def write(self, data):
         if len(data) > 0:
             logging.info("RS232 %s:     -----------> %ibytes %s", self.name, len(data), data.strip())
-            self.serialport.write(data)
+            self.serialport.write(bytes(data,"ascii"))
         else:
             logging.info("RS232 %s: nothing to write", self.name)
 
     def receiving(self):
         while True:
+            print("waiting to read")
             data = self.serialport.read(1)
+            print("read stuff1", data)
             waiting = self.serialport.inWaiting()
+            print("waiting", waiting)
             data += self.serialport.read(waiting)
+            print("read stuffn", data)
             self.handle_data(data)
             
     def handle_data(self, data):
-        for i in range(0, len(data)):
-            self.buf_receive += data[i]
-            if data[i] == "\n":
+        asci = data.decode("ascii")
+        for i in range(0, len(asci)):
+            char = asci[i]
+            self.buf_receive += char
+            if char == "\n":
+                #print("NL detected", self.buf_receive)
                 self.cb(self.buf_receive.strip())
                 self.buf_receive = ""
         
