@@ -102,9 +102,10 @@ def main():
         
     elif subcmd == "stream":
         grbl = GRBL("grbl1", args.dev_node)
-        grbl.set_streamingfile(args.gcodefile) # must be set before calling cnct()!
         grbl.cnect()
         time.sleep(2)
+        grbl.poll_start()
+        grbl.set_streamingfile(args.gcodefile)
         grbl.execute()
         
     elif subcmd == "bbox":
