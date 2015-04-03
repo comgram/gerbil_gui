@@ -106,7 +106,7 @@ def main():
         time.sleep(2)
         grbl.poll_start()
         grbl.set_streamingfile(args.gcodefile)
-        grbl.execute()
+        grbl.run()
         
     elif subcmd == "bbox":
         print("to be implemented soon")

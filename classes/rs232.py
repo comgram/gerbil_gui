@@ -33,11 +33,13 @@ class RS232:
         logging.info("RS232 %s: stop()", self.name)
         self.serial_thread.join()
         logging.info("RS232 %s: JOINED thread", self.name)
+        logging.info("RS232 %s: Closing port", self.name)
+        self.serialport.flushInput()
+        self.serialport.flushOutput()
+        self.serialport.close()
         
     def cleanup(self):
-        logging.info("RS232 %s: cleaning up", self.name)
-        self.write("!") # feed hold
-        logging.info("RS232 %s: ready to be disconnected", self.name)
+        pass
         
     def write(self, data):
         if len(data) > 0:
@@ -53,7 +55,6 @@ class RS232:
             waiting = self.serialport.inWaiting()
             data += self.serialport.read(waiting)
             self.handle_data(data)
-        self.serialport.close()
             
     def handle_data(self, data):
         asci = data.decode("ascii")

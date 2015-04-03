@@ -4,21 +4,22 @@
 
 Example for python3 console:
 
-    import logging
-    from classes.grbl import GRBL
+import logging
+from classes.grbl import GRBL
 
-    log_format = '%(asctime)s %(levelname)s %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_format)
+log_format = '%(asctime)s %(levelname)s %(message)s'
+logging.basicConfig(level=logging.INFO, format=log_format)
 
-    grbl = GRBL("grbl1", "/dev/ttyACM0")
-    grbl.cnect()
-    grbl.poll_start()
-    grbl.set_streamingfile("out.ngc")
-    grbl.run()
-
-    grbl.poll_stop()
-    grbl.softreset()
-
-
+grbl = GRBL("mygrbl", "/dev/ttyACM0")
+grbl.cnect()
+grbl.set_streamingfile("out.ngc")
+grbl.run()
 grbl.disconect()
-~~~
+
+Other stuff:
+
+grbl.poll_start()
+grbl.poll_stop()
+
+grbl.pause()
+grbl.play()

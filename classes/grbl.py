@@ -10,7 +10,7 @@ class GRBL:
     def __init__(self, name="", ifacepath=""):
         self.name = name
         self.ifacepath = ifacepath
-        self.booted = False
+        self.connected = False
         
         self.cmode = None
         self.cmpos = (0, 0, 0)
@@ -33,6 +33,8 @@ class GRBL:
         self.polling_thread = None
         self.reading_thread = None
         
+        self.iface = None
+        
         self.queue = Queue()
         
       
@@ -41,11 +43,19 @@ class GRBL:
         self.reading_thread = threading.Thread(target=self.onread)
         self.reading_thread.start()
 
-        logging.info("%s setting up interface on %s", self.name, self.ifacepath)
-        self.iface = RS232("serial_" + self.name, self.ifacepath, 115200)
-        self.iface.start(self.queue)
+        if self.iface == None:
+            logging.info("%s setting up interface on %s", self.name, self.ifacepath)
+            self.iface = RS232("serial_" + self.name, self.ifacepath, 115200)
+            self.iface.start(self.queue)
+        else:
+            logging.info("%s there is already an interface %s", self.name, self.iface)
+            
+        self.softreset()
+        self.rx_buffer_fill = []
         
     def disconect(self):
+        if self.is_connected() == False: return
+            
         self.abort()
         
         logging.info("Please wait until threads are joined...")
@@ -57,9 +67,12 @@ class GRBL:
         
         self.poll_stop()
         self.iface.stop()
-        self.booted = False
+        self.iface = None
+        self.connected = False
+        self.rx_buffer_fill = []
         
     def poll_start(self):
+        if self.is_connected() == False: return
         self.do_poll = True
         if self.polling_thread == None:
             self.polling_thread = threading.Thread(target=self.poll_state)
@@ -70,6 +83,7 @@ class GRBL:
             
         
     def poll_stop(self):
+        if self.is_connected() == False: return
         if self.polling_thread != None:
             self.do_poll = False
             self.polling_thread.join()
@@ -90,9 +104,11 @@ class GRBL:
         logging.info("polling has been stopped")
         
     def get_state(self):
+        if self.is_connected() == False: return
         self.iface.write("?")
         
     def run(self):
+        if self.is_connected() == False: return
         logging.info("%s running %s", self.name, self.gcodefilename)
         self.gcodefile = open(self.gcodefilename)
         self.softreset()
@@ -103,13 +119,19 @@ class GRBL:
         self.fill_buffer()
         
     def abort(self):
+        if self.is_connected() == False: return
         self.softreset()
         
     def pause(self):
+        if self.is_connected() == False: return
         self.iface.write("!")
         
     def play(self):
+        if self.is_connected() == False: return
         self.iface.write("~")
+        
+    def killalarm(self):
+        self.iface.write("$X\n")
         
     def softreset(self):
         self.iface.write("\x18") # Ctrl-X
@@ -190,7 +212,7 @@ class GRBL:
                 
     def on_bootup(self):
         logging.info("%s has booted!", self.name)
-        self.booted = True
+        self.connected = True
             
     def update_state(self, line):
         m = re.match("<(.*?),MPos:(.*?),WPos:(.*?)>", line)
@@ -200,4 +222,9 @@ class GRBL:
         self.cmpos = (float(mpos_parts[0]), float(mpos_parts[1]), float(mpos_parts[2]))
         self.cwpos = (float(wpos_parts[0]), float(wpos_parts[1]), float(wpos_parts[2]))
         logging.info("GRBL %s: === STATE === %s %s %s", self.name, self.cmode, self.cmpos, self.cwpos)
+        
+    def is_connected(self):
+        if self.connected != True:
+            logging.info("Not yet connected")
+        return self.connected
         
