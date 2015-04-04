@@ -2,8 +2,9 @@ import logging
 import time
 import re
 import threading
-from queue import Queue
+import atexit
 
+from queue import Queue
 from classes.rs232 import RS232
 
 class GRBL:
@@ -21,11 +22,16 @@ class GRBL:
         
         self.gcodefile = None
         self.gcodefilename = None
+        
         self.current_gcodeblock = None
         
+        self.current_gcodeline = 0
+        self.buffer = []
+        
+        self.streaming_mode = None
         self.streaming_active = False
         self.streaming_completed = False
-        self.streaming_eof_reached = False
+        self.streaming_end_reached = False
         
         self.do_poll = False
         self.do_read = False
@@ -36,6 +42,10 @@ class GRBL:
         self.iface = None
         
         self.queue = Queue()
+        
+        self.after_boot_callback =  lambda : None
+            
+        atexit.register(self.disconect)
         
       
     def cnect(self):
@@ -71,6 +81,26 @@ class GRBL:
         self.connected = False
         self.rx_buffer_fill = []
         
+    def abort(self):
+        if self.is_connected() == False: return
+        self.softreset()
+        self._cleanup()
+        
+    def pause(self):
+        if self.is_connected() == False: return
+        self.iface.write("!")
+        
+    def play(self):
+        if self.is_connected() == False: return
+        self.iface.write("~")
+        
+    def killalarm(self):
+        self.iface.write("$X\n")
+        self._cleanup()
+        
+    def softreset(self):
+        self.iface.write("\x18") # Ctrl-X
+        
     def poll_start(self):
         if self.is_connected() == False: return
         self.do_poll = True
@@ -93,10 +123,6 @@ class GRBL:
             
         self.polling_thread = None
         
-        
-    def set_streamingfile(self, filename):
-        self.gcodefilename = filename
-        
     def poll_state(self):
         while self.do_poll == True:
             self.get_state()
@@ -107,70 +133,97 @@ class GRBL:
         if self.is_connected() == False: return
         self.iface.write("?")
         
-    def run(self):
+    def send(self, source):
         if self.is_connected() == False: return
-        logging.info("%s running %s", self.name, self.gcodefilename)
-        self.gcodefile = open(self.gcodefilename)
-        self.softreset()
-        self.rx_buffer_fill = []
-        self.streaming_active = True
+    
+        if "f:" in source:
+            requested_mode = "file"
+        elif "$" in source:
+            requested_mode = "settings"
+        else:
+            requested_mode = "string"
+    
+        if self.streaming_active == True and (self.streaming_mode == "file" or self.streaming_mode == "settings"):
+            logging.info("Already streaming %s. I can't append. Doing nothing now.", self.streaming_mode)
+            return
+    
+        if requested_mode == "file":
+            self.streaming_mode = "file"
+            self.gcodefile = open(source.replace("f:", ""))
+        elif requested_mode == "settings":
+            self.streaming_mode = "settings"
+        else:
+            self.streaming_mode = "string"
+            arr = source.split("\n")
+            arr_stripped = [x.strip() for x in arr]
+            self.buffer.extend(arr_stripped)
+            self.streaming_end_reached = False
+            
+        if self.streaming_active == False:
+            if requested_mode == "file":
+                # only first time for files
+                self.after_boot_callback = self.fill_buffer
+                self.softreset()
+            else:
+                self.fill_buffer()
+                
+        self._set_streaming_active(True)
         self.streaming_completed = False
-        self.streaming_eof_reached = False
-        self.fill_buffer()
-        
-    def abort(self):
-        if self.is_connected() == False: return
-        self.softreset()
-        
-    def pause(self):
-        if self.is_connected() == False: return
-        self.iface.write("!")
-        
-    def play(self):
-        if self.is_connected() == False: return
-        self.iface.write("~")
-        
-    def killalarm(self):
-        self.iface.write("$X\n")
-        
-    def softreset(self):
-        self.iface.write("\x18") # Ctrl-X
+        self.streaming_end_reached = False
+
         
     def fill_buffer(self):
+        logging.info("Filling buffer to the max")
         sent = True
         while sent == True:
-          sent = self.maybe_send_next_line()
+          sent = self._maybe_send_next_line()
         
+    def get_next_line(self):
+        line = ""
+        if self.streaming_mode == "file":
+            line = self.gcodefile.readline().strip()
+            
+        elif self.streaming_mode == "string":
+            if len(self.buffer) > 0:
+                line = self.buffer.pop(0)
+            else:
+                line = "" # same behavior as .readline() from file
+                
+        if line == "":
+            line = None
+            self.streaming_end_reached = True
+            if self.streaming_mode == "file":
+                self.gcodefile.close()
+                logging.info("closed file")
+            
+        logging.info("NEXT LINE %s", line)
+        return line
+    
         
-        
-    def maybe_send_next_line(self):
+    def _maybe_send_next_line(self):
         bf = self.rx_buffer_fill
         
         will_send = False
-        if (self.streaming_active == True and
-            self.streaming_eof_reached == False and
+        if (self.streaming_end_reached == False and
             self.current_gcodeblock == None):
             
-            self.current_gcodeblock = self.gcodefile.readline().strip()
-            if self.current_gcodeblock == "":
-                self.current_gcodeblock = None
-                self.streaming_eof_reached = True
-                self.gcodefile.close()
-                logging.info("closed file")
-                return False
+            self.current_gcodeblock = self.get_next_line()
             
+        logging.info("MAYBE sa=%s se=%s gc=%s", self.streaming_active, self.streaming_end_reached, self.current_gcodeblock)
+
         if self.current_gcodeblock != None:
             want_bytes = len(self.current_gcodeblock) + 1 # +1 because \n
             free_bytes = self.rx_buffer_size - sum(bf)
-            
             will_send = free_bytes >= want_bytes
             
-            logging.info("MAYBE buf=%s fill=%s fill=%s free=%s want=%s, will_send=%s", self.rx_buffer_size, bf, sum(bf), free_bytes, want_bytes, will_send)
+            logging.info("MAYBE rx_buf=%s fillsum=%s free=%s want=%s, will_send=%s", bf, sum(bf), free_bytes, want_bytes, will_send)
         
         if will_send == True:
             bf.append(len(self.current_gcodeblock) + 1) # +1 means \n
             self.iface.write(self.current_gcodeblock + "\n")
-            self.current_gcodeblock = None
+            self.current_gcodeblock = None # Mark this gcode block as processed!
+            
+        
         
         return will_send
     
@@ -180,10 +233,10 @@ class GRBL:
         if len(bf) > 0:
             bf.pop(0)
         
-        if self.streaming_eof_reached == True and len(bf) == 0:
+        if self.streaming_end_reached == True and len(bf) == 0:
             self.streaming_completed = True
-            self.streaming_active = False
-            print("STREAM COMPLETE")
+            self._set_streaming_active(False)
+            print("STREAM COMPLETE. streaming_completed=True, streaming_active=False")
     
     def onread(self):
         while self.do_read == True:
@@ -195,24 +248,27 @@ class GRBL:
                 elif "Grbl " in line:
                     self.on_bootup()
                 elif line == "ok":
-                    self.rx_buffer_fill_pop()
-                    self.fill_buffer()
+                    if self.streaming_active:
+                        self.rx_buffer_fill_pop()
+                        self.fill_buffer()
                 elif "ALARM" in line:
                     self.alarm = True
                     logging.info("GRBL %s: <----- %s", self.name, line)
                 elif "error" in line:
-                    self.streaming_active = False
+                    self._set_streaming_active(False)
                     logging.info("GRBL %s: <----- %s", self.name, line)
                 elif "to unlock" in line:
-                    self.streaming_active = False
+                    self._set_streaming_active(False)
                     logging.info("GRBL %s: <----- %s", self.name, line)
                 else:
                     logging.info("grbl sent something unsupported %s", line)
                 
+
                 
     def on_bootup(self):
         logging.info("%s has booted!", self.name)
         self.connected = True
+        self.after_boot_callback()
             
     def update_state(self, line):
         m = re.match("<(.*?),MPos:(.*?),WPos:(.*?)>", line)
@@ -227,4 +283,30 @@ class GRBL:
         if self.connected != True:
             logging.info("Not yet connected")
         return self.connected
+    
+    def _cleanup(self):
+        logging.info("%s cleaning up", self.name)
+        del self.buffer[:]
+        del self.rx_buffer_fill[:]
+        logging.info("%s cleaning up, buffer is now %s", self.name, self.buffer)
+        if self.gcodefile and not self.gcodefile.closed:
+            logging.info("%s closing file", self.name)
+            self.gcodefile.close()
+
+        self.gcodefile = None
+        self.gcodefilename = None
+        self.streaming_mode = None
+        self._set_streaming_active(False)
+        self.streaming_completed = False
+        self.streaming_end_reached = False
+        self.after_boot_callback =  lambda : None
+            
+    def _set_streaming_active(self, a):
+        self.streaming_active = a
+        logging.info("streaming_active: %s", a)
         
+        
+    def test_string(self):
+        for i in range(0,10):
+            self.send("G1 X3 Y0 Z0 F1000")
+            self.send("G1 X-3 Y0 Z0 F1000")

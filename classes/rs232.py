@@ -57,7 +57,12 @@ class RS232:
             self.handle_data(data)
             
     def handle_data(self, data):
-        asci = data.decode("ascii")
+        try:
+            asci = data.decode("ascii")
+        except UnicodeDecodeError:
+            logging.info("Received a non-ascii byte. Probably junk. Dropping it.")
+            asci = ""
+            
         for i in range(0, len(asci)):
             char = asci[i]
             self.buf_receive += char

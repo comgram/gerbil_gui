@@ -12,8 +12,11 @@ logging.basicConfig(level=logging.INFO, format=log_format)
 
 grbl = GRBL("mygrbl", "/dev/ttyACM0")
 grbl.cnect()
-grbl.set_streamingfile("out.ngc")
-grbl.run()
+grbl.send("f:out.ngc")
+
+grbl.test_string()
+grbl.send("G0 X100")
+
 grbl.disconect()
 
 Other stuff:
@@ -23,3 +26,8 @@ grbl.poll_stop()
 
 grbl.pause()
 grbl.play()
+grbl.abort()
+grbl.killalarm()
+
+grbl._cleanup()
+

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # copyright Red E Tools Ltd.
 # MIT License
@@ -13,6 +13,9 @@ from classes.svg import SVG
 from classes.grbl import GRBL
 from lib import stipple
 from lib import pixel2laser as p2l
+
+from classes.window import MainWindow
+from gi.repository import Gtk
 
 def main():
     '''
@@ -89,8 +92,16 @@ def main():
     
     # define arguments for the 'scale' subcommand
     scale_parser = subparsers.add_parser("scale", help="Scales coordinates in a gcode file")
+    
+    # define arguments for the 'gui' subcommand
+    gui_parser = subparsers.add_parser("gui", help="Start GUI")
 
     args = parser.parse_args()
+    
+    if len(sys.argv) < 2:
+        print("Please use the -h flag to see help")
+        raise SystemExit
+    
     subcmd = sys.argv[1]
     
     # after all arguments have been parsed, delegate
@@ -103,16 +114,21 @@ def main():
     elif subcmd == "stream":
         grbl = GRBL("grbl1", args.dev_node)
         grbl.cnect()
-        time.sleep(2)
-        grbl.poll_start()
-        grbl.set_streamingfile(args.gcodefile)
-        grbl.run()
+        time.sleep(1)
+        src = "out.ngc"
+        grbl.send(src)
         
     elif subcmd == "bbox":
         print("to be implemented soon")
         
     elif subcmd == "scale":
         print("to be implemented soon")
+        
+    elif subcmd == "gui":
+        win = MainWindow()
+        win.connect("delete-event", Gtk.main_quit)
+        win.show_all()
+        Gtk.main()
 
 
 if __name__ == "__main__":
