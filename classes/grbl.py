@@ -8,7 +8,7 @@ from queue import Queue
 from classes.rs232 import RS232
 
 class GRBL:
-    def __init__(self, name="", ifacepath=""):
+    def __init__(self, name="", ifacepath="", state_cb=lambda:None):
         self.name = name
         self.ifacepath = ifacepath
         self.connected = False
@@ -46,6 +46,8 @@ class GRBL:
         self.after_boot_callback =  lambda : None
             
         atexit.register(self.disconect)
+        
+        self.state_cb = state_cb
         
       
     def cnect(self):
@@ -126,7 +128,7 @@ class GRBL:
     def poll_state(self):
         while self.do_poll == True:
             self.get_state()
-            time.sleep(4)
+            time.sleep(2)
         logging.info("polling has been stopped")
         
     def get_state(self):
@@ -278,6 +280,7 @@ class GRBL:
         self.cmpos = (float(mpos_parts[0]), float(mpos_parts[1]), float(mpos_parts[2]))
         self.cwpos = (float(wpos_parts[0]), float(wpos_parts[1]), float(wpos_parts[2]))
         logging.info("GRBL %s: === STATE === %s %s %s", self.name, self.cmode, self.cmpos, self.cwpos)
+        self.state_cb(self.cmode, self.cmpos, self.cwpos)
         
     def is_connected(self):
         if self.connected != True:
