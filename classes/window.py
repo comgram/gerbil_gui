@@ -47,6 +47,9 @@ class Window(QWidget):
         self.xSlider = self.createSlider()
         self.ySlider = self.createSlider()
         self.zSlider = self.createSlider()
+        self.xPanSlider = self.createSlider()
+        self.yPanSlider = self.createSlider()
+        self.zPanSlider = self.createSlider()
 
         self.xSlider.valueChanged.connect(self.glWidget.setXRotation)
         self.glWidget.xRotationChanged.connect(self.xSlider.setValue)
@@ -54,6 +57,9 @@ class Window(QWidget):
         self.glWidget.yRotationChanged.connect(self.ySlider.setValue)
         self.zSlider.valueChanged.connect(self.glWidget.setZRotation)
         self.glWidget.zRotationChanged.connect(self.zSlider.setValue)
+        self.xPanSlider.valueChanged.connect(self.glWidget.setXPan)
+        self.yPanSlider.valueChanged.connect(self.glWidget.setYPan)
+        self.zPanSlider.valueChanged.connect(self.glWidget.setZPan)
 
         mainLayout = QHBoxLayout()
         mainLayout.addWidget(self.label_mpos)
@@ -64,23 +70,22 @@ class Window(QWidget):
         mainLayout.addWidget(self.xSlider)
         mainLayout.addWidget(self.ySlider)
         mainLayout.addWidget(self.zSlider)
+        mainLayout.addWidget(self.xPanSlider)
+        mainLayout.addWidget(self.yPanSlider)
+        mainLayout.addWidget(self.zPanSlider)
         self.setLayout(mainLayout)
 
-        self.xSlider.setValue(15 * 16)
-        self.ySlider.setValue(345 * 16)
-        self.zSlider.setValue(0 * 16)
-
-        self.setWindowTitle("Hello GL")
+        self.xSlider.setValue(1 * 16)
+        self.ySlider.setValue(355 * 16)
+        self.zSlider.setValue(1 * 16)
         
-        # Create a QTimer
         self.timer = QTimer()
-        # Connect it to f
         self.timer.timeout.connect(self.refresh)
-        # Call f() every 5 seconds
-        self.timer.start(200)
+        self.timer.start(20)
+        
+        self.setUpdatesEnabled(True)
         
     def refresh(self):
-        #self.update()
         self.glWidget.updateGL()
         
     def on_run_btn_clicked(self):
@@ -121,6 +126,9 @@ class GLWidget(QGLWidget):
         self.xRot = 0
         self.yRot = 0
         self.zRot = 0
+        self.xPan = 0
+        self.yPan = 0
+        self.zPan = 0
         
         self.mpos = (0,0,0)
 
@@ -140,21 +148,33 @@ class GLWidget(QGLWidget):
         if angle != self.xRot:
             self.xRot = angle
             self.xRotationChanged.emit(angle)
-            self.updateGL()
+            #self.updateGL()
 
     def setYRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.yRot:
             self.yRot = angle
             self.yRotationChanged.emit(angle)
-            self.updateGL()
+            #self.updateGL()
 
     def setZRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.zRot:
             self.zRot = angle
             self.zRotationChanged.emit(angle)
-            self.updateGL()
+            #self.updateGL()
+            
+    def setXPan(self, val):
+        if val != self.xPan:
+            self.xPan = val / 1000.0
+            
+    def setYPan(self, val):
+        if val != self.yPan:
+            self.yPan = val / 1000.0
+            
+    def setZPan(self, val):
+        if val != self.zPan:
+            self.zPan = val / 1000.0 - 10
 
     def initializeGL(self):
         self.qglClearColor(self.trolltechPurple.darker())
@@ -170,12 +190,12 @@ class GLWidget(QGLWidget):
         print("paintGL")
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glLoadIdentity()
-        GL.glTranslated(0.0, 0.0, -10.0)
+        GL.glTranslated(self.xPan, self.yPan, self.zPan)
+        #GL.glTranslated(0, 0, -10)
         GL.glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0)
         GL.glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
         GL.glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
         GL.glCallList(self.makeObject())
-        #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
     def resizeGL(self, width, height):
         side = min(width, height)
@@ -206,7 +226,7 @@ class GLWidget(QGLWidget):
         self.lastPos = event.pos()
 
     def makeObject(self):
-        print("make object", str(self.mpos))
+        #print("make object", str(self.mpos))
         
         coord = numpy.divide(self.mpos, 30)
         line_from = coord
@@ -220,6 +240,13 @@ class GLWidget(QGLWidget):
         GL.glVertex3d(*line_from);
         GL.glVertex3d(*line_to);
         #GL.glVertex3d(2,0,0);
+        
+        for i in range(0,10):
+            j = i/10
+            GL.glVertex3d(j, 0, 0)
+            GL.glVertex3d(j, 1, 0)
+            GL.glVertex3d(0, j, 0)
+            GL.glVertex3d(1, j, 0)
 
         GL.glEnd()
         GL.glEndList()

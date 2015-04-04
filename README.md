@@ -5,10 +5,12 @@
 Example for python3 console:
 
 import logging
+from colorlog import ColoredFormatter
 from classes.grbl import GRBL
 
 log_format = '%(asctime)s %(levelname)s %(message)s'
-logging.basicConfig(level=logging.INFO, format=log_format)
+
+logging.basicConfig(level=0, format=log_format)
 
 grbl = GRBL("mygrbl", "/dev/ttyACM0")
 grbl.cnect()
@@ -31,3 +33,4 @@ grbl.killalarm()
 
 grbl._cleanup()
 
+grbl.send("".join([x for x in open("data/eshapeoko-settings.txt").readlines()]))

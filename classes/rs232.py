@@ -15,7 +15,7 @@ class RS232:
         
     def start(self, q):
         self.queue = q
-        logging.info("RS232 %s: connecting to %s", self.name, self.path)
+        logging.log(10, "RS232 %s: connecting to %s", self.name, self.path)
         self.serialport = serial.Serial(self.path, self.baud, timeout=5)
         
         #time.sleep(0.2)
@@ -30,10 +30,10 @@ class RS232:
     def stop(self):
         self.cleanup()
         self.do_receive = False
-        logging.info("RS232 %s: stop()", self.name)
+        logging.log(10, "RS232 %s: stop()", self.name)
         self.serial_thread.join()
-        logging.info("RS232 %s: JOINED thread", self.name)
-        logging.info("RS232 %s: Closing port", self.name)
+        logging.log(10, "RS232 %s: JOINED thread", self.name)
+        logging.log(10, "RS232 %s: Closing port", self.name)
         self.serialport.flushInput()
         self.serialport.flushOutput()
         self.serialport.close()
@@ -43,10 +43,10 @@ class RS232:
         
     def write(self, data):
         if len(data) > 0:
-            #logging.info("RS232 %s:     -----------> %ibytes %s", self.name, len(data), data.strip())
+            logging.log(10, "RS232 %s:     -----------> %ibytes %s", self.name, len(data), data.strip())
             self.serialport.write(bytes(data,"ascii"))
         else:
-            logging.info("RS232 %s: nothing to write", self.name)
+            logging.log(10, "RS232 %s: nothing to write", self.name)
 
     def receiving(self):
         while self.do_receive == True:
@@ -60,7 +60,7 @@ class RS232:
         try:
             asci = data.decode("ascii")
         except UnicodeDecodeError:
-            logging.info("Received a non-ascii byte. Probably junk. Dropping it.")
+            logging.log(10, "Received a non-ascii byte. Probably junk. Dropping it.")
             asci = ""
             
         for i in range(0, len(asci)):
