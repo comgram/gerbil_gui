@@ -14,8 +14,10 @@ from classes.grbl import GRBL
 from lib import stipple
 from lib import pixel2laser as p2l
 
-from classes.window import MainWindow
-from gi.repository import Gtk
+from classes.window import Window
+#from gi.repository import Gtk
+
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QWidget)
 
 def main():
     '''
@@ -125,9 +127,10 @@ def main():
         print("to be implemented soon")
         
     elif subcmd == "gui":
-        win = MainWindow()
-        win.show_all()
-        Gtk.main()
+        app = QApplication(sys.argv)
+        window = Window()
+        window.show()
+        sys.exit(app.exec_())
 
 
 if __name__ == "__main__":

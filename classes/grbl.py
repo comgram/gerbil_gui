@@ -128,7 +128,7 @@ class GRBL:
     def poll_state(self):
         while self.do_poll == True:
             self.get_state()
-            time.sleep(2)
+            time.sleep(0.1)
         logging.info("polling has been stopped")
         
     def get_state(self):
@@ -175,7 +175,7 @@ class GRBL:
 
         
     def fill_buffer(self):
-        logging.info("Filling buffer to the max")
+        #logging.info("Filling buffer to the max")
         sent = True
         while sent == True:
           sent = self._maybe_send_next_line()
@@ -198,7 +198,7 @@ class GRBL:
                 self.gcodefile.close()
                 logging.info("closed file")
             
-        logging.info("NEXT LINE %s", line)
+        #logging.info("NEXT LINE %s", line)
         return line
     
         
@@ -211,14 +211,14 @@ class GRBL:
             
             self.current_gcodeblock = self.get_next_line()
             
-        logging.info("MAYBE sa=%s se=%s gc=%s", self.streaming_active, self.streaming_end_reached, self.current_gcodeblock)
+        #logging.info("MAYBE sa=%s se=%s gc=%s", self.streaming_active, self.streaming_end_reached, self.current_gcodeblock)
 
         if self.current_gcodeblock != None:
             want_bytes = len(self.current_gcodeblock) + 1 # +1 because \n
             free_bytes = self.rx_buffer_size - sum(bf)
             will_send = free_bytes >= want_bytes
             
-            logging.info("MAYBE rx_buf=%s fillsum=%s free=%s want=%s, will_send=%s", bf, sum(bf), free_bytes, want_bytes, will_send)
+            #logging.info("MAYBE rx_buf=%s fillsum=%s free=%s want=%s, will_send=%s", bf, sum(bf), free_bytes, want_bytes, will_send)
         
         if will_send == True:
             bf.append(len(self.current_gcodeblock) + 1) # +1 means \n
@@ -231,7 +231,7 @@ class GRBL:
     
     def rx_buffer_fill_pop(self):
         bf = self.rx_buffer_fill
-        logging.info("rx_buffer_fill_pop %s %s", bf, len(bf))
+        #logging.info("rx_buffer_fill_pop %s %s", bf, len(bf))
         if len(bf) > 0:
             bf.pop(0)
         
@@ -243,7 +243,7 @@ class GRBL:
     def onread(self):
         while self.do_read == True:
             line = self.queue.get()
-            logging.info("GRBL %s: <----- %s", self.name, line)
+            #logging.info("GRBL %s: <----- %s", self.name, line)
             if len(line) > 0:
                 if line[0] == "<":
                     self.update_state(line)
@@ -279,7 +279,7 @@ class GRBL:
         wpos_parts = m.group(3).split(",")
         self.cmpos = (float(mpos_parts[0]), float(mpos_parts[1]), float(mpos_parts[2]))
         self.cwpos = (float(wpos_parts[0]), float(wpos_parts[1]), float(wpos_parts[2]))
-        logging.info("GRBL %s: === STATE === %s %s %s", self.name, self.cmode, self.cmpos, self.cwpos)
+        #logging.info("GRBL %s: === STATE === %s %s %s", self.name, self.cmode, self.cmpos, self.cwpos)
         self.state_cb(self.cmode, self.cmpos, self.cwpos)
         
     def is_connected(self):
