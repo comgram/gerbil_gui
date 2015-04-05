@@ -122,7 +122,7 @@
    <widget class="QPushButton" name="pushButton_disconnect">
     <property name="geometry">
      <rect>
-      <x>120</x>
+      <x>110</x>
       <y>60</y>
       <width>95</width>
       <height>31</height>
@@ -142,26 +142,26 @@
      </rect>
     </property>
     <property name="text">
-     <string>Homing</string>
+     <string>Homing $H</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_killalarm">
     <property name="geometry">
      <rect>
-      <x>340</x>
+      <x>330</x>
       <y>60</y>
       <width>95</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>Kill Alarm</string>
+     <string>Kill Alarm $X</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_reset">
     <property name="geometry">
      <rect>
-      <x>450</x>
+      <x>530</x>
       <y>60</y>
       <width>95</width>
       <height>31</height>
@@ -181,7 +181,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Hold</string>
+     <string>Hold !</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_resume">
@@ -194,7 +194,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Resume</string>
+     <string>Resume~</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_abort">
@@ -205,6 +205,17 @@
       <width>71</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>Abort</string>
@@ -394,18 +405,18 @@
      <string>Zero XY</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_currentgcodeblock">
+   <widget class="QLabel" name="label_logline">
     <property name="geometry">
      <rect>
-      <x>660</x>
+      <x>470</x>
       <y>120</y>
-      <width>221</width>
+      <width>411</width>
       <height>31</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>17</pointsize>
+      <pointsize>15</pointsize>
      </font>
     </property>
     <property name="text">
@@ -459,7 +470,7 @@
      <rect>
       <x>190</x>
       <y>120</y>
-      <width>301</width>
+      <width>271</width>
       <height>33</height>
      </rect>
     </property>
@@ -467,6 +478,19 @@
      <font>
       <pointsize>20</pointsize>
      </font>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_check">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>60</y>
+      <width>95</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Check</string>
     </property>
    </widget>
   </widget>

@@ -76,7 +76,7 @@ class GRBL:
         
         self._rx_buffer_fill = []
         self._rx_buffer_backlog = []
-        #self._callback_onboot = self.poll_start # Debug
+        self._callback_onboot = self.poll_start
         self.softreset()
         
         
@@ -162,8 +162,9 @@ class GRBL:
         else:
             requested_mode = "string"
     
-        if self._streaming_mode != "string" and self.cmode != "Idle":
-            logging.log(200, "%s: You can't append something to a running stream except when you're streaming strings. Please wait until job has completed or call .abort() for GRBL to become idle", self.name)
+        if self._streaming_mode != "string" and self.cmode == "Run":
+            # Idle Check
+            logging.log(400, "%s: You can't append something to a running stream except when you're streaming strings. Please wait until job has completed or call .abort() for GRBL to become idle", self.name)
             return False
         
         self._streaming_mode = requested_mode
@@ -180,8 +181,9 @@ class GRBL:
             # kick-off!
             if self._streaming_mode == "file":
                 self._gcodefile = open(source.replace("f:", ""))
-                self._callback_onboot = self._fill_buffer
-                self.softreset()
+                self._fill_buffer()
+                #self._callback_onboot = self._fill_buffer
+                #self.softreset()
                     
             elif self._streaming_mode == "string":
                 self._fill_buffer()
@@ -276,6 +278,7 @@ class GRBL:
             self._set_streaming_src_end_reached(True)
             if self._streaming_mode == "file":
                 self._gcodefile.close()
+                self._gcodefile = None
                 logging.log(200, "%s: closed file", self.name)
 
         if line:
@@ -294,8 +297,9 @@ class GRBL:
         
         if self._streaming_src_end_reached == True and len(bf) == 0:
             self._set_job_finished(True)
-            logging.log(200, "%s: STREAM COMPLETE", self.name)
+            logging.log(200, "%s: JOB COMPLETE", self.name)
             self._set_streaming_complete(True)
+            self.callback("on_log", "Job completed")
     
     
     def _iface_write(self, data):
@@ -313,7 +317,7 @@ class GRBL:
                 elif "Grbl " in line:
                     self._on_bootup()
                 elif line == "ok":
-                    if self._error == False and self._alarm == False and self._streaming_complete == False:
+                    if self._error == False and self._streaming_complete == False:
                         if self._streaming_mode != "settings":
                             self._rx_buffer_fill_pop()
                             self._fill_buffer()
@@ -321,9 +325,9 @@ class GRBL:
                             self._maybe_send_next_line()
                             
                 elif "ALARM" in line:
-                    self._alarm = True
-                    self.abort()
+                    self.callback("on_alarm", line)
                     logging.log(200, "%s: ALARM!: %s %s", self.name, line, self._rx_buffer_backlog)
+                    self.abort()
                     
                 elif "error" in line:
                     if self._error == False:
@@ -332,13 +336,13 @@ class GRBL:
                         problem_command = self._rx_buffer_backlog[0]
                         self.callback("on_error", line, problem_command)
                         logging.log(200, "%s: ERROR!: %s %s", self.name, line, self._rx_buffer_backlog)
-                        self.abort()
+                        #self.abort()
                     else:
                         logging.log(200, "%s: Receiving additional errors: %s", self.name, line)
                     
                 elif "to unlock" in line:
-                    pass
-                    #._set_streaming_complete(False)
+                    self.callback("on_log", line)
+                    
                 else:
                     logging.log(200, "%s: sent something unsupported: %s", self.name, line)
                 
@@ -374,7 +378,7 @@ class GRBL:
         del self._rx_buffer_backlog[:]
         logging.log(200, "%s: cleaning up, buffer is now %s", self.name, self._buffer)
         if self._gcodefile and not self._gcodefile.closed:
-            logging.log(200, "%s: closing file", self.name)
+            logging.log(400, "%s: closing file", self.name)
             self._gcodefile.close()
 
         self._gcodefile = None
@@ -383,7 +387,9 @@ class GRBL:
         self._set_streaming_complete(True)
         self._set_job_finished(True)
         self._set_streaming_src_end_reached(True)
+        self._error = False
         self._callback_onboot =  lambda : None
+        self._current_gcodeblock = None
             
             
     def _set_streaming_src_end_reached(self, a):

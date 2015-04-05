@@ -25,7 +25,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         
         self.grbl = GRBL()
-        self.grbl.poll_interval = 0.1
+        self.grbl.poll_interval = 0.2
         
         self.grbl.callback = self.on_grbl_event
         
@@ -37,22 +37,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_disconnect.clicked.connect(self.disconnect)
         self.pushButton_homing.clicked.connect(self.grbl.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
-        self.pushButton_reset.clicked.connect(self.grbl.softreset)
+        self.pushButton_reset.clicked.connect(self.reset)
         
         self.pushButton_filestream.clicked.connect(self.stream_file)
         self.pushButton_fileload.clicked.connect(self.pick_file)
         
         self.pushButton_hold.clicked.connect(self.grbl.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
-        self.pushButton_abort.clicked.connect(self.grbl.abort)
+        self.pushButton_abort.clicked.connect(self.abort)
         
         self.pushButton_zeroxyz.clicked.connect(self.zero_xyz)
         self.pushButton_zeroxy.clicked.connect(self.zero_xy)
         self.pushButton_zeroz.clicked.connect(self.zero_z)
         
+        self.pushButton_check.clicked.connect(self.check)
+        
         self.pushButton_w2mcoord.clicked.connect(self.w2mcoord)
         self.pushButton_g0wzerosafe.clicked.connect(self.g0wzerosafe)
         self.pushButton_g0wzero.clicked.connect(self.g0wzero)
+        
+        
                
         self.lineEdit_cmdline.returnPressed.connect(self.sendsingle)
         
@@ -120,16 +124,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_send_command":
             gcodeblock = data[0]
-            self.label_currentgcodeblock.setText(gcodeblock)
+            self.label_logline.setText(gcodeblock.strip())
+            
+        elif event == "on_error":
+            grbl_message = data[0]
+            problem_command = data[1]
+            self.label_logline.setText(grbl_message + ": " + problem_command)
+            
+        elif event == "on_alarm":
+            grbl_message = data[0]
+            self.label_logline.setText(grbl_message.strip())
+            
+        elif event == "on_log":
+            grbl_message = data[0]
+            self.label_logline.setText(grbl_message.strip())
+            
         
         
     def pick_file(self):
-        filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc, *.gcode, *.nc)")
+        filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.filename = filename_tuple[0]
         self.label_file.setText(self.filename)
+        
+    def abort(self):
+        self.label_logline.setText("")
+        self.grbl.abort()
+        
+    def reset(self):
+        self.label_logline.setText("")
+        self.grbl.abort()
     
     def stream_file(self):
         self.grbl.send("f:" + self.filename)
+        
+    def check(self):
+        self.grbl.send("$C")
         
     def zero_xyz(self):
         self.grbl.send("G92 X0 Y0 Z0")
@@ -165,7 +194,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lcdNumber_wy.display("{:0.2f}".format(8888.88))
         self.lcdNumber_wz.display("{:0.2f}".format(8888.88))
         self.label_state.setText("disconnected")
-        self.label_currentgcodeblock.setText("")
+        self.label_logline.setText("")
         
     def refresh(self):
         self.glWidget.updateGL()

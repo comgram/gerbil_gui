@@ -44,7 +44,7 @@ class RS232:
         if len(data) > 0:
             logging.log(100, "%s:     -----------> %ibytes %s", self.name, len(data), data.strip())
             num_written = self.serialport.write(bytes(data,"ascii"))
-            logging.log(100, "%s: num_written %s", self.name, num_written)
+            #logging.log(100, "%s: num_written %s", self.name, num_written)
         else:
             logging.log(100, "%s: nothing to write", self.name)
 
