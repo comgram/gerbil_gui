@@ -43,7 +43,8 @@ class RS232:
     def write(self, data):
         if len(data) > 0:
             logging.log(100, "%s:     -----------> %ibytes %s", self.name, len(data), data.strip())
-            self.serialport.write(bytes(data,"ascii"))
+            num_written = self.serialport.write(bytes(data,"ascii"))
+            logging.log(100, "%s: num_written %s", self.name, num_written)
         else:
             logging.log(100, "%s: nothing to write", self.name)
 
@@ -53,6 +54,7 @@ class RS232:
         while self._do_receive == True:
             data = self.serialport.read(1)
             waiting = self.serialport.inWaiting()
+            #logging.log(100, "%s: READING %s %s", self.name, waiting, data)
             data += self.serialport.read(waiting)
             self._handle_data(data)
 

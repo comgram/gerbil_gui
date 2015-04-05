@@ -124,7 +124,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def pick_file(self):
-        filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc)")
+        filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc, *.gcode, *.nc)")
         self.filename = filename_tuple[0]
         self.label_file.setText(self.filename)
     
