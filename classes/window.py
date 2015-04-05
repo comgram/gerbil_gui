@@ -1,14 +1,21 @@
 import sys
+import os
 import math
 
+import logging
 from classes.grbl import GRBL
 import numpy
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget)
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog)
 from PyQt5.QtOpenGL import QGLWidget
+
+from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
+
+log_format = '%(asctime)s %(levelname)s %(message)s'
+logging.basicConfig(level=300, format=log_format)
 
 try:
     from OpenGL import GL
@@ -19,12 +26,27 @@ except ImportError:
     sys.exit(1)
 
 
-class Window(QWidget):
+class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
-        super(Window, self).__init__()
+        super(MainWindow, self).__init__()
         
-        self.grbl = GRBL("grbl1", "/dev/ttyACM0", self.on_change)
-        self.grbl.cnect()
+        self.setupUi(self)
+        
+        self.grbl = GRBL()
+        self.grbl.poll_interval = 0.1
+        
+        self.grbl.callback = self.on_grbl_event
+        
+        self.glWidget = GLWidget()
+        
+        self.grid_opengl.addWidget(self.glWidget)
+        
+        self.pushButton_resume.clicked.connect(self.on_run_btn_clicked)
+        self.pushButton_fileload.clicked.connect(self.pick_file)
+        self.pushButton_connect.clicked.connect(self.grbl.cnect)
+        self.pushButton_disconnect.clicked.connect(self.grbl.disconnect)
+        
+        return
         
         self.label_mpos = QLabel("blah", self)
         
@@ -37,7 +59,7 @@ class Window(QWidget):
         self.btn_quit = QPushButton("quit", self)
         #self.btn_quit.clicked.connect(self.quit)
         
-        self.glWidget = GLWidget()
+        
         
 
         
@@ -85,6 +107,24 @@ class Window(QWidget):
         
         self.setUpdatesEnabled(True)
         
+        
+    def on_grbl_event(self, event, *data):
+        logging.log(300, "GRBL event: %s, %s", event, data)
+        if event == "on_stateupdate":
+            state = data[0]
+            mpos = data[1]
+            wpos = data[2]
+            self.lcdNumber_x.display(mpos[0])
+            self.lcdNumber_y.display(mpos[1])
+            self.lcdNumber_z.display(mpos[2])
+            self.glWidget.paintGL()
+        
+        
+    def pick_file(self):
+        self.filename = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc)")
+        self.label_file.setText(self.filename[0])
+        
+        
     def refresh(self):
         self.glWidget.updateGL()
         
@@ -93,14 +133,6 @@ class Window(QWidget):
         
     def quit(self):
         QCoreApplication.instance().quit
-
-    def on_change(self, state, mpos, wpos):
-        self.label_mpos.setText(str(mpos))
-        self.glWidget.mpos = mpos
-        self.glWidget.paintGL()
-        #self.paintEvent()
-        #self.glWidget.updateGL()
-        #self.update()
         
     def createSlider(self):
         slider = QSlider(Qt.Vertical)
@@ -182,12 +214,12 @@ class GLWidget(QGLWidget):
         GL.glShadeModel(GL.GL_FLAT)
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glEnable(GL.GL_CULL_FACE)
-        GL.glEnable(GL_POINT_SMOOTH);
+        #GL.glEnable(GL_POINT_SMOOTH);
         GL.glEnable(GL_LINE_SMOOTH);
         GL.glEnable(GL_POLYGON_SMOOTH);
 
     def paintGL(self):
-        print("paintGL")
+        #print("paintGL")
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glLoadIdentity()
         GL.glTranslated(self.xPan, self.yPan, self.zPan)

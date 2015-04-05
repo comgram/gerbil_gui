@@ -4,33 +4,70 @@
 
 Example for python3 console:
 
-import logging
-from colorlog import ColoredFormatter
-from classes.grbl import GRBL
+First set up environment:
 
-log_format = '%(asctime)s %(levelname)s %(message)s'
+    import logging
+    from classes.grbl import GRBL
 
-logging.basicConfig(level=0, format=log_format)
+    log_format = '%(asctime)s %(levelname)s %(message)s'
+    logging.basicConfig(level=0, format=log_format)
 
-grbl = GRBL("mygrbl", "/dev/ttyACM0")
-grbl.cnect()
-grbl.send("f:out.ngc")
+Next, initialize and connect to Grbl:
+    
+    grbl = GRBL("mygrbl", "/dev/ttyACM0")
+    grbl.cnect()
 
-grbl.test_string()
-grbl.send("G0 X100")
+Now, work with Grbl. To send a file, Grbl must be in 'Idle' state:
 
-grbl.disconect()
+    grbl.send("f:out.ngc")
+    
+The file will be read from disk line-by-line, so this is memory-efficient.
+    
+Settings (starting with a '$') placed amongst gcode in the file will be ignored. You have to send settings separately in the following way, and only when GRBL is in 'Idle' mode:
 
-Other stuff:
+    grbl.send("$40=1\n$$12=0.002")
+    
+For settings, the GRBL class will use a simple challenge-response communication protocol (the next settings command will only be sent after an 'ok' has been received for the last settings command). This is neccessary due to Grbl's internals. To send an entire file full of settings use this method:
 
-grbl.poll_start()
-grbl.poll_stop()
+    grbl.send("".join([x for x in open("data/eshapeoko-settings.txt").readlines()]))
 
-grbl.pause()
-grbl.play()
-grbl.abort()
-grbl.killalarm()
+To send a single gcode command:
 
-grbl._cleanup()
+    grbl.send("G0 X100")
+    
+To send many commands, separate them with a newline character:
 
-grbl.send("".join([x for x in open("data/eshapeoko-settings.txt").readlines()]))
+    grbl.send("G0 X100\nG0 X0")
+
+This way, you can 'script' as many commands as you like, as fast as you like, without risking the overflow of Grbl's 128 byte serial receive buffer. The GRBL class will add them to an internal buffer and stream them as smoothly and fast as possible, using the method suggested by Grbl's main developer. With this method, Grbl's receive buffer will be kept as full as possible at any time, giving its look-ahead motion planner enough data to work with.
+
+During a running job you can call `pause()` to pause the job. The axes will slow down smoothly. To resume after this, call `resume()`. The method `abort()` will stop the axes abruptly, but Grbl will retain it's current coordinates. But the internal buffer of the GRBL class will be emptied, so you can't resume a job.
+
+    grbl.pause()
+    grbl.resume()
+    grbl.abort()
+
+If Grbl is in alarm state, you can clear the alarm:
+
+    grbl.killalarm()
+
+When you're done:
+
+    grbl.disconnect()
+    
+This will call `abort()` to bring Grbl to a stop, and do some clean-up work. After that, it is safe to kill the Python program, or exit the Python console with Ctrl+D.
+
+For integration into a larger project, the GRBL class features a multiple-purpose callback function `callback(event, *data)`:
+
+    grbl.callback = my_function
+    
+Where `my_function`:
+
+    def my_function(event, *data):
+        pass
+    
+`callback` will be called for the following events:
+
+* `on_boot`: When Grbl has booted
+* `on_cnect`: When GRBL is connected to Grbl
+* `on_stateupdate`: Is called in regular intervals adjustable by setting `grbl.poll_interval`. The default interval is 0.2 s (5Hz). `*data` will contain the string `state` and the 3-tuples `machine_pos` and `working_pos`.

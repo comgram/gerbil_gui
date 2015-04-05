@@ -8,135 +8,140 @@ from queue import Queue
 from classes.rs232 import RS232
 
 class GRBL:
-    def __init__(self, name="", ifacepath="", state_cb=None):
+    def __init__(self, name="mygrbl", ifacepath="/dev/ttyACM0"):
+        
+        # 'public' stuff
         self.name = name
-        self.ifacepath = ifacepath
-        self.connected = False
+        self._ifacepath = ifacepath
         
         self.cmode = None
         self.cmpos = (0, 0, 0)
         self.cwpos = (0, 0, 0)
         
-        self.rx_buffer_size = 128
-        self.rx_buffer_fill = []
+        self.callback = lambda event, *data : None
         
-        self.gcodefile = None
-        self.gcodefilename = None
+        self.poll_interval = 0.2
         
-        self.current_gcodeblock = None
+        # 'private' stuff, don't mess
+        self._rx_buffer_size = 128
+        self._rx_buffer_fill = []
         
-        self.current_gcodeline = 0
-        self.buffer = []
+        self._gcodefile = None
+        self._gcodefilename = None
+
+        # state variables
+        self._streaming_mode = None
+        self._streaming_active = False
+        self._streaming_completed = False
+        self._streaming_src_end_reached = False
+        self._buffer = []
+        self._current_gcodeblock = None
+        self._connected = False
         
-        self.streaming_mode = None
-        self.streaming_active = False
-        self.streaming_completed = False
-        self.streaming_src_end_reached = False
+        # for interrupting long-running tasks in threads
+        self._poll_do = False
+        self._iface_read_do = False
         
-        self.do_poll = False
-        self.do_read = False
+        # this class maintains two threads
+        self._thread_polling = None
+        self._thread_read_iface = None
         
-        self.polling_thread = None
-        self.reading_thread = None
+        self._iface = None
+        self._queue = Queue()
         
-        self.iface = None
+        self._callback_onboot =  lambda : None
         
-        self.queue = Queue()
+        atexit.register(self.disconnect)
         
-        self.after_boot_callback =  lambda : None
-            
-        atexit.register(self.disconect)
         
-        self.state_cb = state_cb
-        
+    # ====== 'public' methods ======
       
     def cnect(self):
-        self.do_read = True
-        self.reading_thread = threading.Thread(target=self.onread)
-        self.reading_thread.start()
+        self._iface_read_do = True
+        self._thread_read_iface = threading.Thread(target=self._onread)
+        self._thread_read_iface.start()
 
-        if self.iface == None:
-            logging.info("%s setting up interface on %s", self.name, self.ifacepath)
-            self.iface = RS232("serial_" + self.name, self.ifacepath, 115200)
-            self.iface.start(self.queue)
+        if self._iface == None:
+            logging.log(200, "%s: setting up interface on %s", self.name, self._ifacepath)
+            self._iface = RS232("serial_" + self.name, self._ifacepath, 115200)
+            self._iface.start(self._queue)
         else:
-            logging.error("%s there is already an interface %s", self.name, self.iface)
-            
+            logging.log(200, "%s: there is already an interface %s", self.name, self._iface)
+        
+        self._rx_buffer_fill = []
+        self._callback_onboot = self.poll_start
         self.softreset()
-        self.rx_buffer_fill = []
         
-    def disconect(self):
-        if self.is_connected() == False: return
-            
-        self.abort()
         
-        logging.info("Please wait until threads are joined...")
-        
-        self.do_read = False
-        self.queue.put("ok")
-        self.reading_thread.join()
-        logging.info("JOINED GRBL READING THREAD")
+    def disconnect(self):
+        if self._is_connected() == False: return
         
         self.poll_stop()
-        self.iface.stop()
-        self.iface = None
-        self.connected = False
-        self.rx_buffer_fill = []
+        self.abort()
+        
+        logging.log(200, "%s: Please wait until threads are joined...", self.name)
+        self._iface_read_do = False
+        self._queue.put("ok")
+        self._thread_read_iface.join()
+        logging.log(200, "%s: JOINED GRBL READING THREAD", self.name)
+        
+        self.poll_stop()
+        self._iface.stop()
+        self._iface = None
+        self._connected = False
+        self._rx_buffer_fill = []
+        
         
     def abort(self):
-        if self.is_connected() == False: return
+        if self._is_connected() == False: return
         self.softreset()
         self._cleanup()
         
-    def pause(self):
-        if self.is_connected() == False: return
-        self.iface.write("!")
         
-    def play(self):
-        if self.is_connected() == False: return
-        self.iface.write("~")
+    def pause(self):
+        if self._is_connected() == False: return
+        self._iface.write("!")
+        
+        
+    def resume(self):
+        if self._is_connected() == False: return
+        self._iface.write("~")
+        
         
     def killalarm(self):
-        self.iface.write("$X\n")
+        self._iface.write("$X\n")
         self._cleanup()
         
+        
     def softreset(self):
-        self.iface.write("\x18") # Ctrl-X
+        self._iface.write("\x18") # Ctrl-X
+        
         
     def poll_start(self):
-        if self.is_connected() == False: return
-        self.do_poll = True
-        if self.polling_thread == None:
-            self.polling_thread = threading.Thread(target=self.poll_state)
-            self.polling_thread.start()
-            logging.info("polling thread started")
+        if self._is_connected() == False: return
+        self._poll_do = True
+        if self._thread_polling == None:
+            self._thread_polling = threading.Thread(target=self._poll_state)
+            self._thread_polling.start()
+            logging.log(200, "%s: polling thread started", self.name)
         else:
-            logging.error("the polling thread seems to be already running")
+            logging.log(200, "%s: the polling thread seems to be already running", self.name)
             
         
     def poll_stop(self):
-        if self.is_connected() == False: return
-        if self.polling_thread != None:
-            self.do_poll = False
-            self.polling_thread.join()
-            logging.info("JOINED polling thread")
+        if self._is_connected() == False: return
+        if self._thread_polling != None:
+            self._poll_do = False
+            self._thread_polling.join()
+            logging.log(200, "%s: JOINED polling thread", self.name)
         else:
-            logging.warning("There was no polling thread running")
+            logging.log(200, "%s: There was no polling thread running", self.name)
             
-        self.polling_thread = None
+        self._thread_polling = None
         
-    def poll_state(self):
-        while self.do_poll == True:
-            self.get_state()
-            time.sleep(0.1) # 10 polls per second
-        logging.info("polling has been stopped")
-        
-    def get_state(self):
-        if self.is_connected() == False: return
-        self.iface.write("?")
         
     def send(self, source):
-        if self.is_connected() == False: return
+        if self._is_connected() == False: return
     
         if "f:" in source:
             requested_mode = "file"
@@ -145,136 +150,144 @@ class GRBL:
         else:
             requested_mode = "string"
     
-        if self.cmode != "Idle" and (requested_mode == "file" or requested_mode == "settings"):
-            logging.info("To stream a file or settings, GRBL must be idle. Please wait until job has completed or call .abort()")
-            return
+        if self._streaming_mode != "string" and self.cmode != "Idle":
+            logging.log(200, "%s: You can't append something to a running stream except when you're streaming strings. Please wait until job has completed or call .abort() for GRBL to become idle", self.name)
+            return False
         
-        self.streaming_mode = requested_mode
-        if self.streaming_mode != "file":
+        self._streaming_mode = requested_mode
+        if self._streaming_mode != "file":
             # string and settings are added to the buffer
             arr = source.split("\n")
             arr_stripped = [x.strip() for x in arr]
-            self.buffer.extend(arr_stripped)
-            #self._set_streaming_src_end_reached(False)
-        
+            self._buffer.extend(arr_stripped)
         
         self._set_streaming_completed(False)
         self._set_streaming_src_end_reached(False)
         
-        if self.streaming_active == False:
-            # begin of job
-            
-
+        if self._streaming_active == False:
             # kick-off!
-            if self.streaming_mode == "file":
-                self.gcodefile = open(source.replace("f:", ""))
-                self.after_boot_callback = self.fill_buffer
+            if self._streaming_mode == "file":
+                self._gcodefile = open(source.replace("f:", ""))
+                self._callback_onboot = self._fill_buffer
                 self.softreset()
                     
-            elif self.streaming_mode == "string":
-                self.fill_buffer()
+            elif self._streaming_mode == "string":
+                self._fill_buffer()
                 
-            elif self.streaming_mode == "settings":
+            elif self._streaming_mode == "settings":
                 self._maybe_send_next_line()
-        
                 
-
-    def fill_buffer(self):
+        return True
+        
+        
+    # ====== 'private' methods ======
+        
+    def _poll_state(self):
+        while self._poll_do == True:
+            self._get_state()
+            time.sleep(self.poll_interval)
+        logging.log(200, "%s: polling has been stopped", self.name)
+        
+        
+    def _get_state(self):
+        if self._is_connected() == False: return
+        self._iface.write("?")
+        
+        
+    def _fill_buffer(self):
         sent = True
         while sent:
-            logging.log(5, "fill_buffer")
+            #logging.log(200, "_fill_buffer")
             sent = self._maybe_send_next_line()
-          
-        
-  
+
         
     def _maybe_send_next_line(self):
-        bf = self.rx_buffer_fill
+        bf = self._rx_buffer_fill
         
         will_send = False
-        if (self.streaming_src_end_reached == False and
-            self.current_gcodeblock == None):
+        if (self._streaming_src_end_reached == False and
+            self._current_gcodeblock == None):
             
-            self.current_gcodeblock = self.get_next_line()
+            self._current_gcodeblock = self._get_next_line()
             
-        logging.info("MAYBE s_active=%s s_end=%s curr_gcode=%s", self.streaming_active, self.streaming_src_end_reached, self.current_gcodeblock)
+        logging.log(200, "%s: MAYBE s_active=%s s_end=%s curr_gcode=%s", self.name, self._streaming_active, self._streaming_src_end_reached, self._current_gcodeblock)
         
-        if self.streaming_mode == "settings":
-            if self.current_gcodeblock != None:
-                self.iface.write(self.current_gcodeblock + "\n")
-                self.current_gcodeblock = None # Mark this gcode block as processed!
+        if self._streaming_mode == "settings":
+            if self._current_gcodeblock != None:
+                self._iface.write(self._current_gcodeblock + "\n")
+                self._current_gcodeblock = None # Mark this gcode block as processed!
             
         else:
-            if self.current_gcodeblock != None:
-                want_bytes = len(self.current_gcodeblock) + 1 # +1 because \n
-                free_bytes = self.rx_buffer_size - sum(bf)
+            if self._current_gcodeblock != None:
+                want_bytes = len(self._current_gcodeblock) + 1 # +1 because \n
+                free_bytes = self._rx_buffer_size - sum(bf)
                 will_send = free_bytes >= want_bytes
                 
-                logging.info("MAYBE rx_buf=%s fillsum=%s free=%s want=%s, will_send=%s", bf, sum(bf), free_bytes, want_bytes, will_send)
+                logging.log(200, "%s: MAYBE rx_buf=%s fillsum=%s free=%s want=%s, will_send=%s", self.name, bf, sum(bf), free_bytes, want_bytes, will_send)
             
             if will_send == True:
                 self._set_streaming_active(True)
-                bf.append(len(self.current_gcodeblock) + 1) # +1 means \n
-                self.iface.write(self.current_gcodeblock + "\n")
-                self.current_gcodeblock = None # Mark this gcode block as processed!
+                bf.append(len(self._current_gcodeblock) + 1) # +1 means \n
+                self._iface.write(self._current_gcodeblock + "\n")
+                self._current_gcodeblock = None # Mark this gcode block as processed!
                 
         return will_send
     
-    def get_next_line(self):
+    
+    def _get_next_line(self):
         line = ""
-        if self.streaming_mode == "file":
-            line = self.gcodefile.readline()
+        if self._streaming_mode == "file":
+            line = self._gcodefile.readline()
             if line == "":
                 line = None  # nothing more to read
             
         else:
-            if len(self.buffer) > 0:
-                line = self.buffer.pop(0).strip()
+            if len(self._buffer) > 0:
+                line = self._buffer.pop(0).strip()
             else:
                 line = None # nothing more to read
                 
-        if line and self.streaming_mode != "settings" and "$" in line:
-            logging.warning("I read a %s settings command in the gcode stream but the current streaming mode is %s. Grbl cannot handle that. I will not send this settings cmd.", line, self.streaming_mode)
+        if line and self._streaming_mode != "settings" and "$" in line:
+            logging.log(200, "%s: I encountered a settings command in the gcode stream but the current streaming mode is %s. Grbl cannot handle that. I will not send this settings cmd.", self.name, self._streaming_mode)
             line = "\n"
             
-        logging.info("NEXT LINE %s", line)
+        logging.log(200, "%s: NEXT LINE %s", self.name, line)
                 
         if line == None:
             self._set_streaming_src_end_reached(True)
-            if self.streaming_mode == "file":
-                self.gcodefile.close()
-                logging.log(0, "closed file")
-            
-        
-        
+            if self._streaming_mode == "file":
+                self._gcodefile.close()
+                logging.log(200, "%s: closed file", self.name)
+
         if line: line = line.strip()
         return line
     
     
-    def rx_buffer_fill_pop(self):
-        bf = self.rx_buffer_fill
-        logging.info("rx_buffer_fill_pop %s %s", bf, len(bf))
+    def _rx_buffer_fill_pop(self):
+        bf = self._rx_buffer_fill
+        logging.log(200, "%s: _rx_buffer_fill_pop %s %s", self.name, bf, len(bf))
         if len(bf) > 0:
             bf.pop(0)
         
-        if self.streaming_src_end_reached == True and len(bf) == 0:
+        if self._streaming_src_end_reached == True and len(bf) == 0:
             self._set_streaming_completed(True)
-            logging.info("STREAM COMPLETE. streaming_completed=True, streaming_active=False")
+            logging.log(200, "%s: STREAM COMPLETE. streaming_completed=True, streaming_active=False", self.name)
             self._set_streaming_active(False)
     
-    def onread(self):
-        while self.do_read == True:
-            line = self.queue.get()
-            logging.log(10, "GRBL %s: <----- %s", self.name, line)
+    
+    def _onread(self):
+        while self._iface_read_do == True:
+            line = self._queue.get()
+            logging.log(200, "%s: <----- %s", self.name, line)
             if len(line) > 0:
                 if line[0] == "<":
-                    self.update_state(line)
+                    self._update_state(line)
                 elif "Grbl " in line:
-                    self.on_bootup()
+                    self._on_bootup()
                 elif line == "ok":
-                    if self.streaming_mode != "settings":
-                        self.rx_buffer_fill_pop()
-                        self.fill_buffer()
+                    if self._streaming_mode != "settings":
+                        self._rx_buffer_fill_pop()
+                        self._fill_buffer()
                     else:
                         self._maybe_send_next_line()
                             
@@ -285,59 +298,64 @@ class GRBL:
                 elif "to unlock" in line:
                     self._set_streaming_active(False)
                 else:
-                    logging.log(10, "grbl sent something unsupported %s", line)
+                    logging.log(200, "%s: sent something unsupported: %s", self.name, line)
                 
 
                 
-    def on_bootup(self):
-        logging.log(10, "%s has booted!", self.name)
-        self.connected = True
-        self.after_boot_callback()
+    def _on_bootup(self):
+        logging.log(200, "%s: has booted!", self.name)
+        self._connected = True
+        self._callback_onboot()
+        self.callback("on_boot")
             
-    def update_state(self, line):
+            
+    def _update_state(self, line):
         m = re.match("<(.*?),MPos:(.*?),WPos:(.*?)>", line)
         self.cmode = m.group(1)
         mpos_parts = m.group(2).split(",")
         wpos_parts = m.group(3).split(",")
         self.cmpos = (float(mpos_parts[0]), float(mpos_parts[1]), float(mpos_parts[2]))
         self.cwpos = (float(wpos_parts[0]), float(wpos_parts[1]), float(wpos_parts[2]))
-        logging.log(10, "GRBL %s: === STATE === %s %s %s", self.name, self.cmode, self.cmpos, self.cwpos)
-        if self.state_cb != None:
-            self.state_cb(self.cmode, self.cmpos, self.cwpos)
+        logging.log(200, "%s: === STATE === %s %s %s", self.name, self.cmode, self.cmpos, self.cwpos)
+        self.callback("on_stateupdate", self.cmode, self.cmpos, self.cwpos)
         
-    def is_connected(self):
-        if self.connected != True:
-            logging.info("Not yet connected")
-        return self.connected
+        
+    def _is_connected(self):
+        if self._connected != True:
+            logging.log(200, "%s: Not yet connected", self.name)
+        return self._connected
+    
     
     def _cleanup(self):
-        logging.info("%s cleaning up", self.name)
-        del self.buffer[:]
-        del self.rx_buffer_fill[:]
-        logging.info("%s cleaning up, buffer is now %s", self.name, self.buffer)
-        if self.gcodefile and not self.gcodefile.closed:
-            logging.info("%s closing file", self.name)
-            self.gcodefile.close()
+        del self._buffer[:]
+        del self._rx_buffer_fill[:]
+        logging.log(200, "%s: cleaning up, buffer is now %s", self.name, self._buffer)
+        if self._gcodefile and not self._gcodefile.closed:
+            logging.log(200, "%s: closing file", self.name)
+            self._gcodefile.close()
 
-        self.gcodefile = None
-        self.gcodefilename = None
-        self.streaming_mode = None
+        self._gcodefile = None
+        self._gcodefilename = None
+        self._streaming_mode = None
         self._set_streaming_active(False)
         self._set_streaming_completed(False)
         self._set_streaming_src_end_reached(False)
-        self.after_boot_callback =  lambda : None
+        self._callback_onboot =  lambda : None
+            
             
     def _set_streaming_active(self, a):
-        self.streaming_active = a
-        logging.info("_set_streaming_active: %s", a)
+        self._streaming_active = a
+        logging.log(200, "%s: _set_streaming_active: %s", self.name, a)
+        
         
     def _set_streaming_completed(self, a):
-        self.streaming_completed = a
-        logging.info("_set_streaming_completed: %s", a)
+        self._streaming_completed = a
+        logging.log(200, "%s: _set_streaming_completed: %s", self.name, a)
+        
         
     def _set_streaming_src_end_reached(self, a):
-        self.streaming_src_end_reached = a
-        logging.info("_set_streaming_src_end_reached: %s", a)
+        self._streaming_src_end_reached = a
+        logging.log(200, "%s: _set_streaming_src_end_reached: %s", self.name, a)
         
         
     def test_string(self):
