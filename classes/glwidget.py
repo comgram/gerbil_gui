@@ -25,6 +25,7 @@ class GLWidget(QGLWidget):
         self.xRot = 0
         self.yRot = 0
         self.zRot = 0
+        
         self.xPan = 0
         self.yPan = 0
         self.zPan = -10
@@ -73,7 +74,7 @@ class GLWidget(QGLWidget):
             
     def setZPan(self, val):
         if val != self.zPan:
-            self.zPan = val / 1000.0 - 10
+            self.zPan = val / 1000.0
 
     def initializeGL(self):
         self.qglClearColor(self.trolltechPurple.darker())
@@ -106,7 +107,7 @@ class GLWidget(QGLWidget):
 
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
-        GL.glOrtho(-1, +0.5, +0.5, -0.5, 4.0, 15.0)
+        GL.glOrtho(-0.1, 1.8, 1, -0.1, 4.0, 15.0)
         GL.glMatrixMode(GL.GL_MODELVIEW)
 
     def mousePressEvent(self, event):
