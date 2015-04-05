@@ -1,7 +1,7 @@
 import logging
 import numpy
 
-from PyQt5.QtCore import pyqtSignal, QPoint
+from PyQt5.QtCore import pyqtSignal, QPoint, Qt, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtOpenGL import QGLWidget
 
@@ -27,7 +27,7 @@ class GLWidget(QGLWidget):
         self.zRot = 0
         self.xPan = 0
         self.yPan = 0
-        self.zPan = 0
+        self.zPan = -10
         
         self.mpos = (0,0,0)
 
@@ -97,12 +97,14 @@ class GLWidget(QGLWidget):
         GL.glCallList(self.makeObject())
 
     def resizeGL(self, width, height):
+        
         side = min(width, height)
         if side < 0:
             return
 
         GL.glViewport((width - side) // 2, (height - side) // 2, side, side)
 
+        print("resize", width, height, (width - side) // 2, (height - side) // 2, side, side)
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
         GL.glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)

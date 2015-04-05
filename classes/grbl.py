@@ -98,18 +98,18 @@ class GRBL:
         self._cleanup()
         
         
-    def pause(self):
+    def hold(self):
         if self._is_connected() == False: return
-        self._iface.write("!")
+        self._iface_write("!")
         
         
     def resume(self):
         if self._is_connected() == False: return
-        self._iface.write("~")
+        self._iface_write("~")
         
         
     def killalarm(self):
-        self._iface.write("$X\n")
+        self._iface_write("$X\n")
         self._cleanup()
         
         
@@ -118,7 +118,7 @@ class GRBL:
         
         
     def homing(self):
-        self._iface.write("$H")
+        self._iface_write("$H\n")
         
         
     def poll_start(self):
@@ -218,7 +218,7 @@ class GRBL:
         
         if self._streaming_mode == "settings":
             if self._current_gcodeblock != None:
-                self._iface.write(self._current_gcodeblock + "\n")
+                self._iface_write(self._current_gcodeblock + "\n")
                 self._current_gcodeblock = None # Mark this gcode block as processed!
             
         else:
@@ -232,8 +232,9 @@ class GRBL:
             if will_send == True:
                 self._set_streaming_active(True)
                 bf.append(len(self._current_gcodeblock) + 1) # +1 means \n
-                self._iface.write(self._current_gcodeblock + "\n")
+                self._iface_write(self._current_gcodeblock + "\n")
                 self._current_gcodeblock = None # Mark this gcode block as processed!
+                
                 
         return will_send
     
@@ -279,6 +280,11 @@ class GRBL:
             self._set_streaming_active(False)
     
     
+    def _iface_write(self, data):
+        self._iface.write(data)
+        self.callback("on_send_command", data)
+        
+        
     def _onread(self):
         while self._iface_read_do == True:
             line = self._queue.get()

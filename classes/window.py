@@ -7,10 +7,10 @@ import logging
 from classes.grbl import GRBL
 from classes.glwidget import GLWidget
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog)
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit)
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
 
@@ -34,7 +34,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grid_opengl.addWidget(self.glWidget)
         
         self.pushButton_connect.clicked.connect(self.grbl.cnect)
-        self.pushButton_disconnect.clicked.connect(self.grbl.disconnect)
+        self.pushButton_disconnect.clicked.connect(self.disconnect)
         self.pushButton_homing.clicked.connect(self.grbl.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
         self.pushButton_reset.clicked.connect(self.grbl.softreset)
@@ -42,30 +42,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_filestream.clicked.connect(self.stream_file)
         self.pushButton_fileload.clicked.connect(self.pick_file)
         
-        self.pushButton_pause.clicked.connect(self.grbl.pause)
+        self.pushButton_hold.clicked.connect(self.grbl.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
         self.pushButton_abort.clicked.connect(self.grbl.abort)
         
-        return
+        self.pushButton_zeroxyz.clicked.connect(self.zero_xyz)
+        self.pushButton_zeroxy.clicked.connect(self.zero_xy)
+        self.pushButton_zeroz.clicked.connect(self.zero_z)
         
-        self.label_mpos = QLabel("blah", self)
-        
-        self.btn_poll = QPushButton("poll", self)
-        self.btn_poll.clicked.connect(self.grbl.poll_start)
-        
-        self.btn_run = QPushButton("run", self)
-        self.btn_run.clicked.connect(self.on_run_btn_clicked)
-        
-        self.btn_quit = QPushButton("quit", self)
-        #self.btn_quit.clicked.connect(self.quit)
-        
-        
-        
-
+        self.pushButton_w2mcoord.clicked.connect(self.w2mcoord)
+        self.pushButton_g0wzerosafe.clicked.connect(self.g0wzerosafe)
+        self.pushButton_g0wzero.clicked.connect(self.g0wzero)
+               
+        self.lineEdit_cmdline.returnPressed.connect(self.sendsingle)
         
         self.setWindowTitle("cnctoolbox")
         
-
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.refresh)
+        self.timer.start(20)
+        
+        return
+    
         self.xSlider = self.createSlider()
         self.ySlider = self.createSlider()
         self.zSlider = self.createSlider()
@@ -101,10 +99,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ySlider.setValue(355 * 16)
         self.zSlider.setValue(1 * 16)
         
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.refresh)
-        self.timer.start(20)
-        
         self.setUpdatesEnabled(True)
         
         
@@ -114,11 +108,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             state = data[0]
             mpos = data[1]
             wpos = data[2]
-            self.lcdNumber_x.display(mpos[0])
-            self.lcdNumber_y.display(mpos[1])
-            self.lcdNumber_z.display(mpos[2])
+            self.lcdNumber_mx.display("{:0.2f}".format(mpos[0]))
+            self.lcdNumber_my.display("{:0.2f}".format(mpos[1]))
+            self.lcdNumber_mz.display("{:0.2f}".format(mpos[2]))
+            self.lcdNumber_wx.display("{:0.2f}".format(wpos[0]))
+            self.lcdNumber_wy.display("{:0.2f}".format(wpos[1]))
+            self.lcdNumber_wz.display("{:0.2f}".format(wpos[2]))
             self.label_state.setText(state)
+            self.glWidget.mpos = mpos
             self.glWidget.paintGL()
+            
+        elif event == "on_send_command":
+            gcodeblock = data[0]
+            self.label_currentgcodeblock.setText(gcodeblock)
         
         
     def pick_file(self):
@@ -128,6 +130,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def stream_file(self):
         self.grbl.send("f:" + self.filename)
+        
+    def zero_xyz(self):
+        self.grbl.send("G92 X0 Y0 Z0")
+        
+    def zero_xy(self):
+        self.grbl.send("G92 X0 Y0")
+        
+    def zero_z(self):
+        self.grbl.send("G92 Z0")
+        
+    def w2mcoord(self):
+        self.grbl.send("G92.1")
+        
+    def g0wzerosafe(self):
+        self.grbl.send("G0 Z20")
+        self.grbl.send("G0 X0 Y0")
+        
+    def g0wzero(self):
+        self.grbl.send("G0 X0 Y0 Z0")
+        
+    def sendsingle(self):
+        cmd = self.lineEdit_cmdline.text()
+        self.lineEdit_cmdline.setText("")
+        self.grbl.send(cmd)
+        
+        
+    def disconnect(self):
+        self.grbl.disconnect()
+        self.lcdNumber_mx.display("{:0.2f}".format(8888.88))
+        self.lcdNumber_my.display("{:0.2f}".format(8888.88))
+        self.lcdNumber_mz.display("{:0.2f}".format(8888.88))
+        self.lcdNumber_wx.display("{:0.2f}".format(8888.88))
+        self.lcdNumber_wy.display("{:0.2f}".format(8888.88))
+        self.lcdNumber_wz.display("{:0.2f}".format(8888.88))
+        self.label_state.setText("disconnected")
+        self.label_currentgcodeblock.setText("")
         
     def refresh(self):
         self.glWidget.updateGL()
