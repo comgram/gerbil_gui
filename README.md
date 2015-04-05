@@ -1,5 +1,35 @@
 # cnctoolbox
 
+## Installation
+
+### Dependencies
+
+For a Debian Jessie system:
+
+Install Python 3
+    apt-get install python3
+    
+Install Python 3 modules which are shipped with the Debian Jessie distribution:
+
+    apt-get install python3-pip python3-serial python3-pil python3-numpy python3-pyqt5 python3-pyqt5.qtopengl python3-opengl
+
+Install Python 3 modules not shipped with the Debian Jessie distribution: 
+    
+    python3 -m pip install svgwrite --user
+
+### run!
+
+    git clone ...
+    cd cnctoolbox
+    ./cnctoolbox.py -h
+    
+To start the GUI:
+
+    ./cnctoolbox gui
+    
+    
+    
+
 ## How to script GRBL
 
 Example for python3 console:
@@ -50,6 +80,10 @@ During a running job you can call `pause()` to pause the job. The axes will slow
 If Grbl is in alarm state, you can clear the alarm:
 
     grbl.killalarm()
+    
+To run the homing cycle:
+
+    grbl.homing()
 
 When you're done:
 
@@ -71,3 +105,8 @@ Where `my_function`:
 * `on_boot`: When Grbl has booted
 * `on_cnect`: When GRBL is connected to Grbl
 * `on_stateupdate`: Is called in regular intervals adjustable by setting `grbl.poll_interval`. The default interval is 0.2 s (5Hz). `*data` will contain the string `state` and the 3-tuples `machine_pos` and `working_pos`.
+
+
+## Development
+
+    pyuic5 lib/qt/cnctoolbox/mainwindow.ui > lib/qt/cnctoolbox/ui_mainwindow.py

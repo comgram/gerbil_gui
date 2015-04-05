@@ -117,6 +117,10 @@ class GRBL:
         self._iface.write("\x18") # Ctrl-X
         
         
+    def homing(self):
+        self._iface.write("$H")
+        
+        
     def poll_start(self):
         if self._is_connected() == False: return
         self._poll_do = True

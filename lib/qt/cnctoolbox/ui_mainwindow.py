@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Sun Apr  5 12:20:54 2015
+# Created: Sun Apr  5 12:44:27 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -36,20 +36,23 @@ class Ui_MainWindow(object):
         self.verticalLayout_xyz.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_xyz.setObjectName("verticalLayout_xyz")
         self.lcdNumber_x = QtWidgets.QLCDNumber(self.verticalLayoutWidget_2)
-        self.lcdNumber_x.setDigitCount(6)
+        self.lcdNumber_x.setDigitCount(8)
         self.lcdNumber_x.setSegmentStyle(QtWidgets.QLCDNumber.Flat)
+        self.lcdNumber_x.setProperty("value", 8888.888)
         self.lcdNumber_x.setObjectName("lcdNumber_x")
         self.verticalLayout_xyz.addWidget(self.lcdNumber_x)
         self.lcdNumber_y = QtWidgets.QLCDNumber(self.verticalLayoutWidget_2)
-        self.lcdNumber_y.setDigitCount(6)
+        self.lcdNumber_y.setDigitCount(8)
         self.lcdNumber_y.setSegmentStyle(QtWidgets.QLCDNumber.Flat)
+        self.lcdNumber_y.setProperty("value", 8888.888)
         self.lcdNumber_y.setObjectName("lcdNumber_y")
         self.verticalLayout_xyz.addWidget(self.lcdNumber_y)
         self.lcdNumber_z = QtWidgets.QLCDNumber(self.verticalLayoutWidget_2)
         self.lcdNumber_z.setSmallDecimalPoint(False)
-        self.lcdNumber_z.setDigitCount(6)
+        self.lcdNumber_z.setDigitCount(8)
         self.lcdNumber_z.setMode(QtWidgets.QLCDNumber.Dec)
         self.lcdNumber_z.setSegmentStyle(QtWidgets.QLCDNumber.Flat)
+        self.lcdNumber_z.setProperty("value", 8888.888)
         self.lcdNumber_z.setObjectName("lcdNumber_z")
         self.verticalLayout_xyz.addWidget(self.lcdNumber_z)
         self.textedit_commandline = QtWidgets.QPlainTextEdit(self.centralWidget)
@@ -77,13 +80,13 @@ class Ui_MainWindow(object):
         self.pushButton_reset.setGeometry(QtCore.QRect(470, 60, 95, 31))
         self.pushButton_reset.setObjectName("pushButton_reset")
         self.pushButton_pause = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_pause.setGeometry(QtCore.QRect(80, 320, 95, 31))
+        self.pushButton_pause.setGeometry(QtCore.QRect(70, 380, 95, 31))
         self.pushButton_pause.setObjectName("pushButton_pause")
         self.pushButton_resume = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_resume.setGeometry(QtCore.QRect(80, 360, 95, 31))
+        self.pushButton_resume.setGeometry(QtCore.QRect(70, 420, 95, 31))
         self.pushButton_resume.setObjectName("pushButton_resume")
         self.pushButton_abort = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_abort.setGeometry(QtCore.QRect(80, 400, 95, 31))
+        self.pushButton_abort.setGeometry(QtCore.QRect(70, 460, 95, 31))
         self.pushButton_abort.setObjectName("pushButton_abort")
         self.label_grbl = QtWidgets.QLabel(self.centralWidget)
         self.label_grbl.setGeometry(QtCore.QRect(240, 540, 361, 21))
@@ -106,6 +109,13 @@ class Ui_MainWindow(object):
         self.pushButton_filestream = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_filestream.setGeometry(QtCore.QRect(700, 60, 95, 31))
         self.pushButton_filestream.setObjectName("pushButton_filestream")
+        self.label = QtWidgets.QLabel(self.centralWidget)
+        self.label.setGeometry(QtCore.QRect(670, 120, 221, 31))
+        font = QtGui.QFont()
+        font.setPointSize(16)
+        self.label.setFont(font)
+        self.label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label.setObjectName("label")
         MainWindow.setCentralWidget(self.centralWidget)
         self.mainToolBar = QtWidgets.QToolBar(MainWindow)
         self.mainToolBar.setObjectName("mainToolBar")
@@ -133,4 +143,5 @@ class Ui_MainWindow(object):
         self.pushButton_fileload.setText(_translate("MainWindow", "Load File"))
         self.label_file.setText(_translate("MainWindow", "TextLabel"))
         self.pushButton_filestream.setText(_translate("MainWindow", "Stream File"))
+        self.label.setText(_translate("MainWindow", "State"))
 
