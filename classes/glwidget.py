@@ -102,12 +102,11 @@ class GLWidget(QGLWidget):
         if side < 0:
             return
 
-        GL.glViewport((width - side) // 2, (height - side) // 2, side, side)
+        GL.glViewport(0, 0, width, height)
 
-        print("resize", width, height, (width - side) // 2, (height - side) // 2, side, side)
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
-        GL.glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
+        GL.glOrtho(-1, +0.5, +0.5, -0.5, 4.0, 15.0)
         GL.glMatrixMode(GL.GL_MODELVIEW)
 
     def mousePressEvent(self, event):
