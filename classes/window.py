@@ -3,6 +3,8 @@ import os
 import math
 import numpy
 import logging
+import collections
+
 
 from classes.grbl import GRBL
 from classes.glwidget import GLWidget
@@ -10,12 +12,12 @@ from classes.glwidget import GLWidget
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit)
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem)
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
 
 log_format = '%(asctime)s %(levelname)s %(message)s'
-logging.basicConfig(level=300, format=log_format)
+logging.basicConfig(level=0, format=log_format)
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -37,7 +39,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_disconnect.clicked.connect(self.disconnect)
         self.pushButton_homing.clicked.connect(self.grbl.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
-        self.pushButton_reset.clicked.connect(self.reset)
         
         self.pushButton_filestream.clicked.connect(self.stream_file)
         self.pushButton_fileload.clicked.connect(self.pick_file)
@@ -55,9 +56,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_w2mcoord.clicked.connect(self.w2mcoord)
         self.pushButton_g0wzerosafe.clicked.connect(self.g0wzerosafe)
         self.pushButton_g0wzero.clicked.connect(self.g0wzero)
-        
-        
-               
+
         self.lineEdit_cmdline.returnPressed.connect(self.sendsingle)
         
         self.setWindowTitle("cnctoolbox")
@@ -65,6 +64,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh)
         self.timer.start(20)
+        
+        self.logbuffer = collections.deque(maxlen=25)
+        self._rx_buffer_fill = 0
+        self._progress_percent = 0
+        
+        #self.progressBar_buffer.setValue(50)
         
         return
     
@@ -107,7 +112,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def on_grbl_event(self, event, *data):
-        logging.log(300, "GRBL event: %s, %s", event, data)
         if event == "on_stateupdate":
             state = data[0]
             mpos = data[1]
@@ -123,35 +127,74 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.glWidget.paintGL()
             
         elif event == "on_send_command":
+            #logging.log(300, "GRBL event: %s, %s", event, data)
             gcodeblock = data[0]
-            self.label_logline.setText(gcodeblock.strip())
+            #self.logbuffer.append(gcodeblock)
+            
+        elif event == "on_processed_command":
+            #logging.log(300, "GRBL event: %s, %s", event, data)
+            gcodeblock = data[0]
+            self.logbuffer.append(gcodeblock)
+            #self._show_logbuffer()
             
         elif event == "on_error":
+            #logging.log(300, "GRBL event: %s, %s", event, data)
             grbl_message = data[0]
             problem_command = data[1]
-            self.label_logline.setText(grbl_message + ": " + problem_command)
+            self.logbuffer.append(grbl_message + ": " + problem_command)
+            #self._show_logbuffer()
             
         elif event == "on_alarm":
+            #logging.log(300, "GRBL event: %s, %s", event, data)
             grbl_message = data[0]
-            self.label_logline.setText(grbl_message.strip())
+            self.logbuffer.append(grbl_message)
+            #self._show_logbuffer()
             
         elif event == "on_log":
-            grbl_message = data[0]
-            self.label_logline.setText(grbl_message.strip())
+            #logging.log(300, "GRBL event: %s, %s", event, data)
+            logline = data[0]
+            self.logbuffer.append("log: " + logline)
+            #self._show_logbuffer()
+            
+        elif event == "on_rx_buffer_percentage":
+            #logging.log(300, "GRBL event: %s, %s", event, data)
+            self._rx_buffer_fill = data[0]
+            #self.progressBar_buffer.setValue(data[0])
+            
+        elif event == "on_progress_percent":
+            #logging.log(300, "GRBL event: %s, %s", event, data)
+            self._progress_percent = data[0]
+            #self.progressBar_buffer.setValue(data[0])
+            
+        elif event == "on_boot":
+            #logging.log(300, "GRBL event: %s, %s", event, data)
+            #self._progress_percent = data[0]
+            #self.progressBar_buffer.setValue(data[0])
+            self.logbuffer.append("Grbl has booted!")
+            
+            
+    def _show_logbuffer(self):
+        self.label_log.setText("\n".join(self.logbuffer))
             
         
+    def refresh(self):
+        self.glWidget.updateGL()
+        self._show_logbuffer()
+        self.progressBar_buffer.setValue(self._rx_buffer_fill)
+        self.progressBar_job.setValue(self._progress_percent)
         
     def pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.filename = filename_tuple[0]
-        self.label_file.setText(self.filename)
+        #self.pushButton_filestream.setText(self.filename)
+        #self.plainTextEdit_log()
         
     def abort(self):
-        self.label_logline.setText("")
+        #self.label_logline.setText("")
         self.grbl.abort()
         
     def reset(self):
-        self.label_logline.setText("")
+        #self.label_logline.setText("")
         self.grbl.abort()
     
     def stream_file(self):
@@ -194,10 +237,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lcdNumber_wy.display("{:0.2f}".format(8888.88))
         self.lcdNumber_wz.display("{:0.2f}".format(8888.88))
         self.label_state.setText("disconnected")
-        self.label_logline.setText("")
-        
-    def refresh(self):
-        self.glWidget.updateGL()
+        #self.label_logline.setText("")
+
         
     def on_run_btn_clicked(self):
         self.grbl.send("f:out.ngc")

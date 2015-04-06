@@ -57,9 +57,9 @@ Settings (starting with a '$') placed amongst gcode in the file will be ignored.
 
     grbl.send("$40=1\n$$12=0.002")
     
-For settings, the GRBL class will use a simple challenge-response communication protocol (the next settings command will only be sent after an 'ok' has been received for the last settings command). This is neccessary due to Grbl's internals. To send an entire file full of settings use this method:
+For settings, the GRBL class will use a simple challenge-response communication protocol (the next settings command will only be sent after an 'ok' has been received for the last settings command). This is neccessary due to Grbl's internals. To send an entire file full of settings, use this method (Grbl must be in Idle state otherwise this method will do nothing):
 
-    grbl.send("".join([x for x in open("data/eshapeoko-settings.txt").readlines()]))
+    grbl.settings_from_file("data/eshapeoko-settings.txt")
 
 To send a single gcode command:
 
