@@ -1,4 +1,20 @@
+from __future__ import division                 
 import sys
+import scipy
+import pprint
+import copy
+import skimage
+import math
+
+pi     = scipy.pi
+dot    = scipy.dot
+sin    = scipy.sin
+cos    = scipy.cos
+ar     = scipy.array
+rand   = scipy.rand
+arange = scipy.arange
+
+rad    = lambda ang: ang*pi/180 
 '''
     When considering a bit, think of it like this.
     Does the point specified mean the center of the
@@ -53,6 +69,12 @@ State = {
 PositionStack = []
 ''' We have to save the z-depth separately '''
 ZStack = []
+def slow():
+    global Settings
+    return Settings['feed_speed'] / 2
+def fast():
+    global Settings
+    return Settings['max_feed_speed']
 def comment(txt):
     emit(";%s" % txt)
 def push_z():
@@ -90,7 +112,7 @@ def depth(d,f=50):
         return
     if Settings['ignoreZ'] == False:
         State['z'] = d
-        emit("G53 G1 Z%.3f F%d;depth(%.3f,%d)" % (d,f,d,f))
+        emit("G1 Z%.3f F%d;depth(%.3f,%d)" % (d,f,d,f))
     else:
         emit(";IgnoreZ depth(%f,%f)" % (d,f))
 def up():
@@ -109,7 +131,7 @@ def move(x,y,f=False):
     State['y'] = y
     if f == False:
         f = Settings['feed_speed']
-    emit("G53 G1 X%.3f Y%.3f F%d" % (x,y,f))
+    emit("G1 X%.3f Y%.3f F%d" % (x,y,f))
 def done():
     global Settings
     emit("M2")
@@ -154,10 +176,30 @@ def block_end(cmnt="END"):
     line however does manage the z-axis for you.
     
 '''
+def rotate_points(pts,cnt,ang=pi/4):
+    '''
+        pts = {} Rotates points(nx2) about center cnt(2)
+        by angle ang(1) in radian
+    '''
+    return dot(pts-cnt,ar([[cos(ang),sin(ang)],[-sin(ang),cos(ang)]]))+cnt
 def line_to(ex,ey,d):
     global Settings
     depth(d)
     move(ex,ey, Settings['feed_speed'])
+def path(pts,d=0):
+    up()
+    st = pts.pop(0)
+    move(st[0],st[1])
+    if len(st) > 2:
+        d = st[2]
+    down()
+    depth(d)
+    for coord in pts:
+        st = coord
+        if len(st) > 2:
+            d = st[2]
+        line_to(st[0],st[1],d)
+        
 def line(sx,sy, ex,ey, d):
     global Settings
     block_start("BEGIN: line(%.3f,%.3f,%.3f,%.3f,%.3f" % (sx,sy, ex,ey, d))
@@ -176,9 +218,107 @@ def square(bx,by,tx,ty,d):
     line_to(tx,by,d)
     line_to(bx,by,d)
     block_end();
-def arc_to(sx,sy,ex,ey,c):
-    comment("ARC is not yet implemented")
+def cw_arc_to(sx,sy,ex,ey,r,t,d):
+    Q = math.sqrt( (ex - sx)**2 + (ey - sy)**2 ) / 2
+    xm = (sx+ex)/2
+    ym = (sy+ey)/2
+    if  r < Q:
+        r = Q+1
+    print "Q: %3.f" % Q
+   
+    Xc = xm + 0.5*math.sqrt(r**2-Q**2)*(ey-sy)/Q
+    Yc = ym - 0.5*math.sqrt(r**2-Q**2)*(ex-sx)/Q
 
+    print "Xc: %.3f Yc: %.3f" % (Xc,Yc)
+
+    I = Xc - sx
+    J = Yc - sy
+    if t == 0:
+        code = "G2"
+    else:
+        code = "G3"
+    emit("%s X%.3f Y%.3f I%.3f J%.3f F%d" %(code,ex,ey,I,J,300))
+def cw_circle_to(sx,sy,ex,ey,r,t,d):
+    Q = math.sqrt( (ex - sx)**2 + (ey - sy)**2 ) / 2
+    xm = (sx+ex)/2
+    ym = (sy+ey)/2
+    if  r < Q:
+        r = Q+1
+    print "Q: %3.f" % Q
+   
+    Xc = xm - 0.5*math.sqrt(r**2-Q**2)*(ey-sy)/Q
+    Yc = ym + 0.5*math.sqrt(r**2-Q**2)*(ex-sx)/Q
+
+    print "Xc: %.3f Yc: %.3f" % (Xc,Yc)
+
+    I = Xc - sx
+    J = Yc - sy
+    if t == 0:
+        code = "G2"
+    else:
+        code = "G3"
+    emit("%s X%.3f Y%.3f I%.3f J%.3f F%d" %(code,sx,sy,I,J,300))
+def cw_arc(sx,sy,ex,ey,r,t,d):
+    block_start("Arc")
+    move(sx,sy)
+    depth(d)
+    cw_arc_to(sx,sy,ex,ey,r,t,d)
+    up()
+    block_end()
+'''
+    h: x coord
+    k: y coord
+    r: radius
+    d: segment length
+    dth: depth
+'''
+def circle(h,k,r,d,dth):
+    global Settings
+    n = int(math.floor(2 * math.pi * r / d))
+    depth(0)
+    move(h,k)
+    depth(-2)
+    depth(1)
+    xs = h + r
+    ys = k
+    move(xs,ys)
+    depth(dth)
+    
+    fi = 2 * math.pi / n
+    for i in range(1,n):
+        xe = h + r * math.cos(i * fi)
+        ye = k + r * math.sin(i * fi)
+        line_to(xe,ye,dth)
+        xs = xe
+        ys = ye
+    up()
+    move(h,k)
+    
+def hole(h,k,r,d,dth):
+    global Settings
+    inc = Settings['bit']['diameter'] / 2
+    i = 0.5
+    while i < r:
+        circle(h,k,i,d,dth)
+        i = i + 0.1
+
+def triangle(blx,bly,brx,bry,ax,ay,d):
+    block_start("Triangle")
+    depth(1)
+    move(blx,bly)
+    depth(d)
+    move(brx,bry)
+    move(ax,ay)
+    move(blx,bly)
+    block_end()
+def equal_triangle(blx,bly, brx,bry, d):
+    block_start("Equalateral Triangle")
+    ax = blx + ((brx - blx) / 2)
+    ay = bly + (brx - blx)
+    up()
+    triangle(blx,bly,brx,bry,ax,ay,d)
+    down()
+    block_end()
 ''' Basic Milling Functions '''
 
 def pocket(sx,sy,ex,ey,d):
@@ -192,7 +332,11 @@ def pocket(sx,sy,ex,ey,d):
     nsy = cy - inc
     nex = cx + inc
     ney = cy + inc
+    
+    up()
+    move(sx,sy)
     square(sx,sy,ex,ey,d)
+    
     while nsx > sx and nsy > sy:
         square(nsx,nsy,nex,ney,d)
         nsx -= inc
@@ -204,8 +348,13 @@ def pocket(sx,sy,ex,ey,d):
 ''' Basic Gerometry Functions Test '''
 receiver("test.ngc")
 write_header()
-line(10,10,50,50, -3)
-square(10,10,50,50, -4)
-line(50,10,10,50,-2)
-pocket(55,55, 100,100,-2)
+##line(10,10,50,50, -3)
+square(10,10,110,110, -4)
+##line(50,10,10,50,-2)
+pocket(0,0, 45,34,-2)
+##equal_triangle(55,10, 85, 10, -3.2)
+##line(100,100, 150,100, -3)
+##cw_arc(10,15,11,16,5,0,-3)
+##circle(60,60,15,3,-3)
+
 done()
