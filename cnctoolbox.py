@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # copyright Red E Tools Ltd.
 # MIT License
@@ -6,11 +6,21 @@
 import argparse
 import logging
 import sys
+import time
 
 from classes.session import Session
 from classes.svg import SVG
+from classes.grbl import GRBL
 from lib import stipple
 from lib import pixel2laser as p2l
+
+from classes.window import Ui_MainWindow
+#from gi.repository import Gtk
+
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QWidget, QDialog, QMainWindow)
+
+from classes.window import MainWindow
+
 
 def main():
     '''
@@ -71,14 +81,32 @@ def main():
     
     # define arguments for the 'stream' subcommand
     stream_parser = subparsers.add_parser("stream", help="Streams a gcode file to GRBL.")
+    stream_parser.add_argument(
+        'dev_node',
+        metavar='DEV_NODE',
+        help='Interface node in /dev file system. E.g. /dev/ttyACM0'
+        )
+    stream_parser.add_argument(
+        'gcodefile',
+        metavar='GCODE_FILE',
+        help='File to stream'
+        )
     
     # define arguments for the 'bbox' subcommand
     bbox_parser = subparsers.add_parser("bbox", help="Calculates the bounding box of a gcode file")
     
     # define arguments for the 'scale' subcommand
     scale_parser = subparsers.add_parser("scale", help="Scales coordinates in a gcode file")
+    
+    # define arguments for the 'gui' subcommand
+    gui_parser = subparsers.add_parser("gui", help="Start GUI")
 
     args = parser.parse_args()
+    
+    if len(sys.argv) < 2:
+        print("Please use the -h flag to see help")
+        raise SystemExit
+    
     subcmd = sys.argv[1]
     
     # after all arguments have been parsed, delegate
@@ -89,13 +117,26 @@ def main():
         p2l.do(args.in_file, args.out_file)
         
     elif subcmd == "stream":
-        print "to be implemented soon"
+        grbl = GRBL("grbl1", args.dev_node)
+        grbl.cnect()
+        time.sleep(1)
+        src = "out.ngc"
+        grbl.send(src)
         
     elif subcmd == "bbox":
-        print "to be implemented soon"
+        print("to be implemented soon")
         
     elif subcmd == "scale":
-        print "to be implemented soon"
+        print("to be implemented soon")
+        
+    elif subcmd == "gui":
+        app = QApplication(sys.argv)
+        window = MainWindow()
+        #ui = Ui_MainWindow()
+        #ui.setupUi(window)
+        #window = Window()
+        window.show()
+        sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
