@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1012</width>
-    <height>521</height>
+    <width>1260</width>
+    <height>701</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,12 +32,72 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="4" column="2" rowspan="5" colspan="10">
-     <layout class="QGridLayout" name="grid_opengl">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetNoConstraint</enum>
+    <item row="7" column="1">
+     <widget class="QPushButton" name="pushButton_w2mcoord">
+      <property name="font">
+       <font>
+        <italic>true</italic>
+        <underline>false</underline>
+       </font>
       </property>
-     </layout>
+      <property name="text">
+       <string>W -&gt; M</string>
+      </property>
+     </widget>
+    </item>
+    <item row="11" column="1">
+     <widget class="QPushButton" name="pushButton_xplus">
+      <property name="text">
+       <string>X→</string>
+      </property>
+     </widget>
+    </item>
+    <item row="11" column="0">
+     <widget class="QPushButton" name="pushButton_xminus">
+      <property name="text">
+       <string>←X</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="10">
+     <widget class="QPushButton" name="pushButton_killalarm">
+      <property name="text">
+       <string>Kill Alarm</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="4">
+     <widget class="QLabel" name="label_mmmin">
+      <property name="text">
+       <string>mm/min</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QPushButton" name="pushButton_disconnect">
+      <property name="text">
+       <string>Disconnect</string>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="0" colspan="2">
+     <widget class="QDoubleSpinBox" name="doubleSpinBox_jogstep">
+      <property name="decimals">
+       <number>1</number>
+      </property>
+      <property name="minimum">
+       <double>0.100000000000000</double>
+      </property>
+      <property name="maximum">
+       <double>10.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>0.100000000000000</double>
+      </property>
+      <property name="value">
+       <double>1.000000000000000</double>
+      </property>
+     </widget>
     </item>
     <item row="0" column="0">
      <widget class="QPushButton" name="pushButton_connect">
@@ -46,69 +106,45 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="2" colspan="10">
-     <widget class="QLineEdit" name="lineEdit_cmdline">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>20</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="9" column="4">
-     <widget class="QPushButton" name="pushButton_abort">
-      <property name="font">
-       <font>
-        <pointsize>11</pointsize>
-       </font>
-      </property>
-      <property name="autoFillBackground">
-       <bool>false</bool>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="text">
-       <string>Abort/Reset</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="3">
-     <widget class="QPushButton" name="pushButton_killalarm">
-      <property name="text">
-       <string>Kill Alarm $X</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="2">
+    <item row="15" column="11">
      <widget class="QPushButton" name="pushButton_homing">
       <property name="text">
-       <string>Homing $H</string>
+       <string>Homing</string>
       </property>
      </widget>
     </item>
-    <item row="0" column="4">
+    <item row="0" column="10">
      <widget class="QPushButton" name="pushButton_check">
       <property name="text">
        <string>Check</string>
       </property>
      </widget>
     </item>
-    <item row="0" column="11">
-     <widget class="QPushButton" name="pushButton_fileload">
+    <item row="15" column="7">
+     <widget class="QPushButton" name="pushButton_hold">
       <property name="text">
-       <string>Load File</string>
+       <string>Hold !</string>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="0">
+     <widget class="QPushButton" name="pushButton_g0wzero">
+      <property name="text">
+       <string>Goto 0</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="0">
+     <widget class="QPushButton" name="pushButton_zeroxy">
+      <property name="text">
+       <string>Zero XY</string>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="1">
+     <widget class="QPushButton" name="pushButton_g0wzerosafe">
+      <property name="text">
+       <string>+Z Goto 0</string>
       </property>
      </widget>
     </item>
@@ -119,32 +155,250 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="0">
-     <widget class="QPushButton" name="pushButton_w2mcoord">
+    <item row="8" column="1">
+     <widget class="QPushButton" name="pushButton_zeroz">
       <property name="text">
-       <string>W -&gt; M Coord</string>
+       <string>Zero Z</string>
       </property>
      </widget>
     </item>
-    <item row="9" column="3">
+    <item row="15" column="5">
+     <widget class="QCheckBox" name="checkBox_feedoverride">
+      <property name="text">
+       <string>Feed override</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="8">
      <widget class="QPushButton" name="pushButton_resume">
       <property name="text">
-       <string>Resume~</string>
+       <string>Resume ~</string>
       </property>
      </widget>
     </item>
-    <item row="9" column="2">
-     <widget class="QPushButton" name="pushButton_hold">
+    <item row="0" column="3">
+     <widget class="QLabel" name="label_state">
+      <property name="font">
+       <font>
+        <pointsize>18</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
       <property name="text">
-       <string>Hold !</string>
+       <string>disconnected</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
-    <item row="7" column="0">
-     <widget class="QPushButton" name="pushButton_g0wzerosafe">
-      <property name="text">
-       <string>G0 WZero (safe)</string>
+    <item row="15" column="3">
+     <widget class="QLCDNumber" name="lcdNumber_feed">
+      <property name="digitCount">
+       <number>4</number>
       </property>
+      <property name="segmentStyle">
+       <enum>QLCDNumber::Flat</enum>
+      </property>
+      <property name="value" stdset="0">
+       <double>50.000000000000000</double>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="9">
+     <widget class="QPushButton" name="pushButton_abort">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Abrt / Rset</string>
+      </property>
+     </widget>
+    </item>
+    <item row="12" column="1">
+     <widget class="QPushButton" name="pushButton_yplus">
+      <property name="text">
+       <string>Y↗</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="12" rowspan="6">
+     <widget class="QListWidget" name="listWidget_logoutput"/>
+    </item>
+    <item row="13" column="12">
+     <layout class="QVBoxLayout" name="verticalLayout_cmd"/>
+    </item>
+    <item row="12" column="0">
+     <widget class="QPushButton" name="pushButton_yminus">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <stylestrategy>PreferDefault</stylestrategy>
+        <kerning>true</kerning>
+       </font>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <property name="text">
+       <string>Y↙</string>
+      </property>
+      <property name="default">
+       <bool>false</bool>
+      </property>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="11">
+     <widget class="QPushButton" name="pushButton_fileload">
+      <property name="text">
+       <string>Set File</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="0" colspan="2">
+     <widget class="QSlider" name="horizontalSlider_feed">
+      <property name="minimum">
+       <number>50</number>
+      </property>
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="singleStep">
+       <number>50</number>
+      </property>
+      <property name="pageStep">
+       <number>100</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="invertedAppearance">
+       <bool>false</bool>
+      </property>
+      <property name="invertedControls">
+       <bool>false</bool>
+      </property>
+      <property name="tickPosition">
+       <enum>QSlider::TicksAbove</enum>
+      </property>
+      <property name="tickInterval">
+       <number>50</number>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="12">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QProgressBar" name="progressBar_buffer">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>10</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>6</pointsize>
+         </font>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QProgressBar" name="progressBar_job">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>10</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>6</pointsize>
+         </font>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="13" column="0">
+     <widget class="QPushButton" name="pushButton_zminus">
+      <property name="text">
+       <string>Z↓</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="3" rowspan="10" colspan="9">
+     <layout class="QGridLayout" name="grid_opengl">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetNoConstraint</enum>
+      </property>
+     </layout>
+    </item>
+    <item row="13" column="1">
+     <widget class="QPushButton" name="pushButton_zplus">
+      <property name="text">
+       <string>Z↑</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="12" rowspan="3">
+     <widget class="QScrollArea" name="scrollArea_loginput">
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOn</enum>
+      </property>
+      <property name="widgetResizable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="scrollAreaWidgetContents">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>236</width>
+         <height>309</height>
+        </rect>
+       </property>
+      </widget>
      </widget>
     </item>
     <item row="4" column="0" rowspan="2" colspan="2">
@@ -290,133 +544,30 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="1">
-     <widget class="QPushButton" name="pushButton_disconnect">
+    <item row="6" column="0">
+     <widget class="QLabel" name="label_distancemode">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
       <property name="text">
-       <string>Disconnect</string>
+       <string>dist mode</string>
       </property>
      </widget>
     </item>
-    <item row="8" column="0">
-     <widget class="QPushButton" name="pushButton_g0wzero">
-      <property name="text">
-       <string>G0 WZero</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0" colspan="2">
-     <widget class="QLabel" name="label_state">
-      <property name="font">
-       <font>
-        <pointsize>21</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>disconnected</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="1">
+    <item row="7" column="0">
      <widget class="QPushButton" name="pushButton_zeroxyz">
       <property name="text">
        <string>Zero XYZ</string>
       </property>
      </widget>
     </item>
-    <item row="7" column="1">
-     <widget class="QPushButton" name="pushButton_zeroxy">
+    <item row="6" column="1">
+     <widget class="QLabel" name="label_arcdistancemode">
       <property name="text">
-       <string>Zero XY</string>
-      </property>
-     </widget>
-    </item>
-    <item row="8" column="1">
-     <widget class="QPushButton" name="pushButton_zeroz">
-      <property name="text">
-       <string>Zero Z</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="12">
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QProgressBar" name="progressBar_buffer">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>15</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>6</pointsize>
-         </font>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QProgressBar" name="progressBar_job">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>15</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>6</pointsize>
-         </font>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="4" column="12" rowspan="5">
-     <widget class="QLabel" name="label_log">
-      <property name="minimumSize">
-       <size>
-        <width>200</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <family>DejaVu Sans Mono</family>
-        <pointsize>8</pointsize>
-       </font>
-      </property>
-      <property name="autoFillBackground">
-       <bool>false</bool>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: white;</string>
-      </property>
-      <property name="text">
-       <string>Log Line 1</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       <string>arc dist mode</string>
       </property>
      </widget>
     </item>

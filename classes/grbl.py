@@ -362,13 +362,8 @@ class GRBL:
                     else:
                         logging.log(200, "%s: Receiving additional errors: %s", self.name, line)
                     
-                elif "to unlock" in line:
-                    logging.log(200, "%s: <----- %s", self.name, line)
-                    self.callback("on_log", line)
-                    
                 else:
-                    logging.log(200, "%s: sent something unsupported: %s", self.name, line)
-                    self.callback("on_log", "Unknown response: " + line)
+                    self.callback("on_read", line)
                 
 
                 
@@ -460,7 +455,7 @@ class GRBL:
         
         
     def _default_callback(self, status, *args):
-        print("CALLBACK", status, args)
+        print("DEFAULT CALLBACK", status, args)
         
         
     def test_string(self):

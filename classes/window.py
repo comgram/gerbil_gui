@@ -8,16 +8,21 @@ import collections
 
 from classes.grbl import GRBL
 from classes.glwidget import GLWidget
+from classes.commandlineedit import CommandLineEdit
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem)
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem)
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
 
 log_format = '%(asctime)s %(levelname)s %(message)s'
 logging.basicConfig(level=0, format=log_format)
+
+#G91 G0 Y1 G90
+#G10 P0 L20 X0 Y0 Z0
+
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -28,11 +33,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.grbl = GRBL()
         self.grbl.poll_interval = 0.2
-        
         self.grbl.callback = self.on_grbl_event
         
-        self.glWidget = GLWidget()
+        self.changed_state = False
+        self.changed_loginput = False
         
+        self.logbuffer = collections.deque(maxlen=200)
+        
+        self._rx_buffer_fill = 0
+        self._rx_buffer_fill_last = 0
+        
+        self._progress_percent = 0
+        self._progress_percent_last = 0
+        
+        
+        # UI SETUP
+        
+        self.glWidget = GLWidget()
         self.grid_opengl.addWidget(self.glWidget)
         
         self.pushButton_connect.clicked.connect(self.grbl.cnect)
@@ -56,20 +73,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_w2mcoord.clicked.connect(self.w2mcoord)
         self.pushButton_g0wzerosafe.clicked.connect(self.g0wzerosafe)
         self.pushButton_g0wzero.clicked.connect(self.g0wzero)
+        
+        self.pushButton_xminus.clicked.connect(self.xminus)
+        self.pushButton_xplus.clicked.connect(self.xplus)
+        self.pushButton_yminus.clicked.connect(self.yminus)
+        self.pushButton_yplus.clicked.connect(self.yplus)
+        self.pushButton_zminus.clicked.connect(self.zminus)
+        self.pushButton_zplus.clicked.connect(self.zplus)
+        
+        self.horizontalSlider_feed.valueChanged.connect(self.feedchange)
 
-        self.lineEdit_cmdline.returnPressed.connect(self.sendsingle)
+        self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
+        self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
+    
+        self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
+        self.listWidget_logoutput.itemClicked.connect(self._on_logoutput_item_clicked)
+        self.listWidget_logoutput.currentItemChanged.connect(self._on_logoutput_current_item_changed)
+        self.logoutput_items = []
         
         self.setWindowTitle("cnctoolbox")
         
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh)
-        self.timer.start(20)
+        self.timer.start(30)
         
-        self.logbuffer = collections.deque(maxlen=25)
-        self._rx_buffer_fill = 0
-        self._progress_percent = 0
+
+        
+        
+        #QFont f( "Cantarell", 10, QFont::Bold);
+        #textLabel->setFont( f);
+        
+        self.label_loginput = QLabel()
+        self.label_loginput.setTextFormat(Qt.RichText)
+        self.scrollArea_loginput.setWidget(self.label_loginput)
+        self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
+        self.label_loginput.setStyleSheet("font: 9pt")
+        #self.label_loginput.setText("<b style='color: red'>blah</b>")
         
         #self.progressBar_buffer.setValue(50)
+        
+        
+        self._add_to_logoutput("G0 X0 Y0 Z0")
+        self._add_to_logoutput("G0 X100")
+        self._add_to_logoutput("G0 Y100")
+        self._add_to_logoutput("G0 Z100")
         
         return
     
@@ -113,119 +160,230 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def on_grbl_event(self, event, *data):
         if event == "on_stateupdate":
-            state = data[0]
-            mpos = data[1]
-            wpos = data[2]
-            self.lcdNumber_mx.display("{:0.2f}".format(mpos[0]))
-            self.lcdNumber_my.display("{:0.2f}".format(mpos[1]))
-            self.lcdNumber_mz.display("{:0.2f}".format(mpos[2]))
-            self.lcdNumber_wx.display("{:0.2f}".format(wpos[0]))
-            self.lcdNumber_wy.display("{:0.2f}".format(wpos[1]))
-            self.lcdNumber_wz.display("{:0.2f}".format(wpos[2]))
-            self.label_state.setText(state)
-            self.glWidget.mpos = mpos
-            self.glWidget.paintGL()
+            self.state = data[0]
+            self.mpos = data[1]
+            self.wpos = data[2]
+            self.changed_state = True
             
         elif event == "on_send_command":
+            pass
             #logging.log(300, "GRBL event: %s, %s", event, data)
-            gcodeblock = data[0]
+            #gcodeblock = data[0]
             #self.logbuffer.append(gcodeblock)
             
         elif event == "on_processed_command":
-            #logging.log(300, "GRBL event: %s, %s", event, data)
-            gcodeblock = data[0]
-            self.logbuffer.append(gcodeblock)
-            #self._show_logbuffer()
+            self._add_to_loginput("<span style='color: green'>" + data[0] + "</span>")
             
         elif event == "on_error":
-            #logging.log(300, "GRBL event: %s, %s", event, data)
-            grbl_message = data[0]
-            problem_command = data[1]
-            self.logbuffer.append(grbl_message + ": " + problem_command)
-            #self._show_logbuffer()
+            self._add_to_loginput("<span style='color: red'><b>" + data[0] + "</b></span>")
             
         elif event == "on_alarm":
-            #logging.log(300, "GRBL event: %s, %s", event, data)
-            grbl_message = data[0]
-            self.logbuffer.append(grbl_message)
-            #self._show_logbuffer()
+            self._add_to_loginput("<span style='color: red'>" + data[0] + "</span>")
+            
+        elif event == "on_read":
+            self._add_to_loginput(data[0])
             
         elif event == "on_log":
-            #logging.log(300, "GRBL event: %s, %s", event, data)
-            logline = data[0]
-            self.logbuffer.append("log: " + logline)
-            #self._show_logbuffer()
+            self._add_to_loginput("<i>" + data[0] + "</i>")
             
         elif event == "on_rx_buffer_percentage":
-            #logging.log(300, "GRBL event: %s, %s", event, data)
             self._rx_buffer_fill = data[0]
-            #self.progressBar_buffer.setValue(data[0])
             
         elif event == "on_progress_percent":
-            #logging.log(300, "GRBL event: %s, %s", event, data)
             self._progress_percent = data[0]
-            #self.progressBar_buffer.setValue(data[0])
             
         elif event == "on_boot":
-            #logging.log(300, "GRBL event: %s, %s", event, data)
-            #self._progress_percent = data[0]
-            #self.progressBar_buffer.setValue(data[0])
-            self.logbuffer.append("Grbl has booted!")
+            self._add_to_loginput("<b>Grbl has booted!</b>")
             
             
-    def _show_logbuffer(self):
-        self.label_log.setText("\n".join(self.logbuffer))
+    def _render_logbuffer(self):
+        self.label_loginput.setText("<br />".join(self.logbuffer))
+        self.scrollArea_loginput.verticalScrollBar().setValue(self.scrollArea_loginput.verticalScrollBar().maximum())
             
         
     def refresh(self):
         self.glWidget.updateGL()
-        self._show_logbuffer()
-        self.progressBar_buffer.setValue(self._rx_buffer_fill)
-        self.progressBar_job.setValue(self._progress_percent)
         
+        if self.changed_state:
+            self.lcdNumber_mx.display("{:0.2f}".format(self.mpos[0]))
+            self.lcdNumber_my.display("{:0.2f}".format(self.mpos[1]))
+            self.lcdNumber_mz.display("{:0.2f}".format(self.mpos[2]))
+            self.lcdNumber_wx.display("{:0.2f}".format(self.wpos[0]))
+            self.lcdNumber_wy.display("{:0.2f}".format(self.wpos[1]))
+            self.lcdNumber_wz.display("{:0.2f}".format(self.wpos[2]))
+            self.glWidget.mpos = self.mpos
+            self.glWidget.paintGL()
+            
+
+            if self.state == "Idle":
+                color = "green"
+            elif self.state == "Run":
+                color = "blue"
+            elif self.state == "Check":
+                color = "orange"
+            elif self.state == "Hold":
+                color = "yellow"
+            elif self.state == "Alarm":
+                color = "red"
+                
+            self.label_state.setText("<span style='color: {}'>{}</span>".format(color, self.state))
+            
+            
+            self.changed_state = False
+            
+        if self.changed_loginput == True:
+            self._render_logbuffer()
+            self.changed_loginput = False
+            
+        if self._rx_buffer_fill_last != self._rx_buffer_fill:
+            self.progressBar_buffer.setValue(self._rx_buffer_fill)
+            self._rx_buffer_fill_last = self._rx_buffer_fill
+            
+        if self._progress_percent_last != self._progress_percent:
+            self.progressBar_job.setValue(self._progress_percent)
+            self._progress_percent_last = self._progress_percent
+        
+
+    def _add_to_loginput(self, line):
+        self.logbuffer.append(line)
+        self.changed_loginput = True
+        
+    def _add_to_logoutput(self, line):
+        item = QListWidgetItem(line, self.listWidget_logoutput)
+        self.logoutput_items.append(item)
+        self.listWidget_logoutput.setCurrentItem(item)
+        self.listWidget_logoutput.scrollToBottom()
+        
+        
+    # UI SLOTS
+    
+    def _cmd_line_callback(self, data):
+        if data == "Enter":
+            cmd = self.lineEdit_cmdline.text()
+            self.grbl.send(cmd)
+            self._add_to_logoutput(cmd)
+            self.lineEdit_cmdline.setText("")
+        elif data == "UP":
+            row = self.listWidget_logoutput.currentRow()
+            if row > 0:
+                row -= 1
+                item = self.logoutput_items[row]
+                self.listWidget_logoutput.setCurrentItem(item)
+                self.lineEdit_cmdline.setText(item.text())
+        elif data == "DOWN":
+            row = self.listWidget_logoutput.currentRow()
+            if row < len(self.logoutput_items):
+                row += 1
+                item = self.logoutput_items[row]
+                self.listWidget_logoutput.setCurrentItem(item)
+                self.lineEdit_cmdline.setText(item.text())
+            
+    
+    def _on_logoutput_item_double_clicked(self, item):
+        self.grbl.send(item.text())
+        
+    def _on_logoutput_item_clicked(self, item):
+        self.lineEdit_cmdline.setText(item.text())
+        
+    def _on_logoutput_current_item_changed(self, item_current, item_previous):
+        self.lineEdit_cmdline.setText(item_current.text())
+
     def pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.filename = filename_tuple[0]
         #self.pushButton_filestream.setText(self.filename)
         #self.plainTextEdit_log()
         
+    
+    def xminus(self):
+        step = - self.doubleSpinBox_jogstep.value()
+        self.grbl.send("G91")
+        self.grbl.send("G0 X" + str(step))
+        self.grbl.send("G90")
+        
+        
+    def xplus(self):
+        step = self.doubleSpinBox_jogstep.value()
+        self.grbl.send("G91")
+        self.grbl.send("G0 X" + str(step))
+        self.grbl.send("G90")
+        
+    
+    def yminus(self):
+        step = - self.doubleSpinBox_jogstep.value()
+        self.grbl.send("G91")
+        self.grbl.send("G0 Y" + str(step))
+        self.grbl.send("G90")
+        
+        
+    def yplus(self):
+        step = self.doubleSpinBox_jogstep.value()
+        self.grbl.send("G91")
+        self.grbl.send("G0 Y" + str(step))
+        self.grbl.send("G90")
+        
+    
+    def zminus(self):
+        step = - self.doubleSpinBox_jogstep.value()
+        self.grbl.send("G91")
+        self.grbl.send("G0 Z" + str(step))
+        self.grbl.send("G90")
+        
+        
+    def zplus(self):
+        step = self.doubleSpinBox_jogstep.value()
+        self.grbl.send("G91")
+        self.grbl.send("G0 Z" + str(step))
+        self.grbl.send("G90")
+        
+        
+    def feedchange(self):
+        val = self.horizontalSlider_feed.value()
+        self.lcdNumber_feed.display(val)
+        
+        
+                  
     def abort(self):
-        #self.label_logline.setText("")
+        #self.label_loginputline.setText("")
         self.grbl.abort()
         
+        
     def reset(self):
-        #self.label_logline.setText("")
+        #self.label_loginputline.setText("")
         self.grbl.abort()
+        
     
     def stream_file(self):
         self.grbl.send("f:" + self.filename)
         
+        
     def check(self):
         self.grbl.send("$C")
+        
         
     def zero_xyz(self):
         self.grbl.send("G92 X0 Y0 Z0")
         
+        
     def zero_xy(self):
         self.grbl.send("G92 X0 Y0")
+        
         
     def zero_z(self):
         self.grbl.send("G92 Z0")
         
+        
     def w2mcoord(self):
         self.grbl.send("G92.1")
+        
         
     def g0wzerosafe(self):
         self.grbl.send("G0 Z20")
         self.grbl.send("G0 X0 Y0")
         
+        
     def g0wzero(self):
         self.grbl.send("G0 X0 Y0 Z0")
-        
-    def sendsingle(self):
-        cmd = self.lineEdit_cmdline.text()
-        self.lineEdit_cmdline.setText("")
-        self.grbl.send(cmd)
         
         
     def disconnect(self):
@@ -237,14 +395,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lcdNumber_wy.display("{:0.2f}".format(8888.88))
         self.lcdNumber_wz.display("{:0.2f}".format(8888.88))
         self.label_state.setText("disconnected")
-        #self.label_logline.setText("")
-
+        #self.label_loginputline.setText("")
         
-    def on_run_btn_clicked(self):
-        self.grbl.send("f:out.ngc")
-        
-    def quit(self):
-        QCoreApplication.instance().quit
         
     def createSlider(self):
         slider = QSlider(Qt.Vertical)
