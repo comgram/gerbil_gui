@@ -114,6 +114,7 @@ class GRBL:
         self._cleanup()
         
         
+        
     def hold(self):
         if self._is_connected() == False: return
         self._iface_write("!")
@@ -164,6 +165,9 @@ class GRBL:
     def send(self, source):
         if self._is_connected() == False: return
     
+        if self._error:
+            self.callback("on_log", "{}: GRBL class is in a state of error. Please reset before you continue.".format(self.name))
+    
         if "f:" in source:
             requested_mode = "file"
         elif "$" in source:
@@ -193,7 +197,7 @@ class GRBL:
                 self._gcodefile = open(filename)
                 self._gcodefilesize = os.path.getsize(filename)
                 self._streamed_bytes = 0
-                self.callback("on_log", "{}: File size is %i".format(str(self._gcodefilesize)))
+                self.callback("on_log", "{}: File size is {:d}".format(self.name, self._gcodefilesize))
                 self._fill_buffer()
                 #self._callback_onboot = self._fill_buffer
                 #self.softreset()
@@ -249,7 +253,12 @@ class GRBL:
         if (self._streaming_src_end_reached == False and self._current_gcodeblock == None):
             self._current_gcodeblock = self._get_next_line()
             
-        logging.log(200, "MAYBE s_active=%s s_end=%s curr_gcode=%s", self.name, self._streaming_complete, self._streaming_src_end_reached, self._current_gcodeblock)
+        if self._current_gcodeblock == "":
+            logging.log(200, "MAYBE: Empty line, not sending")
+            self._current_gcodeblock = None
+            return True
+            
+        logging.log(200, "MAYBE s_active=%s s_end=%s curr_gcode=%s", self._streaming_complete, self._streaming_src_end_reached, self._current_gcodeblock)
         
         if self._streaming_mode == "settings":
             if self._current_gcodeblock != None:
@@ -263,7 +272,7 @@ class GRBL:
                 free_bytes = self._rx_buffer_size - sum(self._rx_buffer_fill)
                 will_send = free_bytes >= want_bytes
                 
-                logging.log(200, "MAYBE rx_buf=%s fillsum=%s free=%s want=%s, will_send=%s", self.name, self._rx_buffer_fill, sum(self._rx_buffer_fill), free_bytes, want_bytes, will_send)
+                logging.log(200, "MAYBE rx_buf=%s fillsum=%s free=%s want=%s, will_send=%s", self._rx_buffer_fill, sum(self._rx_buffer_fill), free_bytes, want_bytes, will_send)
             
             if will_send == True:
                 line_length = len(self._current_gcodeblock) + 1 # +1 means \n
@@ -299,7 +308,7 @@ class GRBL:
             self.callback("on_log", "{}: I encountered a settings command in the gcode stream but the current streaming mode is {}. Grbl cannot handle that. I will not send this.".format(self.name, self._streaming_mode))
             line = "\n"
             
-        logging.log(200, "NEXT LINE %s", self.name, line)
+        logging.log(200, "%s: NEXT LINE %s", self.name, line)
                 
         if line == None:
             self._set_streaming_src_end_reached(True)
@@ -316,7 +325,7 @@ class GRBL:
     
     
     def _rx_buffer_fill_pop(self):
-        logging.log(200, "_rx_buffer_fill_pop %s %s", self.name, self._rx_buffer_fill, len(self._rx_buffer_fill))
+        logging.log(200, "%s: _rx_buffer_fill_pop %s %s", self.name, self._rx_buffer_fill, len(self._rx_buffer_fill))
             
         if len(self._rx_buffer_fill) > 0:
             self._rx_buffer_fill.pop(0)
@@ -354,10 +363,11 @@ class GRBL:
                     if self._error == False:
                         # First time
                         self._error = True
-                        problem_command = self._rx_buffer_backlog[1]
+                        logging.log(200, "%s: _rx_buffer_backlog at time of error: %s", self.name,  self._rx_buffer_backlog)
+                        problem_command = self._rx_buffer_backlog[0]
                         self.callback("on_error", line, problem_command)
                     else:
-                        self.callback("on_error", "{}: Receiving additional errors: {}".format(self.name, line))
+                        self.callback("on_log", "{}: Receiving additional errors: {}".format(self.name, line))
                         
                 else:
                     self.callback("on_read", line)
@@ -381,7 +391,7 @@ class GRBL:
                 self._maybe_send_next_line()
                 
         else: 
-            self.callback("on_error", "%s: Will send no more because GRBL class has received an error. Please reset".format(self.name))
+            self.callback("on_log", "{}: GRBL class is in state of error, will not send any more. Please reset/abort before you can continue.".format(self.name))
         
         self._rx_buffer_fill_percent = int(100 - 100 * (self._rx_buffer_size - sum(self._rx_buffer_fill)) / self._rx_buffer_size)
         self.callback("on_rx_buffer_percentage", self._rx_buffer_fill_percent)

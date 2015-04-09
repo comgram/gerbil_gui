@@ -29,6 +29,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         
+        _logbuffer_size = 200
+        
         self.setupUi(self)
         
         self.grbl = GRBL()
@@ -38,7 +40,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.changed_state = False
         self.changed_loginput = False
         
-        self.logbuffer = collections.deque(maxlen=200)
+        self.logbuffer = collections.deque(maxlen=_logbuffer_size)
+        for i in range(1, _logbuffer_size):
+            self.logbuffer.append("")
         
         self._rx_buffer_fill = 0
         self._rx_buffer_fill_last = 0
@@ -113,10 +117,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.progressBar_buffer.setValue(50)
         
         
-        self._add_to_logoutput("G0 X0 Y0 Z0")
-        self._add_to_logoutput("G0 X100")
-        self._add_to_logoutput("G0 Y100")
-        self._add_to_logoutput("G0 Z100")
+        #self._add_to_logoutput("G0 X0 Y0 Z0")
+        #self._add_to_logoutput("G0 X100")
+        #self._add_to_logoutput("G0 Y100")
+        #self._add_to_logoutput("G0 Z100")
         
         return
     
@@ -175,13 +179,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<span style='color: green'>" + data[0] + "</span>")
             
         elif event == "on_error":
-            self._add_to_loginput("<span style='color: red'><b>" + data[0] + "</b></span>")
+            self._add_to_loginput("<span style='color: red'><b>{}</b></span>".format(data[0]))
+            self._add_to_loginput("<span style='color: red'><b>Error was in line {}</b></span>".format(data[1]))
             
         elif event == "on_alarm":
             self._add_to_loginput("<span style='color: red'>" + data[0] + "</span>")
             
         elif event == "on_read":
-            self._add_to_loginput(data[0])
+            self._add_to_loginput("<span style='color: blue'>{}</span>".format(data[0]))
             
         elif event == "on_log":
             self._add_to_loginput("<i>" + data[0] + "</i>")
@@ -265,18 +270,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lineEdit_cmdline.setText("")
         elif data == "UP":
             row = self.listWidget_logoutput.currentRow()
-            if row > 0:
-                row -= 1
-                item = self.logoutput_items[row]
-                self.listWidget_logoutput.setCurrentItem(item)
-                self.lineEdit_cmdline.setText(item.text())
+            row -= 1
+            row = 0 if row < 0 else row
+            item = self.logoutput_items[row]
+            self.listWidget_logoutput.setCurrentItem(item)
+            self.lineEdit_cmdline.setText(item.text())
         elif data == "DOWN":
             row = self.listWidget_logoutput.currentRow()
-            if row < len(self.logoutput_items):
-                row += 1
-                item = self.logoutput_items[row]
-                self.listWidget_logoutput.setCurrentItem(item)
-                self.lineEdit_cmdline.setText(item.text())
+            itemcount = len(self.logoutput_items) - 1
+            row += 1
+            row = itemcount if row > itemcount else row
+            item = self.logoutput_items[row]
+            self.listWidget_logoutput.setCurrentItem(item)
+            self.lineEdit_cmdline.setText(item.text())
             
     
     def _on_logoutput_item_double_clicked(self, item):
