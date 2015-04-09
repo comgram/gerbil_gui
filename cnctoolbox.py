@@ -11,8 +11,10 @@ import time
 from classes.session import Session
 from classes.svg import SVG
 from classes.grbl import GRBL
+
 from lib import stipple
 from lib import pixel2laser as p2l
+from lib import gcode
 
 from classes.window import Ui_MainWindow
 #from gi.repository import Gtk
@@ -94,9 +96,48 @@ def main():
     
     # define arguments for the 'bbox' subcommand
     bbox_parser = subparsers.add_parser("bbox", help="Calculates the bounding box of a gcode file")
+    bbox_parser.add_argument(
+        'gcodefile',
+        metavar='GCODE_FILE',
+        help='File to find the bounding box for'
+        )
+    
+    
+    # This parent parser provides args for infile and outfile for less repetition
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument(
+        'infile',
+        metavar='GCODE_INFILE',
+        help='File to read from'
+        )
+    parent_parser.add_argument(
+        'outfile',
+        metavar='GCODE_OUTFILE',
+        help='File to write results to'
+        )
+    
+    # define arguments for the 'transform' subcommand
+    translate_parser = subparsers.add_parser("translate", help="Translates gcode by X, Y, Z offsets", parents=[parent_parser])
+    translate_parser.add_argument(
+        'offset_x',
+        metavar='OFFSET_X',
+        help='offset x'
+        )
+    translate_parser.add_argument(
+        'offset_y',
+        metavar='OFFSET_Y',
+        help='offset y'
+        )
+    translate_parser.add_argument(
+        'offset_z',
+        metavar='OFFSET_Z',
+        help='offset z'
+        )
+
+
     
     # define arguments for the 'scale' subcommand
-    scale_parser = subparsers.add_parser("scale", help="Scales coordinates in a gcode file")
+    to_origin_parser = subparsers.add_parser("2origin", help="Moves bottom left extremity of gcode to (0,0)", parents=[parent_parser])
     
     # define arguments for the 'gui' subcommand
     gui_parser = subparsers.add_parser("gui", help="Start GUI")
@@ -124,10 +165,20 @@ def main():
         grbl.send(src)
         
     elif subcmd == "bbox":
-        print("to be implemented soon")
+        lines = read_file_to_linearray(args.gcodefile)
         
-    elif subcmd == "scale":
-        print("to be implemented soon")
+        bbox = gcode.get_bbox(lines)
+        print("BBOX: {}".format(bbox))
+        
+    elif subcmd == "translate":
+        lines = read_file_to_linearray(args.infile)
+        result = gcode.translate(lines, [float(args.offset_x), float(args.offset_y), float(args.offset_z)])
+        write_file_from_linearray(result, args.outfile)
+        
+    elif subcmd == "2origin":
+        lines = read_file_to_linearray(args.infile)
+        result = gcode.move_to_origin(lines)
+        write_file_from_linearray(result, args.outfile)
         
     elif subcmd == "gui":
         app = QApplication(sys.argv)
@@ -141,6 +192,20 @@ def main():
         window.show()
         sys.exit(app.exec_())
 
+
+# simple shared file utility functions
+
+def read_file_to_linearray(filename):
+    lines = []
+    with open(filename, "r") as f:
+        for line in f:
+            lines.append(line)
+    return lines
+
+def write_file_from_linearray(array, filename):
+    with open(filename, "w") as f:
+        for line in array:
+            f.write(line)
 
 if __name__ == "__main__":
     main()
