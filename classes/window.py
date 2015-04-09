@@ -258,16 +258,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.logoutput_items.append(item)
         self.listWidget_logoutput.setCurrentItem(item)
         self.listWidget_logoutput.scrollToBottom()
+    
+    def _exec_cmd(self, cmd):
+        cmd = cmd.strip()
+        if len(cmd) == 0:
+            return
         
+        self._add_to_logoutput(cmd)
+        self.lineEdit_cmdline.setText("")
+        
+        if cmd[0] == "=":
+            # dynamically executed python code must begin with an equal sign
+            # "self." is prepended for convenience
+            try:
+                cmd = cmd[1:]
+                cmd = "self.{}".format(cmd)
+                self._add_to_loginput("Executing: {}".format(cmd))
+                exec(cmd)
+            except:
+                self._add_to_loginput("Error during dynamic python execution:<br />{}".format(sys.exc_info()))
+        else:
+            self.grbl.send(cmd)
+
         
     # UI SLOTS
     
     def _cmd_line_callback(self, data):
         if data == "Enter":
             cmd = self.lineEdit_cmdline.text()
-            self.grbl.send(cmd)
-            self._add_to_logoutput(cmd)
-            self.lineEdit_cmdline.setText("")
+            self._exec_cmd(cmd)
         elif data == "UP":
             row = self.listWidget_logoutput.currentRow()
             row -= 1
