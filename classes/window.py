@@ -94,6 +94,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget_logoutput.itemClicked.connect(self._on_logoutput_item_clicked)
         self.listWidget_logoutput.currentItemChanged.connect(self._on_logoutput_current_item_changed)
         self.logoutput_items = []
+        self.logoutput_current_index = -1
         
         self.setWindowTitle("cnctoolbox")
         
@@ -197,6 +198,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_progress_percent":
             self._progress_percent = data[0]
             
+        elif event == "on_linear_distance_mode_change":
+            self.label_distancemode.setText(data[0])
+            
+        elif event == "on_arc_distance_mode_change":
+            self.label_arcdistancemode.setText(data[0])
+            
+            
         elif event == "on_boot":
             pass
             
@@ -258,6 +266,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.logoutput_items.append(item)
         self.listWidget_logoutput.setCurrentItem(item)
         self.listWidget_logoutput.scrollToBottom()
+        self.logoutput_at_end = True
     
     def _exec_cmd(self, cmd):
         cmd = cmd.strip()
@@ -288,12 +297,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cmd = self.lineEdit_cmdline.text()
             self._exec_cmd(cmd)
         elif data == "UP":
-            row = self.listWidget_logoutput.currentRow()
-            row -= 1
+            if self.logoutput_at_end:
+                itemcount = len(self.logoutput_items) - 1
+                row = itemcount
+                self.logoutput_at_end = False
+            else:
+                row = self.listWidget_logoutput.currentRow()
+                row -= 1
             row = 0 if row < 0 else row
             item = self.logoutput_items[row]
             self.listWidget_logoutput.setCurrentItem(item)
             self.lineEdit_cmdline.setText(item.text())
+            
         elif data == "DOWN":
             row = self.listWidget_logoutput.currentRow()
             itemcount = len(self.logoutput_items) - 1
@@ -312,6 +327,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def _on_logoutput_current_item_changed(self, item_current, item_previous):
         self.lineEdit_cmdline.setText(item_current.text())
+        self.logoutput_at_end = False
 
     def pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")

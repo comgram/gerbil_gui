@@ -36,6 +36,9 @@ class GRBL:
         # state variables
         self._streaming_mode = None
         
+        self.distance_mode_arc = None
+        self.distance_mode_linear = None
+        
         self._streaming_complete = True
         self._job_finished = False
         self._streaming_src_end_reached = True
@@ -317,11 +320,43 @@ class GRBL:
                 self._gcodefile = None
                 self.callback("on_log", "{}: Closed file.".format(self.name))
 
-        if line:
-            line = re.match("([^;(]*)", line).group(1) # strip comments and parentheses
-            line = line.strip()
+        line = self._preprocess(line)
             
         return line
+    
+    
+    def _preprocess(self, line):
+        if line == None:
+            return line
+                
+        # strip comments (after semicolon and opening parenthesis)
+        line = re.match("([^;(]*)", line).group(1)
+        
+        # strip
+        line = line.strip()
+        
+        # remove whitespaces
+        line = line.replace(" ", "")
+        
+        if re.match("G90($|[^.])", line):
+            self.distance_mode_linear = "absolute"
+            self.callback("on_linear_distance_mode_change", self.distance_mode_linear)
+        
+        if re.match("G91($|[^.])", line):
+            self.distance_mode_linear = "incremental"
+            self.callback("on_linear_distance_mode_change", self.distance_mode_linear)
+            
+        if "G90.1" in line:
+            self.distance_mode_arc = "absolute"
+            self.callback("on_arc_distance_mode_change", self.distance_mode_arc)
+            
+        if "G91.1" in line:
+            self.distance_mode_arc = "incremental"
+            self.callback("on_arc_distance_mode_change", self.distance_mode_arc)
+        
+        return line
+        
+        
     
     
     def _rx_buffer_fill_pop(self):
@@ -402,6 +437,8 @@ class GRBL:
         self._connected = True
         self._callback_onboot()
         self.callback("on_boot")
+        self.send("G90")
+        self.send("G90.1")
             
             
     def _update_state(self, line):
