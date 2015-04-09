@@ -193,7 +193,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._progress_percent = data[0]
             
         elif event == "on_boot":
-            self._add_to_loginput("<b>Grbl has booted!</b>")
+            pass
             
             
     def _render_logbuffer(self):
