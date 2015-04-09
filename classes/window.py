@@ -391,8 +391,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def _feedoverride_changed(self, val):
         val = False if val == 0 else True
-        self.grbl.set_feed_override(val)
         self._feedoverride_value_changed()
+        self.grbl.set_feed_override(val)
+        
         
                   
     def abort(self):

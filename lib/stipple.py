@@ -26,14 +26,14 @@ def render_gcode_from_data(data, out_file):
     with open(out_file, "w") as f:
         f.write("G90 ; absolute positioning\n")
         f.write("F400; _globalfeed\n")
-        f.write("G0 Z0.5; _zclear\n")
+        f.write("G0 Z0.5 ; _zclear\n")
         for idx, val in enumerate(data):
             x = val[0]
             y = val[1]
             r = val[2]
-            f.write("G0 X{:0.2f} Y{:0.2f}\n".format(x, y)) # position
+            f.write("G0 X{:0.2f} Y{:0.2f}\n".format(x, 3000 - y)) # position
             f.write("G1 Z-{:0.2f}\n".format(r))
-            f.write("G0 Z0.5\n")
+            f.write("G0 Z0.5 ; _zclear\n")
     
 def merge_and_sort_data(sort_indices, coords_unsorted, weights_unsorted):
     logging.info("Sorting coords")

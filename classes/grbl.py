@@ -205,7 +205,7 @@ class GRBL:
                 self._gcodefilesize = os.path.getsize(filename)
                 self._streamed_bytes = 0
                 self.callback("on_log", "{}: File size is {:d}".format(self.name, self._gcodefilesize))
-                if self._feed_override and self._current_feed == None:
+                if self._feed_override == True and self._current_feed == None:
                     self.set_feed(self._requested_feed)
                 self._fill_buffer()
                 #self._callback_onboot = self._fill_buffer
@@ -381,7 +381,7 @@ class GRBL:
                 # strip the original F setting
                 line = re.sub(r"F[.\d]+", "", line)
                 
-            if self._current_feed != self._requested_feed:
+            if self._requested_feed and self._current_feed != self._requested_feed:
                 line += "F{:d}".format(self._requested_feed)
                 self._current_feed = self._requested_feed
                 self.callback("on_log", "OVERRIDING FEED" + str(self._current_feed))

@@ -8,6 +8,34 @@ def move_to_origin(gcode):
     translated_gcode = translate(gcode, [-xmin, -ymin, 0])
     return translated_gcode
 
+def scale_into(gcode, width, height, depth, scale_zclear=False):
+    bbox = get_bbox(gcode)
+    xmin = bbox[0][0]
+    xmax = bbox[0][1]
+    ymin = bbox[1][0]
+    ymax = bbox[1][1]
+    zmin = bbox[2][0]
+    zmax = bbox[2][1]
+    translated_gcode = translate(gcode, [-xmin, -ymin, 0])
+    
+    if width > 0:
+        w = xmax - xmin
+        fac_x = width / w
+        fac_y = fac_x
+        fac_z = fac_x
+        
+    if height > 0:
+        h = ymax - ymin
+        fac_y = height / h
+        
+    if depth > 0:
+        d = zmax - zmin
+        fac_z = depth / d
+    
+    scaled_gcode = scale_factor(translated_gcode, [fac_x, fac_y, fac_z], scale_zclear)
+    return scaled_gcode
+    
+
 def get_bbox(gcode):
     bbox = []
     
@@ -67,5 +95,31 @@ def translate(lines, offsets=[0, 0, 0]):
         result.append(line)
     return result
 
-def scale(filename, axes, fac_x=1, fac_y=1, fac_z=1):
-    pass
+def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
+    result = []
+    
+    axes = ["X", "Y", "Z"]
+    contains_regexps = []
+    replace_regexps = []
+    for i in range(0, 3):
+        axis = axes[i]
+        contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
+        replace_regexps.append(re.compile(r"" + axis + "[-.\d]+"))
+    
+    for line in lines:
+        for i in range(0, 3):
+            axis = axes[i]
+            cr = contains_regexps[i]
+            rr = replace_regexps[i]
+            factor = facts[i]
+            
+            m = re.match(cr, line)
+            if m and facts[i] != 0 and not ("_zclear" in line and scale_zclear == False):
+                a = float(m.group(1))
+                a *= factor
+                rep = "{}{:0.3f}".format(axis, a)
+                rep = rep.rstrip("0").rstrip(".")
+                line = re.sub(rr, rep, line)
+
+        result.append(line)
+    return result

@@ -116,7 +116,7 @@ def main():
         help='File to write results to'
         )
     
-    # define arguments for the 'transform' subcommand
+    # define arguments for the 'translate' subcommand
     translate_parser = subparsers.add_parser("translate", help="Translates gcode by X, Y, Z offsets", parents=[parent_parser])
     translate_parser.add_argument(
         'offset_x',
@@ -133,11 +133,48 @@ def main():
         metavar='OFFSET_Z',
         help='offset z'
         )
+    
+    
+    # define arguments for the 'scale_factor' subcommand
+    scalefactor_parser = subparsers.add_parser("scale_factor", help="Scales gcode by X, Y, Z factors", parents=[parent_parser])
+    scalefactor_parser.add_argument(
+        'scale_x',
+        metavar='SCALE_X',
+        help='scale x'
+        )
+    scalefactor_parser.add_argument(
+        'scale_y',
+        metavar='SCALE_Y',
+        help='scale y'
+        )
+    scalefactor_parser.add_argument(
+        'scale_z',
+        metavar='SCALE_Z',
+        help='scale z'
+        )
 
+
+    # define arguments for the 'scale_factor' subcommand
+    scaleinto_parser = subparsers.add_parser("scale_into", help="Scales and translates gcode into a bbox specified by (0,0,-,width,height,depth)", parents=[parent_parser])
+    scaleinto_parser.add_argument(
+        'width',
+        metavar='WIDTH',
+        help='width in mm'
+        )
+    scaleinto_parser.add_argument(
+        'height',
+        metavar='HEIGHT',
+        help='height mm'
+        )
+    scaleinto_parser.add_argument(
+        'depth',
+        metavar='DEPTH',
+        help='depth in mm'
+        )
 
     
     # define arguments for the 'scale' subcommand
-    to_origin_parser = subparsers.add_parser("2origin", help="Moves bottom left extremity of gcode to (0,0)", parents=[parent_parser])
+    to_origin_parser = subparsers.add_parser("2origin", help="Moves bottom left extremity of gcode to (0,0), z remains unaffected", parents=[parent_parser])
     
     # define arguments for the 'gui' subcommand
     gui_parser = subparsers.add_parser("gui", help="Start GUI")
@@ -173,6 +210,16 @@ def main():
     elif subcmd == "translate":
         lines = read_file_to_linearray(args.infile)
         result = gcode.translate(lines, [float(args.offset_x), float(args.offset_y), float(args.offset_z)])
+        write_file_from_linearray(result, args.outfile)
+        
+    elif subcmd == "scale_factor":
+        lines = read_file_to_linearray(args.infile)
+        result = gcode.scale_factor(lines, [float(args.scale_x), float(args.scale_y), float(args.scale_z)], False)
+        write_file_from_linearray(result, args.outfile)
+        
+    elif subcmd == "scale_into":
+        lines = read_file_to_linearray(args.infile)
+        result = gcode.scale_into(lines, float(args.width), float(args.height), float(args.depth), False)
         write_file_from_linearray(result, args.outfile)
         
     elif subcmd == "2origin":
