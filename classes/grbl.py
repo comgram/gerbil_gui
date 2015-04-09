@@ -39,6 +39,10 @@ class GRBL:
         self.distance_mode_arc = None
         self.distance_mode_linear = None
         
+        self._feed_override = False
+        self._current_feed = None
+        self._requested_feed = None
+        
         self._streaming_complete = True
         self._job_finished = False
         self._streaming_src_end_reached = True
@@ -201,6 +205,8 @@ class GRBL:
                 self._gcodefilesize = os.path.getsize(filename)
                 self._streamed_bytes = 0
                 self.callback("on_log", "{}: File size is {:d}".format(self.name, self._gcodefilesize))
+                if self._feed_override and self._current_feed == None:
+                    self.set_feed(self._requested_feed)
                 self._fill_buffer()
                 #self._callback_onboot = self._fill_buffer
                 #self.softreset()
@@ -227,6 +233,16 @@ class GRBL:
             self.poll_start()
         else:
             self.callback("on_log", "{}: Grbl has to be idle to stream settings.".format(self.name))
+            
+            
+    def set_feed_override(self, val):
+        self._feed_override = val
+        
+        
+    def set_feed(self, requested_feed):
+        if self._current_feed != requested_feed:
+            self._requested_feed = int(requested_feed)
+        
         
         
     # ====== 'private' methods ======
@@ -291,21 +307,19 @@ class GRBL:
     
     def _get_next_line(self):
         line = ""
+        
         if self._streaming_mode == "file":
-            line = self._gcodefile.readline()
+            l = self._gcodefile.readline()
+            if l != "":
+                self._buffer.append(l)
+                self._streamed_bytes += len(l)
+                progress_percent = int(100 * self._streamed_bytes / self._gcodefilesize)
+                self.callback("on_progress_percent", progress_percent)
             
-            self._streamed_bytes += len(line)
-            progress_percent = int(100 * self._streamed_bytes / self._gcodefilesize)
-            self.callback("on_progress_percent", progress_percent)
-            
-            if line == "":
-                line = None  # nothing more to read
-            
+        if len(self._buffer) > 0:
+            line = self._buffer.pop(0).strip()
         else:
-            if len(self._buffer) > 0:
-                line = self._buffer.pop(0).strip()
-            else:
-                line = None # nothing more to read
+            line = None # nothing more to read
                 
         if line and self._streaming_mode != "settings" and "$" in line:
             self.callback("on_log", "{}: I encountered a settings command in the gcode stream but the current streaming mode is {}. Grbl cannot handle that. I will not send this.".format(self.name, self._streaming_mode))
@@ -353,6 +367,25 @@ class GRBL:
         if "G91.1" in line:
             self.distance_mode_arc = "incremental"
             self.callback("on_arc_distance_mode_change", self.distance_mode_arc)
+
+        contains_feed = True if re.match(".*F[.\d]+", line) else False
+        if contains_feed:
+            if self._feed_override == False:
+                parsed_feed = re.match(".*F([.\d]+)", line).group(1)
+                self._current_feed = int(parsed_feed)
+                self.callback("on_feed_change", self._current_feed)
+                self.callback("on_log", "FEED" + str(self._current_feed))
+            
+        if self._feed_override == True:
+            if contains_feed:
+                # strip the original F setting
+                line = re.sub(r"F[.\d]+", "", line)
+                
+            if self._current_feed != self._requested_feed:
+                line += "F{:d}".format(self._requested_feed)
+                self._current_feed = self._requested_feed
+                self.callback("on_log", "OVERRIDING FEED" + str(self._current_feed))
+            
         
         return line
         

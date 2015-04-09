@@ -85,7 +85,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_zminus.clicked.connect(self.zminus)
         self.pushButton_zplus.clicked.connect(self.zplus)
         
-        self.horizontalSlider_feed.valueChanged.connect(self.feedchange)
+        self.horizontalSlider_feed.valueChanged.connect(self._feedoverride_value_changed)
+        self.checkBox_feedoverride.stateChanged.connect(self._feedoverride_changed)
 
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
         self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
@@ -184,7 +185,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<span style='color: red'><b>Error was in line {}</b></span>".format(data[1]))
             
         elif event == "on_alarm":
-            self._add_to_loginput("<span style='color: red'>" + data[0] + "</span>")
+            self._add_to_loginput("<span style='color: orange'>" + data[0] + "</span>")
             
         elif event == "on_read":
             self._add_to_loginput("<span style='color: blue'>{}</span>".format(data[0]))
@@ -204,9 +205,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_arc_distance_mode_change":
             self.label_arcdistancemode.setText(data[0])
             
+        elif event == "on_feed_change":
+            self.horizontalSlider_feed.setValue(data[0])
             
         elif event == "on_boot":
             pass
+        
+        else:
+            self._add_to_loginput("Grbl event {} not yet implemented".format(event))
             
             
     def _render_logbuffer(self):
@@ -378,10 +384,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send("G90")
         
         
-    def feedchange(self):
+    def _feedoverride_value_changed(self):
         val = self.horizontalSlider_feed.value()
         self.lcdNumber_feed.display(val)
+        self.grbl.set_feed(val)
         
+    def _feedoverride_changed(self, val):
+        val = False if val == 0 else True
+        self.grbl.set_feed_override(val)
+        self._feedoverride_value_changed()
         
                   
     def abort(self):
