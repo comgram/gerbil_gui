@@ -33,10 +33,11 @@ class GLWidget(QGLWidget):
         self.yPan = 0
         self.zPan = -10
         
-        self.colors = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
-        self.positions = [ (-1,-1),   (-1,+1),   (+1,-1),   (+1,+1)   ]
+        self.colors = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,1,1), (1,1,1,1), (1,0,0,1) ]
+        self.positions = [ (-1,-1),   (-0.5,+1),   (+1,-1),   (+0.7,+0.6), (-1,-1), (-0.7,+0.7)   ]
+        self._linecount = len(self.positions)
         
-        self.data = np.zeros(4, [("position", np.float32, 2), ("color",    np.float32, 4)])
+        self.data = np.zeros(self._linecount, [("position", np.float32, 2), ("color",    np.float32, 4)])
         self.data['color']    = self.colors
         self.data['position'] = self.positions
         
@@ -134,19 +135,28 @@ class GLWidget(QGLWidget):
         #glUniform1f(loc, 1.0)
         print("XXXXXXXXXX DOUBLE", self.doubleBuffer())
         
-    def add_vertex(self):
+    def add_vertex(self, tuple):
+        #self.colors = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
+        #self.positions = [ (-1,-1),   (-1,+1),   (+1,-1),   (+1,+1)   ]
+        
+        glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, None, GL_DYNAMIC_DRAW) #https://www.opengl.org/wiki/Buffer_Object_Streaming#Buffer_update
+        
+        self.positions.append(tuple)
+        self.colors.append((1, 1, 1, 1))
+        self._linecount = len(self.positions)
+        
+        self.data = np.zeros(self._linecount, [("position", np.float32, 2), ("color",    np.float32, 4)])
         self.data['color']    = self.colors
         self.data['position'] = self.positions
-        
+        #glInvalidateBufferData(self.buffer_label)
         
     def _setup_buffer(self):
-
-        
-
-
+        print("XXXXXXXXXXXXXXX" + str(self.data.nbytes))
+         
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, self.data, GL_DYNAMIC_DRAW)
         
         stride = self.data.strides[0]
+        
         offset = ctypes.c_void_p(0)
         loc = glGetAttribLocation(self.program, "position")
         glEnableVertexAttribArray(loc)
@@ -160,7 +170,7 @@ class GLWidget(QGLWidget):
         glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
         
         loc = glGetUniformLocation(self.program, "scale")
-        glUniform1f(loc, 0.5)
+        glUniform1f(loc, 0.2)
 
 
     def paintGL(self):
@@ -189,7 +199,7 @@ class GLWidget(QGLWidget):
         glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
         
         self._setup_buffer()
-        glDrawArrays(GL_LINE_STRIP, 0, 4)
+        glDrawArrays(GL_LINE_STRIP, 0, self._linecount)
 
     def resizeGL(self, width, height):
         print("resizeGL")
