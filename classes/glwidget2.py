@@ -50,14 +50,13 @@ class GLWidget(QGLWidget):
         print("OPENGL GLSL VERSION", glGetString(GL_SHADING_LANGUAGE_VERSION))
         
         
-        program  = glCreateProgram()
+        self.program  = glCreateProgram()
         vertex   = glCreateShader(GL_VERTEX_SHADER)
         fragment = glCreateShader(GL_FRAGMENT_SHADER)
         
-        data = np.zeros(4, [("position", np.float32, 2),
-                            ("color",    np.float32, 4)])
-        data['color']    = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
-        data['position'] = [ (-1,-1),   (-1,+1),   (+1,-1),   (+1,+1)   ]
+        self.data = np.zeros(4, [("position", np.float32, 2), ("color",    np.float32, 4)])
+        self.data['color']    = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
+        self.data['position'] = [ (-1,-1),   (-1,+1),   (+1,-1),   (+1,+1)   ]
         
         # Set shaders source
         with open("vertex.c", "r") as f: vertex_code = f.read()
@@ -69,40 +68,21 @@ class GLWidget(QGLWidget):
         glCompileShader(vertex)
         glCompileShader(fragment)
         
-        glAttachShader(program, vertex)
-        glAttachShader(program, fragment)
+        glAttachShader(self.program, vertex)
+        glAttachShader(self.program, fragment)
         
-        glLinkProgram(program)
+        glLinkProgram(self.program)
         
-        glDetachShader(program, vertex)
-        glDetachShader(program, fragment)
+        glDetachShader(self.program, vertex)
+        glDetachShader(self.program, fragment)
         
-        glUseProgram(program)
+        glUseProgram(self.program)
         
-        # Request a buffer slot from GPU
-        buffer = glGenBuffers(1)
+        # Request a buffer_label slot from GPU
+        self.buffer_label = glGenBuffers(1)
+        print("XXXXXXXXXX BUF", self.buffer_label)
 
-        # Make this buffer the default one
-        glBindBuffer(GL_ARRAY_BUFFER, buffer)
-
-        # Upload data
-        glBufferData(GL_ARRAY_BUFFER, data.nbytes, data, GL_DYNAMIC_DRAW)
-        
-        stride = data.strides[0]
-        offset = ctypes.c_void_p(0)
-        loc = glGetAttribLocation(program, "position")
-        glEnableVertexAttribArray(loc)
-        glBindBuffer(GL_ARRAY_BUFFER, buffer)
-        glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
-
-        offset = ctypes.c_void_p(data.dtype["position"].itemsize)
-        loc = glGetAttribLocation(program, "color")
-        glEnableVertexAttribArray(loc)
-        glBindBuffer(GL_ARRAY_BUFFER, buffer)
-        glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
-        
-        loc = glGetUniformLocation(program, "scale")
-        glUniform1f(loc, 0.5)
+      
         
         glEnable (GL_LINE_SMOOTH);
         glEnable (GL_BLEND);
@@ -148,6 +128,29 @@ class GLWidget(QGLWidget):
         print("XXXXXXXXXX DOUBLE", self.doubleBuffer())
         
         
+    def _setup_buffer(self):
+        # Make this buffer_label the default one
+        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
+
+        # Upload data
+        glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, self.data, GL_DYNAMIC_DRAW)
+        
+        stride = self.data.strides[0]
+        offset = ctypes.c_void_p(0)
+        loc = glGetAttribLocation(self.program, "position")
+        glEnableVertexAttribArray(loc)
+        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
+        glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
+
+        offset = ctypes.c_void_p(self.data.dtype["position"].itemsize)
+        loc = glGetAttribLocation(self.program, "color")
+        glEnableVertexAttribArray(loc)
+        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
+        glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
+        
+        loc = glGetUniformLocation(self.program, "scale")
+        glUniform1f(loc, 0.5)
+
 
     def paintGL(self):
         print("paintGL")
@@ -174,6 +177,7 @@ class GLWidget(QGLWidget):
         glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
         glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
         
+        self._setup_buffer()
         glDrawArrays(GL_LINE_STRIP, 0, 4)
 
     def resizeGL(self, width, height):
