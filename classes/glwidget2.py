@@ -33,6 +33,13 @@ class GLWidget(QGLWidget):
         self.yPan = 0
         self.zPan = -10
         
+        self.colors = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
+        self.positions = [ (-1,-1),   (-1,+1),   (+1,-1),   (+1,+1)   ]
+        
+        self.data = np.zeros(4, [("position", np.float32, 2), ("color",    np.float32, 4)])
+        self.data['color']    = self.colors
+        self.data['position'] = self.positions
+        
         self.lastPos = QPoint()
        
 
@@ -54,9 +61,7 @@ class GLWidget(QGLWidget):
         vertex   = glCreateShader(GL_VERTEX_SHADER)
         fragment = glCreateShader(GL_FRAGMENT_SHADER)
         
-        self.data = np.zeros(4, [("position", np.float32, 2), ("color",    np.float32, 4)])
-        self.data['color']    = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
-        self.data['position'] = [ (-1,-1),   (-1,+1),   (+1,-1),   (+1,+1)   ]
+        
         
         # Set shaders source
         with open("vertex.c", "r") as f: vertex_code = f.read()
@@ -81,6 +86,8 @@ class GLWidget(QGLWidget):
         # Request a buffer_label slot from GPU
         self.buffer_label = glGenBuffers(1)
         print("XXXXXXXXXX BUF", self.buffer_label)
+        
+        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
 
       
         
@@ -127,12 +134,16 @@ class GLWidget(QGLWidget):
         #glUniform1f(loc, 1.0)
         print("XXXXXXXXXX DOUBLE", self.doubleBuffer())
         
+    def add_vertex(self):
+        self.data['color']    = self.colors
+        self.data['position'] = self.positions
+        
         
     def _setup_buffer(self):
-        # Make this buffer_label the default one
-        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
 
-        # Upload data
+        
+
+
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, self.data, GL_DYNAMIC_DRAW)
         
         stride = self.data.strides[0]
