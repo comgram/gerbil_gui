@@ -231,6 +231,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lcdNumber_wy.display("{:0.2f}".format(self.wpos[1]))
             self.lcdNumber_wz.display("{:0.2f}".format(self.wpos[2]))
             self.glWidget.mpos = self.mpos
+            self.glWidget.add_vertex((self.wpos[0],self.wpos[1]))
             self.glWidget.paintGL()
             
 
