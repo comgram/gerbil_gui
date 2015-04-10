@@ -101,7 +101,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh)
-        self.timer.start(1000)
+        self.timer.start(30)
         
 
         

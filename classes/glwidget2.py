@@ -8,8 +8,8 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtOpenGL import QGLWidget
 
 import OpenGL
-OpenGL.ERROR_CHECKING = True
-OpenGL.FULL_LOGGING = True
+OpenGL.ERROR_CHECKING = False
+OpenGL.FULL_LOGGING = False
 from OpenGL.GL import *
 #from OpenGL.GLUT import *
 
@@ -86,7 +86,7 @@ class GLWidget(QGLWidget):
         
         # Request a buffer_label slot from GPU
         self.buffer_label = glGenBuffers(1)
-        print("XXXXXXXXXX BUF", self.buffer_label)
+        #print("XXXXXXXXXX BUF", self.buffer_label)
         
         glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
 
@@ -133,7 +133,7 @@ class GLWidget(QGLWidget):
         #loc = glGetUniformLocation(program, "scale")
         #print("XXXXXXXXXXXX", loc)
         #glUniform1f(loc, 1.0)
-        print("XXXXXXXXXX DOUBLE", self.doubleBuffer())
+        #print("XXXXXXXXXX DOUBLE", self.doubleBuffer())
         
     def add_vertex(self, tuple):
         #self.colors = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
@@ -151,7 +151,7 @@ class GLWidget(QGLWidget):
         #glInvalidateBufferData(self.buffer_label)
         
     def _setup_buffer(self):
-        print("XXXXXXXXXXXXXXX" + str(self.data.nbytes))
+        #print("XXXXXXXXXXXXXXX" + str(self.data.nbytes))
          
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, self.data, GL_DYNAMIC_DRAW)
         
@@ -170,11 +170,11 @@ class GLWidget(QGLWidget):
         glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
         
         loc = glGetUniformLocation(self.program, "scale")
-        glUniform1f(loc, 0.2)
+        glUniform1f(loc, 0.004)
 
 
     def paintGL(self):
-        print("paintGL")
+        #print("paintGL")
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
