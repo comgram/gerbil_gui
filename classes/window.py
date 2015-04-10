@@ -7,7 +7,7 @@ import collections
 
 
 from classes.grbl import GRBL
-from classes.glwidget import GLWidget
+from classes.glwidget2 import GLWidget
 from classes.commandlineedit import CommandLineEdit
 
 from PyQt5 import QtCore, QtGui
@@ -101,7 +101,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh)
-        self.timer.start(30)
+        self.timer.start(3000)
         
 
         
