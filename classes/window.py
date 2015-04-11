@@ -36,7 +36,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         
         self.grbl = GRBL()
-        self.grbl.poll_interval = 0.2
+        self.grbl.poll_interval = 0.1
         self.grbl.callback = self.on_grbl_event
         
         self.filename = None
