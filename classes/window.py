@@ -87,6 +87,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.horizontalSlider_feed.valueChanged.connect(self._feedoverride_value_changed)
         self.checkBox_feedoverride.stateChanged.connect(self._feedoverride_changed)
+        
+        self.checkBox_incremental.stateChanged.connect(self._incremental_changed)
 
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
         self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
@@ -207,6 +209,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_feed_change":
             self.horizontalSlider_feed.setValue(data[0])
+            
+        elif event == "on_streaming_complete":
+            self.grbl.set_incremental_streaming(True)
             
         elif event == "on_boot":
             pass
@@ -394,7 +399,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._feedoverride_value_changed()
         self.grbl.set_feed_override(val)
         
-        
+    def _incremental_changed(self, val):
+        val = False if val == 0 else True
+        self.grbl.set_incremental_streaming(val)
                   
     def abort(self):
         #self.label_loginputline.setText("")

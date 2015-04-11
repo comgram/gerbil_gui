@@ -66,6 +66,25 @@ def get_bbox(gcode):
     return bbox
 
 
+def draw_bbox(gcode, move_z=False):
+    result = "(cnctoolbox_set incremental_send=True)"
+    
+    bbox = get_bbox(gcode)
+    xmin = bbox[0][0]
+    xmax = bbox[0][1]
+    ymin = bbox[1][0]
+    ymax = bbox[1][1]
+    zmin = bbox[2][0]
+    zmax = bbox[2][1]
+    
+    if move_z:
+        result += "G0 Z{:0.3f}\n".format(zmin)
+        result += "!\n"
+    result += "G0 X{:0.3f} Y{:0.3f}\n".format(xmin, ymin, zmin)
+    
+    
+
+
 def translate(lines, offsets=[0, 0, 0]):
     result = []
     
