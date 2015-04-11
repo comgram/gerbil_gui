@@ -109,9 +109,11 @@ def receiver(path=False):
     global Settings
     if isinstance(path,basestring):
         Settings['port'] = open(path,'w')
-    elif inspect.isclass(path):
+    elif not path == False:
+        print("Adding class as receiver")
         Settings['port'] = path
     else:
+        print("using stdout")
         Settings['port'] = sys.stdout
 def write_header():
     emit(Settings['header'])
@@ -125,11 +127,9 @@ def depth(d,f=False):
     global Settings
     if not f:
         f = Settings['max_feed_speed'] / 2
-    if State['z'] == d:
-        return
     if Settings['ignoreZ'] == False:
         State['z'] = d
-        emit("G53 G1 Z%.3f F%d;depth(%.3f,%d)" % (d,f,d,f))
+        emit("G1 Z%.3f F%d;depth(%.3f,%d)" % (d,f,d,f))
     else:
         emit(";IgnoreZ depth(%f,%f)" % (d,f))
 def up():
@@ -149,7 +149,7 @@ def move(x,y,f=False):
     State['y'] = y
     if f == False:
         f = Settings['feed_speed']
-    emit("G53 G1 X%.3f Y%.3f F%d" % (x,y,f))
+    emit("G1 X%.3f Y%.3f F%d" % (x,y,f))
 def done():
     global Settings
     emit("M2")
@@ -160,10 +160,11 @@ def emit(txt=";Nothing Emitted\n"):
     global State
     
     if Settings['debug_gcode'] == True or txt[0] != ';':
-        for x in range(0,State['white_space']):
-            Settings['port'].write(" ")  
-        Settings['port'].write(txt)
-        Settings['port'].write("\n")
+        ## for x in range(0,State['white_space']):
+            ##Settings['port'].write(" ")  
+        ##log("Writing Text: %s" % txt)
+        if txt and isinstance(txt,basestring) and len(txt) > 2:
+            Settings['port'].write("%s" % txt)
             
 '''
     USE THESE TO PRETTY UP GCODE!!

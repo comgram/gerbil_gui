@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Sat Apr 11 07:36:20 2015
+# Created: Sat Apr 11 15:30:32 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -315,6 +315,9 @@ class Ui_MainWindow(object):
         self.pushButton_check = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_check.setObjectName("pushButton_check")
         self.gridLayout.addWidget(self.pushButton_check, 0, 10, 1, 1)
+        self.line_edit_devicePath = QtWidgets.QLineEdit(self.centralWidget)
+        self.line_edit_devicePath.setObjectName("line_edit_devicePath")
+        self.gridLayout.addWidget(self.line_edit_devicePath, 0, 7, 1, 3)
         self.label_grbl = QtWidgets.QLabel(self.centralWidget)
         self.label_grbl.setGeometry(QtCore.QRect(279, 493, 334, 31))
         self.label_grbl.setText("")

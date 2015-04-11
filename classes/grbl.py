@@ -77,7 +77,9 @@ class GRBL:
         
     # ====== 'public' methods ======
       
-    def cnect(self):
+    def cnect(self,path=False):
+        if path:
+            self._ifacepath = path
         self._cleanup()
         
         self._iface_read_do = True
@@ -169,8 +171,9 @@ class GRBL:
             self.callback("on_log", "{}: Cannot start a polling thread. Another one is already running. This should not have happened.".format(self.name))
             
         self._thread_polling = None
-    # Just a wrapper around send.
+    # Just a wrapper around
     def write(self,source):
+        print("WRITING: '%s'" % source)
         self.send(source)
     def send(self, source):
         if self._is_connected() == False: return
@@ -274,6 +277,7 @@ class GRBL:
         
     def _maybe_send_next_line(self):
         will_send = False
+        print("_maybe_send_next_line was called")
         
         if (self._streaming_src_end_reached == False and self._current_gcodeblock == None):
             self._current_gcodeblock = self._get_next_line()
@@ -293,6 +297,7 @@ class GRBL:
             logging.log(200, "MAYBE rx_buf=%s fillsum=%s free=%s want=%s, will_send=%s", self._rx_buffer_fill, sum(self._rx_buffer_fill), free_bytes, want_bytes, will_send)
 
         if will_send == True:
+            print("Gcode block is: '%s'" % self._current_gcodeblock)
             line_length = len(self._current_gcodeblock) + 1 # +1 means \n
             self._set_streaming_complete(False)
             self._rx_buffer_fill.append(line_length) 

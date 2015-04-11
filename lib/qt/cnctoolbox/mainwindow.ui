@@ -633,6 +633,9 @@
       </property>
      </widget>
     </item>
+    <item row="0" column="7" colspan="3">
+     <widget class="QLineEdit" name="line_edit_devicePath"/>
+    </item>
    </layout>
    <widget class="QLabel" name="label_grbl">
     <property name="geometry">

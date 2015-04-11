@@ -63,7 +63,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.glWidget = GLWidget()
         self.grid_opengl.addWidget(self.glWidget)
         
-        self.pushButton_connect.clicked.connect(self.grbl.cnect)
+        self.pushButton_connect.clicked.connect(lambda x: self.grbl.cnect(self.line_edit_devicePath.text()))
         self.pushButton_disconnect.clicked.connect(self.disconnect)
         self.pushButton_homing.clicked.connect(self.grbl.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
@@ -98,6 +98,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.checkBox_incremental.stateChanged.connect(self._incremental_changed)
 
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
+        self.line_edit_devicePath.setText("/dev/ttyACM0")
         self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
     
         self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
@@ -346,7 +347,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
     
     def _on_logoutput_item_double_clicked(self, item):
-        self.grbl.send(item.text())
+        self._exec_cmd(item.text())
         
     def _on_logoutput_item_clicked(self, item):
         self.lineEdit_cmdline.setText(item.text())
