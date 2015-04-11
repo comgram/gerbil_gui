@@ -16,6 +16,8 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem)
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
+from lib import gcodetools
+from lib import utility
 
 log_format = '%(asctime)s %(levelname)s %(message)s'
 logging.basicConfig(level=0, format=log_format)
@@ -36,6 +38,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl = GRBL()
         self.grbl.poll_interval = 0.2
         self.grbl.callback = self.on_grbl_event
+        
+        self.filename = None
         
         self.changed_state = False
         self.changed_loginput = False
@@ -456,6 +460,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lcdNumber_wz.display("{:0.2f}".format(8888.88))
         self.label_state.setText("disconnected")
         #self.label_loginputline.setText("")
+        
+        
+    # call: =bbox(True)
+    def bbox(self, move_z=False, gcode=None):
+        if gcode:
+            movements = gcodetools.draw_bbox(gcode, move_z)
+        elif self.filename:
+            gcode = utility.read_file_to_linearray(self.filename)
+            movements = gcodetools.draw_bbox(gcode, move_z)
+        else:
+            self._add_to_loginput("<i>No file set and no gcode provided.</i>")
+            return
+        
+        self.grbl.send(movements)
         
         
     def createSlider(self):

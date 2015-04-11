@@ -37,6 +37,8 @@ class GRBL:
         self._streaming_mode = None
         self._incremental_streaming = False
         
+        self._wait_empty_buffer = False
+        
         self.distance_mode_arc = None
         self.distance_mode_linear = None
         
@@ -275,10 +277,10 @@ class GRBL:
         if (self._streaming_src_end_reached == False and self._current_gcodeblock == None):
             self._current_gcodeblock = self._get_next_line()
             
-        if self._current_gcodeblock == "":
-            logging.log(200, "MAYBE: Empty line, not sending")
-            self._current_gcodeblock = None
-            return True
+        #if self._current_gcodeblock == "":
+            #logging.log(200, "MAYBE: Empty line, not sending")
+            #self._current_gcodeblock = None
+            #return True
             
         logging.log(200, "MAYBE s_active=%s s_end=%s curr_gcode=%s", self._streaming_complete, self._streaming_src_end_reached, self._current_gcodeblock)
         

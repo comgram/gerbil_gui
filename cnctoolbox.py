@@ -14,7 +14,8 @@ from classes.grbl import GRBL
 
 from lib import stipple
 from lib import pixel2laser as p2l
-from lib import gcode
+from lib import gcodetools
+from lib import utility
 
 from classes.window import Ui_MainWindow
 #from gi.repository import Gtk
@@ -202,30 +203,30 @@ def main():
         grbl.send(src)
         
     elif subcmd == "bbox":
-        lines = read_file_to_linearray(args.gcodefile)
+        lines = utility.read_file_to_linearray(args.gcodefile)
         
-        bbox = gcode.get_bbox(lines)
+        bbox = gcodetools.get_bbox(lines)
         print("BBOX: {}".format(bbox))
         
     elif subcmd == "translate":
-        lines = read_file_to_linearray(args.infile)
-        result = gcode.translate(lines, [float(args.offset_x), float(args.offset_y), float(args.offset_z)])
-        write_file_from_linearray(result, args.outfile)
+        lines = utility.read_file_to_linearray(args.infile)
+        result = gcodetools.translate(lines, [float(args.offset_x), float(args.offset_y), float(args.offset_z)])
+        utility.write_file_from_linearray(result, args.outfile)
         
     elif subcmd == "scale_factor":
-        lines = read_file_to_linearray(args.infile)
-        result = gcode.scale_factor(lines, [float(args.scale_x), float(args.scale_y), float(args.scale_z)], False)
-        write_file_from_linearray(result, args.outfile)
+        lines = utility.read_file_to_linearray(args.infile)
+        result = gcodetools.scale_factor(lines, [float(args.scale_x), float(args.scale_y), float(args.scale_z)], False)
+        utility.write_file_from_linearray(result, args.outfile)
         
     elif subcmd == "scale_into":
-        lines = read_file_to_linearray(args.infile)
-        result = gcode.scale_into(lines, float(args.width), float(args.height), float(args.depth), False)
-        write_file_from_linearray(result, args.outfile)
+        lines = utility.read_file_to_linearray(args.infile)
+        result = gcodetools.scale_into(lines, float(args.width), float(args.height), float(args.depth), False)
+        utility.write_file_from_linearray(result, args.outfile)
         
     elif subcmd == "2origin":
-        lines = read_file_to_linearray(args.infile)
-        result = gcode.move_to_origin(lines)
-        write_file_from_linearray(result, args.outfile)
+        lines = utility.read_file_to_linearray(args.infile)
+        result = gcodetools.move_to_origin(lines)
+        utility.write_file_from_linearray(result, args.outfile)
         
     elif subcmd == "gui":
         app = QApplication(sys.argv)
@@ -238,21 +239,6 @@ def main():
         #window = Window()
         window.show()
         sys.exit(app.exec_())
-
-
-# simple shared file utility functions
-
-def read_file_to_linearray(filename):
-    lines = []
-    with open(filename, "r") as f:
-        for line in f:
-            lines.append(line)
-    return lines
-
-def write_file_from_linearray(array, filename):
-    with open(filename, "w") as f:
-        for line in array:
-            f.write(line)
 
 if __name__ == "__main__":
     main()
