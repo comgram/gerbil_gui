@@ -7,7 +7,7 @@ import collections
 
 
 from classes.grbl import GRBL
-from classes.glwidget import GLWidget
+from classes.glwidget2 import GLWidget
 from classes.commandlineedit import CommandLineEdit
 
 from PyQt5 import QtCore, QtGui
@@ -56,7 +56,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
         # UI SETUP
-        
+        #=glWidget.add_vertex((0.5,0.5))
         self.glWidget = GLWidget()
         self.grid_opengl.addWidget(self.glWidget)
         
@@ -240,6 +240,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lcdNumber_wy.display("{:0.2f}".format(self.wpos[1]))
             self.lcdNumber_wz.display("{:0.2f}".format(self.wpos[2]))
             self.glWidget.mpos = self.mpos
+            self.glWidget.add_vertex((self.wpos[0],self.wpos[1]))
             self.glWidget.paintGL()
             
 

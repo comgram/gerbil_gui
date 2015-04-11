@@ -5,13 +5,8 @@ from PyQt5.QtCore import pyqtSignal, QPoint, Qt, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtOpenGL import QGLWidget
 
-try:
-    from OpenGL import GL
-except ImportError:
-    app = QApplication(sys.argv)
-    QMessageBox.critical(None, "OpenGL hellogl",
-            "PyOpenGL must be installed to run this example.")
-    sys.exit(1)
+from OpenGL import GL
+
 
 class GLWidget(QGLWidget):
     xRotationChanged = pyqtSignal(int)
