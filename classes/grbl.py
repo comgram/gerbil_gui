@@ -169,8 +169,9 @@ class GRBL:
             self.callback("on_log", "{}: Cannot start a polling thread. Another one is already running. This should not have happened.".format(self.name))
             
         self._thread_polling = None
-        
-        
+    # Just a wrapper around send.
+    def write(self,source):
+        self.send(source)
     def send(self, source):
         if self._is_connected() == False: return
     

@@ -1,4 +1,4 @@
-import sys
+import sys,traceback
 import os
 import math
 import numpy
@@ -9,6 +9,7 @@ import collections
 from classes.grbl import GRBL
 from classes.glwidget2 import GLWidget
 from classes.commandlineedit import CommandLineEdit
+import compiler.gcode as COMPILER
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
@@ -36,6 +37,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         
         self.grbl = GRBL()
+        COMPILER.receiver(self.grbl)
+        COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
         self.grbl.poll_interval = 0.1
         self.grbl.callback = self.on_grbl_event
         
@@ -295,13 +298,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if cmd[0] == "=":
             # dynamically executed python code must begin with an equal sign
             # "self." is prepended for convenience
-            try:
+            if cmd[1] == "=":
+                kls = "COMPILER"
+                cmd = cmd[2:]
+            else:
+                kls = "self" 
                 cmd = cmd[1:]
-                cmd = "self.{}".format(cmd)
-                self._add_to_loginput("Executing: {}".format(cmd))
+            cmd = "%s.%s" % (kls,cmd)
+            try:
+                self._add_to_loginput("Executing: %s" % cmd)
                 exec(cmd)
             except:
                 self._add_to_loginput("Error during dynamic python execution:<br />{}".format(sys.exc_info()))
+                print("Exception in user code:")
+                traceback.print_exc(file=sys.stdout)
         else:
             self.grbl.send(cmd)
 

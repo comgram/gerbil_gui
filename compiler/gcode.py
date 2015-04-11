@@ -1,20 +1,24 @@
 from __future__ import division                 
 import sys
-import scipy
 import pprint
 import copy
-import skimage
 import math
+import inspect
+try:
+    unicode = unicode
+except NameError:
+    # 'unicode' is undefined, must be Python 3
+    str = str
+    unicode = str
+    bytes = bytes
+    basestring = (str,bytes)
+else:
+    # 'unicode' exists, must be Python 2
+    str = str
+    unicode = unicode
+    bytes = str
+    basestring = basestring
 
-pi     = scipy.pi
-dot    = scipy.dot
-sin    = scipy.sin
-cos    = scipy.cos
-ar     = scipy.array
-rand   = scipy.rand
-arange = scipy.arange
-
-rad    = lambda ang: ang*pi/180 
 '''
     When considering a bit, think of it like this.
     Does the point specified mean the center of the
@@ -30,13 +34,15 @@ rad    = lambda ang: ang*pi/180
     center_edge is the default.
 '''
 Settings = {
-    'header': "G17 G21 G90 G94 G54;header\n",
+    'header': "G17 G21 G91 G94 G54;header\n",
     'ignoreZ': False,
     'port': sys.stdout,
-    'feed_speed': 300,
-    'max_feed_speed': 400,
+    'feed_speed': 400,
+    'max_feed_speed': 800,
     'debug': True,
     'debug_gcode': True,
+    'safe_z': 2.5,
+    'log_callback': lambda str: print(str),
     'material': {
         'width': 0,
         'length': 0,
@@ -69,6 +75,9 @@ State = {
 PositionStack = []
 ''' We have to save the z-depth separately '''
 ZStack = []
+def log(str):
+    global Settings
+    Settings['log_callback'](str)
 def slow():
     global Settings
     return Settings['feed_speed'] / 2
@@ -76,6 +85,7 @@ def fast():
     global Settings
     return Settings['max_feed_speed']
 def comment(txt):
+    log(txt)
     emit(";%s" % txt)
 def push_z():
     global ZStack
@@ -97,7 +107,12 @@ def pop_position():
     move(pos[0],pos[1])
 def receiver(path=False):
     global Settings
-    Settings['port'] = open(path,'w') if path else sys.stdout
+    if isinstance(path,basestring):
+        Settings['port'] = open(path,'w')
+    elif inspect.isclass(path):
+        Settings['port'] = path
+    else:
+        Settings['port'] = sys.stdout
 def write_header():
     emit(Settings['header'])
     home()
@@ -105,24 +120,27 @@ def write_header():
     Remember that Z0 is exactlty the top of the
     material!
 '''
-def depth(d,f=50):
+def depth(d,f=False):
     global State
     global Settings
+    if not f:
+        f = Settings['max_feed_speed'] / 2
     if State['z'] == d:
         return
     if Settings['ignoreZ'] == False:
         State['z'] = d
-        emit("G1 Z%.3f F%d;depth(%.3f,%d)" % (d,f,d,f))
+        emit("G53 G1 Z%.3f F%d;depth(%.3f,%d)" % (d,f,d,f))
     else:
         emit(";IgnoreZ depth(%f,%f)" % (d,f))
 def up():
+    global Settings
     push_z()
-    depth(3,300)
+    depth(Settings['safe_z'],Settings['max_feed_speed'])
 def down():
     pop_z()
 def home():
     global Settings
-    depth(0, Settings['max_feed_speed'])
+    depth(Settings['safe_z'], Settings['max_feed_speed'])
     move(0,  0, Settings['max_feed_speed'])
     
 def move(x,y,f=False):
@@ -131,7 +149,7 @@ def move(x,y,f=False):
     State['y'] = y
     if f == False:
         f = Settings['feed_speed']
-    emit("G1 X%.3f Y%.3f F%d" % (x,y,f))
+    emit("G53 G1 X%.3f Y%.3f F%d" % (x,y,f))
 def done():
     global Settings
     emit("M2")
@@ -176,12 +194,6 @@ def block_end(cmnt="END"):
     line however does manage the z-axis for you.
     
 '''
-def rotate_points(pts,cnt,ang=pi/4):
-    '''
-        pts = {} Rotates points(nx2) about center cnt(2)
-        by angle ang(1) in radian
-    '''
-    return dot(pts-cnt,ar([[cos(ang),sin(ang)],[-sin(ang),cos(ang)]]))+cnt
 def line_to(ex,ey,d):
     global Settings
     depth(d)
@@ -224,12 +236,12 @@ def cw_arc_to(sx,sy,ex,ey,r,t,d):
     ym = (sy+ey)/2
     if  r < Q:
         r = Q+1
-    print "Q: %3.f" % Q
+    print("Q: %3.f" % Q)
    
     Xc = xm + 0.5*math.sqrt(r**2-Q**2)*(ey-sy)/Q
     Yc = ym - 0.5*math.sqrt(r**2-Q**2)*(ex-sx)/Q
 
-    print "Xc: %.3f Yc: %.3f" % (Xc,Yc)
+    print("Xc: %.3f Yc: %.3f" % (Xc,Yc))
 
     I = Xc - sx
     J = Yc - sy
@@ -244,12 +256,12 @@ def cw_circle_to(sx,sy,ex,ey,r,t,d):
     ym = (sy+ey)/2
     if  r < Q:
         r = Q+1
-    print "Q: %3.f" % Q
+    print("Q: %3.f" % Q)
    
     Xc = xm - 0.5*math.sqrt(r**2-Q**2)*(ey-sy)/Q
     Yc = ym + 0.5*math.sqrt(r**2-Q**2)*(ex-sx)/Q
 
-    print "Xc: %.3f Yc: %.3f" % (Xc,Yc)
+    print("Xc: %.3f Yc: %.3f" % (Xc,Yc))
 
     I = Xc - sx
     J = Yc - sy
@@ -323,38 +335,31 @@ def equal_triangle(blx,bly, brx,bry, d):
 
 def pocket(sx,sy,ex,ey,d):
     global Settings
+    osx = sx
+    osy = sy
     block_start("Pocket")
     inc = Settings['bit']['diameter'] / 2
-    cx = sx + ((ex - sx) / 2)
-    cy = sy + ((ey - sy) / 2 )
-    
-    nsx = cx - inc
-    nsy = cy - inc
-    nex = cx + inc
-    ney = cy + inc
-    
     up()
     move(sx,sy)
-    square(sx,sy,ex,ey,d)
-    
-    while nsx > sx and nsy > sy:
-        square(nsx,nsy,nex,ney,d)
-        nsx -= inc
-        nsy -= inc
-        nex += inc
-        ney += inc
+    while sx < ex - inc:
+        print("sx: %.3f ey: %.3f" % (sx,ey))
+        line_to(sx,ey,d)
+        sx += inc
+        line_to(sx,sy,d)
+        sx += inc
+        
     block_end("Pocket")
 
-''' Basic Gerometry Functions Test '''
-receiver("test.ngc")
-write_header()
+#''' Basic Gerometry Functions Test '''
+#receiver("test.ngc")
+#write_header()
 ##line(10,10,50,50, -3)
-square(10,10,110,110, -4)
+##square(10,10,110,110, -4)
 ##line(50,10,10,50,-2)
-pocket(0,0, 45,34,-2)
+#pocket(0,0, 450,200,-2)
 ##equal_triangle(55,10, 85, 10, -3.2)
 ##line(100,100, 150,100, -3)
 ##cw_arc(10,15,11,16,5,0,-3)
 ##circle(60,60,15,3,-3)
 
-done()
+#done()

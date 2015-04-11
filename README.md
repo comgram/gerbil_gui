@@ -17,6 +17,8 @@ Install Python 3 modules not shipped with the Debian Jessie distribution:
     
     python3 -m pip install svgwrite --user
 
+Unfortunately this doesn't always work, so you may need to download svgwrite and pyparsing projects, and run `python3 setup.py install` for each of them.
+
 ### run!
 
     git clone ...

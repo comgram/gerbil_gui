@@ -1,0 +1,12 @@
+None
+OPENGL VERSION b'3.0 Mesa 10.3.2'
+OPENGL VENDOR b'Intel Open Source Technology Center'
+OPENGL RENDERER b'Mesa DRI Intel(R) Sandybridge Mobile '
+OPENGL GLSL VERSION b'1.30'
+resizeGL
+resizeGL
+;Pocket
+    ;Z Pushed 0.000
+    G53 G1 Z2.500 F800;depth(2.500,800)
+    G53 G1 X0.000 Y0.000 F400
+;Pocket

@@ -11,6 +11,7 @@ import time
 from classes.session import Session
 from classes.svg import SVG
 from classes.grbl import GRBL
+import compiler.gcode as COMPILE
 
 from lib import stipple
 from lib import pixel2laser as p2l
