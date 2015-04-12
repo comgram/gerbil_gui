@@ -61,7 +61,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # UI SETUP
         #=glWidget.add_vertex((0.5,0.5))
         self.glWidget = GLWidget()
-        self.grid_opengl.addWidget(self.glWidget)
+        self.glTabGrid.addWidget(self.glWidget)
         
         self.pushButton_connect.clicked.connect(lambda x: self.grbl.cnect(self.line_edit_devicePath.text()))
         self.pushButton_disconnect.clicked.connect(self.disconnect)
