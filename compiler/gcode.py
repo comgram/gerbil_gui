@@ -160,9 +160,9 @@ def emit(txt=";Nothing Emitted\n"):
     global State
     
     if Settings['debug_gcode'] == True or txt[0] != ';':
-        ## for x in range(0,State['white_space']):
-            ##Settings['port'].write(" ")  
-        ##log("Writing Text: %s" % txt)
+        for x in range(0,State['white_space']):
+            Settings['port'].write(" ")  
+        log("Writing Text: %s" % txt)
         if txt and isinstance(txt,basestring) and len(txt) > 2:
             Settings['port'].write("%s" % txt)
             
