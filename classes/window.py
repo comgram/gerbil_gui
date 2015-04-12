@@ -21,7 +21,7 @@ from lib import gcodetools
 from lib import utility
 
 log_format = '%(asctime)s %(levelname)s %(message)s'
-logging.basicConfig(level=0, format=log_format)
+logging.basicConfig(level=250, format=log_format)
 
 #G91 G0 Y1 G90
 #G10 P0 L20 X0 Y0 Z0
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl = GRBL()
         COMPILER.receiver(self.grbl)
         COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
-        self.grbl.poll_interval = 0.1
+        self.grbl.poll_interval = 0.05
         self.grbl.callback = self.on_grbl_event
         
         self.filename = None
@@ -188,11 +188,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #self.logbuffer.append(gcodeblock)
             
         elif event == "on_processed_command":
-            self._add_to_loginput("<span style='color: green'>" + data[0] + "</span>")
+            self._add_to_loginput("<span style='color: green'>Line {}: {}</span>".format(data[0], data[1]))
             
         elif event == "on_error":
             self._add_to_loginput("<span style='color: red'><b>{}</b></span>".format(data[0]))
-            self._add_to_loginput("<span style='color: red'><b>Error was in line {}</b></span>".format(data[1]))
+            self._add_to_loginput("<span style='color: red'><b>Error was in line {}: {}</b></span>".format(data[2], data[1]))
             
         elif event == "on_alarm":
             self._add_to_loginput("<span style='color: orange'>" + data[0] + "</span>")
@@ -430,6 +430,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     
     def stream_file(self):
+        self.grbl.set_feed_override(self.checkBox_feedoverride.isChecked())
+        self.grbl.set_feed(self.horizontalSlider_feed.value())
         self.grbl.send("f:" + self.filename)
         
         

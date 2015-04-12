@@ -33,8 +33,8 @@ class GLWidget(QGLWidget):
         self.yPan = 0
         self.zPan = -10
         
-        self.colors = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,1,1), (1,1,1,1), (1,0,0,1) ]
-        self.positions = [ (-1,-1),   (-0.5,+1),   (+1,-1),   (+0.7,+0.6), (-1,-1), (-0.7,+0.7)   ]
+        self.colors = [ (1,0,0,1) ]
+        self.positions = [ (0,0) ]
         self._linecount = len(self.positions)
         
         self.data = np.zeros(self._linecount, [("position", np.float32, 2), ("color",    np.float32, 4)])
@@ -141,6 +141,7 @@ class GLWidget(QGLWidget):
         
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, None, GL_DYNAMIC_DRAW) #https://www.opengl.org/wiki/Buffer_Object_Streaming#Buffer_update
         
+        tuple = (tuple[0] - 80, tuple[1] - 80)
         self.positions.append(tuple)
         self.colors.append((1, 1, 1, 1))
         self._linecount = len(self.positions)
@@ -170,7 +171,7 @@ class GLWidget(QGLWidget):
         glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
         
         loc = glGetUniformLocation(self.program, "scale")
-        glUniform1f(loc, 0.004)
+        glUniform1f(loc, 0.01)
 
 
     def paintGL(self):
