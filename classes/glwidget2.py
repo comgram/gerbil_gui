@@ -170,7 +170,7 @@ class GLWidget(QGLWidget):
         glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
         
         loc = glGetUniformLocation(self.program, "scale")
-        glUniform1f(loc, 0.004)
+        glUniform1f(loc, 0.01)
 
 
     def paintGL(self):

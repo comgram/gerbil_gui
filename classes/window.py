@@ -39,7 +39,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl = GRBL()
         COMPILER.receiver(self.grbl)
         COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
-        self.grbl.poll_interval = 0.1
+        self.grbl.poll_interval = 0.05
         self.grbl.callback = self.on_grbl_event
         
         self.filename = None
