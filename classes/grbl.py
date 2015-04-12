@@ -10,6 +10,9 @@ from classes.rs232 import RS232
 
 class GRBL:
     def __init__(self, name="mygrbl", ifacepath="/dev/ttyACM0"):
+        """
+        Set up initial values of all properties.
+        """
         
         # 'public' stuff
         self.name = name
@@ -19,9 +22,7 @@ class GRBL:
         self.cmpos = (0, 0, 0)
         self.cwpos = (0, 0, 0)
         
-        
-        
-        self.poll_interval = 0.2
+        self.poll_interval = 0.2 # suggested by Grbl documentation
         
         # 'private' stuff, don't mess
         self._rx_buffer_size = 128
@@ -33,7 +34,7 @@ class GRBL:
         self._gcodefilename = None
         self._gcodefilesize = 999999999
         
-        self._current_line = "; _INIT" # explicit magic string
+        self._current_line = "; _INIT" # explicit init string for debugging
         self._current_line_sent = True
 
         # state variables
@@ -81,6 +82,17 @@ class GRBL:
     # ====== 'public' methods ======
       
     def cnect(self,path=False):
+        """
+        Connect to the RS232 port of the Grbl controller. This is done by instantiating
+        a RS232 object which by itself block-listens (in a thread) to asynchronous data
+        sent by the Grbl controller. To read these data, the method 'self._onread' will
+        block-run in a separate thread and fetch data via a thread queue. Once this is
+        set up, we soft-reset the Grbl controller, after which status polling starts.
+        
+        The only argument to this method is `path` (e.g. /dev/ttyACM0), which you can
+        set if you haven't given the path during object instatiation.
+        """
+        
         if path:
             self._ifacepath = path
             
@@ -102,6 +114,9 @@ class GRBL:
         
         
     def disconnect(self):
+        """
+        This method stops all threads, joins them, then closes the serial connection.
+        """
         if self._is_connected() == False: return
         
         self.poll_stop()
@@ -124,35 +139,58 @@ class GRBL:
         
         
     def abort(self):
+        """
+        An alias for `softreset()`, but also performs cleaning up.
+        """
         if self._is_connected() == False: return
         self.softreset()
         self._cleanup()
         
         
     def hold(self):
+        """
+        An alias for sending an exclamation mark.
+        """
         if self._is_connected() == False: return
         self._iface_write("!")
         
         
     def resume(self):
+        """
+        An alias for sending a tilde.
+        """
         if self._is_connected() == False: return
         self._iface_write("~")
         
         
     def killalarm(self):
+        """
+        An alias for sending $X, but also performs a cleanup of data
+        """
         self._iface_write("$X\n")
         self._cleanup()
         
         
     def softreset(self):
+        """
+        An alias for sending Ctrl-X
+        """
         self._iface.write("\x18") # Ctrl-X
         
         
     def homing(self):
+        """
+        An alias for sending $H
+        """
         self._iface_write("$H\n")
         
         
     def poll_start(self):
+        """
+        Start method `_poll_state()` in a thread, which sends question marks in regular
+        intervals forever, or until _poll_do is set to False. Grbl responds to the 
+        question marks with a status string enclosed in angle brackets < and >.
+        """
         if self._is_connected() == False: return
         self._poll_do = True
         if self._thread_polling == None:
@@ -164,6 +202,10 @@ class GRBL:
             
         
     def poll_stop(self):
+        """
+        Set _poll_do to False, which completes the status polling thread. This method
+        also joins the thread to make sure it comes to a well defined end.
+        """
         if self._is_connected() == False: return
         if self._thread_polling != None:
             self._poll_do = False
@@ -191,28 +233,62 @@ class GRBL:
             
             
     def set_feed_override(self, val):
+        """
+        Pass True or False as argument to enable or disable feed override. If you pass
+        True, all F gcode-commands will be stripped out from the stream. In addition, no feed
+        override takes place until you also have set the requested feed via the method
+        `set_feed()`.
+        """
         self._feed_override = val
         
         
     def set_feed(self, requested_feed):
-        if self._current_feed != requested_feed:
-            self._requested_feed = float(requested_feed)
+        """
+        Override the feed speed (in mm/min). Effecive only when you set `set_feed_override(True)`.
+        An 'overriding' F gcode command will be inserted into the stream only when the currently
+        requested feed differs from the last requested feed.
+        """
+        self._requested_feed = float(requested_feed)
+        
         
     def set_incremental_streaming(self, a):
+        """
+        Pass True to enable incremental streaming. The default is False.
+        
+        Incremental streaming means that a new command is sent to Grbl only after
+        Grbl has responded with 'ok' to the last sent command.
+        
+        Non-incremental streaming means that Grbl's 128-byte receive buffer will
+        be kept as full as possible at all times, to give it's motion planner system
+        enough data to work with. This results in smoother and faster axis motion.
+        
+        You can change the streaming method even during streaming.
+        """
         self._incremental_streaming = a
         if self._incremental_streaming == True:
             self._wait_empty_buffer = True
         self.callback("on_log", "{}: Incremental streaming is {}".format(self.name, self._incremental_streaming))
     
     
-    # Just a wrapper around
     def write(self,source):
-        print("WRITING: '%s'" % source)
+        """
+        The Gcode compiler requires a method "write" to be present. This is just an alias for `send()`
+        """
         self.send(source)
         
     
-    # adds lines to _buffer
     def send(self, source):
+        """
+        Stream one or many commands to Grbl.
+        
+        An argument other than a string is rejected.
+        A single command does not have to be newline-terminated.
+        To send multiple commands in one go, separate them by newlines.
+        Empty or blank strings are simply ignored.
+        Gcode comments (semicolon and parentesis) will be filtered out
+        
+        
+        """
         logging.log(200, "%s: send(): %s", self.name, source)
         if self._is_connected() == False: return
     
@@ -235,17 +311,19 @@ class GRBL:
         self._streaming_mode = requested_mode
         
         if self._streaming_mode == "string":
-            # add everything into buffer
+            # append to buffer
             arr = source.split("\n")
-            arr_stripped = [x.strip() for x in arr]
+            arr_stripped = []
+            for l in arr:
+                # when sending individual strings, strip comments early
+                # when first individual string contains comment-only, it
+                # mimics src_end_reached
+                l = re.match("([^;(]*)", l).group(1)
+                if l != "":
+                    arr_stripped.append(l.strip())
             self._buffer.extend(arr_stripped)
-            # print("XXXXXXXXXXX", self._buffer) #==pocket(0,0,10,10,-5)
         
-        self._set_job_finished(False)
-        self._set_streaming_src_end_reached(False)
-        self._set_streaming_complete(False)
-        
-        if self._streaming_mode == "file":
+        elif self._streaming_mode == "file":
             filename = source.replace("f:", "")
             self._gcodefile = open(filename)
             self._gcodefilesize = os.path.getsize(filename)
@@ -254,7 +332,15 @@ class GRBL:
             if self._feed_override == True and self._current_feed == None:
                 self.set_feed(self._requested_feed)
             
-        self._stream()
+        self._set_streaming_src_end_reached(False)
+        self._set_streaming_complete(False)
+        
+        if self._job_finished == True:
+            if len(self._buffer) > 0:
+                # happens when first line is comment
+                self._stream() # only needed at beginning, because once kicked off it is self-sustaining
+                self._set_job_finished(False)
+
 
 
     # ====== 'private' methods ======
@@ -269,22 +355,32 @@ class GRBL:
         
         if self._incremental_streaming:
             # buffer is guaranteed to be underfull, so it is safe to send without checking Grbl's rx buffer size
+            logging.log(200, "%s: _stream(): Is incremental. Setting next line.")
             self._set_next_line()
+            logging.log(200, "%s: _stream(): Source end reached=%s", self.name, self._streaming_src_end_reached)
             if self._streaming_src_end_reached == False:
                 self._send_current_line()
                 
         else:
+            logging.log(200, "%s: _stream(): Calling _fill_rx_buffer_until_full", self.name)
             self._fill_rx_buffer_until_full()
 
         
         
     def _fill_rx_buffer_until_full(self):
-        while self._streaming_src_end_reached == False and self._current_line_sent == True:
-            # everything so far has been sent, so we can get the next line
-            self._set_next_line()
-            #logging.log(200, "%s: _stream() IN while(): current_line:'%s' rx_buf_can_receive: %s", self.name, self._current_line, self._rx_buf_can_receive_current_line())
+        logging.log(200, "%s: _fill_rx_buffer_until_full(): called. checking for while: end_reached=%s, current_line_sent=%s", self.name, self._streaming_src_end_reached, self._current_line_sent)
+        
+        while True:
+            if self._current_line_sent == True:
+                self._set_next_line()
+                
+            logging.log(200, "%s: _fill_rx_buffer_until_full(): in WHILE loop: end_reached=%s, buf_can_receive=%s", self.name, self._streaming_src_end_reached, self._rx_buf_can_receive_current_line())
+            
             if self._streaming_src_end_reached == False and self._rx_buf_can_receive_current_line():
+                logging.log(200, "%s: _fill_rx_buffer_until_full(): in WHILE loop: sending current line!")
                 self._send_current_line() # will add _SENT comment to _current_line
+            else:
+                break
                 
                 
                 
@@ -292,6 +388,9 @@ class GRBL:
     def _set_next_line(self):
         preprocessed_line = ""
         
+        if self._streaming_src_end_reached == True:
+            logging.log(200, "%s: _set_next_line(): Will not enter while loop because end_reached=%s", self.name, self._streaming_src_end_reached)
+            
         while preprocessed_line == "" and self._streaming_src_end_reached == False:
             # read one line from file and append it to _buffer
             if self._streaming_mode == "file":
@@ -310,6 +409,7 @@ class GRBL:
                     self.callback("on_log", "{}: Closed file.".format(self.name))
                     
                 
+            # at this point, buffer contains comments etc.
             if len(self._buffer) > 0:
                 # still something in _buffer, get it
                 line = self._buffer.pop(0).strip()
@@ -322,7 +422,9 @@ class GRBL:
         if preprocessed_line != "":
             self._current_line = preprocessed_line
             self._current_line_sent = False
-            logging.log(200, "%s: _set_next_line(): raw:'%s' preprocessed:'%s'", self.name, line, preprocessed_line)
+            logging.log(200, "%s: _set_next_line(): SETTING CURRENT LINE TO '%s'", self.name, preprocessed_line)
+        else:
+            logging.log(200, "%s: _set_next_line(): Did NOT set CURRENT LINE because line was empty", self.name)
         
         
         
@@ -399,7 +501,7 @@ class GRBL:
                 line = re.sub(r"F[.\d]+", "", line)
                 
             if self._requested_feed and self._current_feed != self._requested_feed:
-                line += "F{:d}".format(self._requested_feed)
+                line += "F{:0.1f}".format(self._requested_feed)
                 self._current_feed = self._requested_feed
                 self.callback("on_log", "OVERRIDING FEED" + str(self._current_feed))
             
@@ -459,7 +561,7 @@ class GRBL:
                 
                 
     def _handle_ok(self):
-        logging.log(200, "%s: handle ok: %s %s %s %s", self.name, self._error, self._streaming_complete, self._streaming_mode, self._incremental_streaming)
+        logging.log(200, "%s: handle ok: error:%s complete:%s mode:%s incremental:%s", self.name, self._error, self._streaming_complete, self._streaming_mode, self._incremental_streaming)
 
         if self._error == False:
             if self._streaming_complete == False:
@@ -509,7 +611,7 @@ class GRBL:
         del self._buffer[:]
         del self._rx_buffer_fill[:]
         del self._rx_buffer_backlog[:]
-        logging.log(200, "%s: cleaning up, buffer is now %s %s %s", self.name, self._buffer, self._rx_buffer_fill, self._rx_buffer_backlog )
+        
         if self._gcodefile and not self._gcodefile.closed:
             logging.log(400, "%s: closing file", self.name)
             self._gcodefile.close()
@@ -522,7 +624,7 @@ class GRBL:
         self._set_streaming_src_end_reached(True)
         self._error = False
         self._callback_onboot =  lambda : None
-        self._current_line = "; _INIT" # explicit magic string
+        self._current_line = "; _CLEANUP" # explicit magic string for debugging
         self._current_line_sent = True
         self._gcodefilesize = 999999999
         self._streamed_bytes = 0
@@ -544,6 +646,7 @@ class GRBL:
     def _set_streaming_src_end_reached(self, a):
         self._streaming_src_end_reached = a
         self.callback("on_log", "{}: Streaming source end reached: {}".format(self.name, a))
+        print("STREAMING SOURCE END REACHED", a)
 
 
     # The buffer has been fully written to Grbl, but Grbl is still processing the last commands.
@@ -562,8 +665,26 @@ class GRBL:
         print("DEFAULT CALLBACK", status, args)
         
         
-    def test_string(self):
-        for i in range(0,10):
-            self.send("G1 X3 Y0 Z0 F1000")
-            #self.send(None)
-            self.send("G1 X-3 Y0 Z0 F1000")
+    def test1(self):
+        self.send(";Pocket")
+        self.send("G0 X0")
+        for y in range(0, 100, 6):
+            self.send("G0 Y{:0.3f}".format(y))
+            self.send("G0 X50 ; a lot of comments here")
+            self.send("; a lot of comments here")
+            self.send("")
+            self.send("G0 Y{:0.3f}".format(y+3))
+            self.send("G0 X0")
+            
+    def test2(self):
+        allcode = ";blah"
+        allcode = "\n"
+        allcode += "G0 X0\n"
+        for y in range(0, 100, 6):
+            allcode += "G0 Y{:0.3f}\n".format(y)
+            allcode += "G0 X50 ; a lot of comments here\n"
+            allcode += "; a lot of comments here\n"
+            allcode += "\n\n"
+            allcode += "G0 Y{:0.3f}\n\n\n\n".format(y+3)
+            allcode += "G0 X0\n"
+        self.send(allcode)
