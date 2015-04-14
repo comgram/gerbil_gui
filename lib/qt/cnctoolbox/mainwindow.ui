@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1190</width>
-    <height>631</height>
+    <width>1229</width>
+    <height>674</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -466,7 +466,7 @@
       <property name="sizeConstraint">
        <enum>QLayout::SetMaximumSize</enum>
       </property>
-      <item row="0" column="0">
+      <item row="0" column="1">
        <widget class="QTabWidget" name="centerTabWidget">
         <property name="currentIndex">
          <number>0</number>
@@ -475,17 +475,18 @@
          <attribute name="title">
           <string>Simulation</string>
          </attribute>
-         <widget class="QWidget" name="gridLayoutWidget">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>10</y>
-            <width>631</width>
-            <height>441</height>
-           </rect>
-          </property>
-          <layout class="QGridLayout" name="glTabGrid"/>
-         </widget>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <layout class="QGridLayout" name="glTabGrid">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetDefaultConstraint</enum>
+            </property>
+            <property name="horizontalSpacing">
+             <number>4</number>
+            </property>
+           </layout>
+          </item>
+         </layout>
         </widget>
         <widget class="QWidget" name="conversationTab">
          <attribute name="title">
@@ -953,7 +954,7 @@
          <x>0</x>
          <y>0</y>
          <width>285</width>
-         <height>276</height>
+         <height>319</height>
         </rect>
        </property>
       </widget>

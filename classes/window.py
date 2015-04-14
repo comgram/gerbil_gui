@@ -22,7 +22,7 @@ from lib import gcodetools
 from lib import utility
 
 log_format = '%(asctime)s %(levelname)s %(message)s'
-logging.basicConfig(level=200, format=log_format)
+logging.basicConfig(level=250, format=log_format)
 
 #G91 G0 Y1 G90
 #G10 P0 L20 X0 Y0 Z0
@@ -41,7 +41,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         COMPILER.receiver(self.grbl)
         COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
         self.grbl.poll_interval = 0.1
-        self.grbl.callback = self.on_grbl_event
+        self.grbl.set_callback(self.on_grbl_event)
         
         self.filename = None
         

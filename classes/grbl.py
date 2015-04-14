@@ -7,6 +7,7 @@ import os
 
 from queue import Queue
 from classes.rs232 import RS232
+from classes.preprocessor import Preprocessor
 
 class GRBL:
     def __init__(self, name="mygrbl", ifacepath="/dev/ttyACM0"):
@@ -35,7 +36,7 @@ class GRBL:
         self._gcodefilename = None
         self._gcodefilesize = 999999999
         
-        self._current_line = "; _INIT" # explicit init string for debugging
+        self._current_line = "; cnctools_INIT" # explicit init string for debugging
         self._current_line_sent = True
 
         # state variables
@@ -46,10 +47,6 @@ class GRBL:
         
         self.distance_mode_arc = None
         self.distance_mode_linear = None
-        
-        self._feed_override = False
-        self._current_feed = None
-        self._requested_feed = None
         
         self._streaming_complete = True
         self._job_finished = True
@@ -79,10 +76,16 @@ class GRBL:
         self._callback_onboot =  lambda : None
         self.callback = self._default_callback
         
+        self._preprocessor = Preprocessor()
+        
         atexit.register(self.disconnect)
         
         
     # ====== 'public' methods ======
+    
+    def set_callback(self, cb):
+        self.callback = cb
+        self._preprocessor.callback = cb
       
     def cnect(self,path=False):
         """
@@ -241,8 +244,8 @@ class GRBL:
         override takes place until you also have set the requested feed via the method
         `set_feed()`.
         """
-        logging.log(260, "Setting feed_override to %s", val)
-        self._feed_override = val
+        #logging.log(260, "Setting feed_override to %s", val)
+        self._preprocessor.set_feed_override(val)
         
         
     def set_feed(self, requested_feed):
@@ -251,8 +254,8 @@ class GRBL:
         An 'overriding' F gcode command will be inserted into the stream only when the currently
         requested feed differs from the last requested feed.
         """
-        logging.log(260, "Setting _requested_feed to %s", requested_feed)
-        self._requested_feed = float(requested_feed)
+        #logging.log(260, "Setting _requested_feed to %s", requested_feed)
+        self._preprocessor.set_feed(float(requested_feed))
         
         
     def set_incremental_streaming(self, a):
@@ -321,8 +324,6 @@ class GRBL:
             self._gcodefilesize = os.path.getsize(filename)
             self._streamed_bytes = 0
             self.callback("on_log", "{}: File size is {:d}".format(self.name, self._gcodefilesize))
-            if self._feed_override == True and self._current_feed == None:
-                self.set_feed(self._requested_feed)
             
         self._set_streaming_src_end_reached(False)
         self._set_streaming_complete(False)
@@ -431,29 +432,14 @@ class GRBL:
     
     
     def _preprocess(self, line):
-        """
-        This removes comments and spaces, parses gcode to keep track of some G codes,
-        and does feed override.
-        """
-        
-        # strip comments (after semicolon and opening parenthesis)
-        line = re.match("([^;(]*)", line).group(1)
-        
-        # strip
-        line = line.strip()
-        
-        # remove whitespaces
-        line = line.replace(" ", "")
-        
-        # check for $ settings
         contains_setting = re.match("\$[^CXHG$#]", line)
         if contains_setting and self._incremental_streaming == False:
             self.callback("on_log", "{}: I encountered a settings command '{}' in the gcode stream but the current streaming mode is not set to incremental. Grbl cannot handle that. I will not send the $ command.".format(self.name, line))
             line = ""
             
-        # keep track of distance modes        
         if re.match("G90($|[^.])", line):
             self.distance_mode_linear = "absolute"
+            print("HERE")
             self.callback("on_linear_distance_mode_change", self.distance_mode_linear)
         
         if re.match("G91($|[^.])", line):
@@ -467,28 +453,9 @@ class GRBL:
         if "G91.1" in line:
             self.distance_mode_arc = "incremental"
             self.callback("on_arc_distance_mode_change", self.distance_mode_arc)
-
-        contains_feed = True if re.match(".*F[.\d]+", line) else False
-        
-        # Update the UI for detected feed
-        if contains_feed:
-            if self._feed_override == False:
-                parsed_feed = re.match(".*F([.\d]+)", line).group(1)
-                self._current_feed = float(parsed_feed)
-                self.callback("on_feed_change", self._current_feed)
-                #self.callback("on_log", "FEED" + str(self._current_feed))
             
-        if self._feed_override == True:
-            if self._requested_feed:
-                if contains_feed:
-                    # strip the original F setting
-                    line = re.sub(r"F[.\d]+", "", line)
-                    
-                if self._current_feed != self._requested_feed:
-                    line += "F{:0.1f}".format(self._requested_feed)
-                    self._current_feed = self._requested_feed
-                    self.callback("on_log", "OVERRIDING FEED: " + str(self._current_feed))
-
+        # gcode processing
+        line = self._preprocessor.do(line)
         return line
     
         
@@ -635,7 +602,7 @@ class GRBL:
         self._set_streaming_src_end_reached(True)
         self._error = False
         self._callback_onboot =  lambda : None
-        self._current_line = "; _CLEANUP" # explicit magic string for debugging
+        self._current_line = "; cnctools_CLEANUP" # explicit magic string for debugging
         self._current_line_sent = True
         self._gcodefilesize = 999999999
         self._streamed_bytes = 0
@@ -683,4 +650,4 @@ class GRBL:
         
 
     def _default_callback(self, status, *args):
-        print("DEFAULT CALLBACK", status, args)
+        print("GRBL DEFAULT CALLBACK", status, args)

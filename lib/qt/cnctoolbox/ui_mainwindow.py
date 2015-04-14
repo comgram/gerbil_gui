@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Sun Apr 12 22:23:24 2015
+# Created: Tue Apr 14 11:20:57 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1190, 631)
+        MainWindow.resize(1229, 674)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -238,12 +238,13 @@ class Ui_MainWindow(object):
         self.centerTabWidget.setObjectName("centerTabWidget")
         self.glTab = QtWidgets.QWidget()
         self.glTab.setObjectName("glTab")
-        self.gridLayoutWidget = QtWidgets.QWidget(self.glTab)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(0, 10, 631, 441))
-        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
-        self.glTabGrid = QtWidgets.QGridLayout(self.gridLayoutWidget)
-        self.glTabGrid.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.glTab)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.glTabGrid = QtWidgets.QGridLayout()
+        self.glTabGrid.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
+        self.glTabGrid.setHorizontalSpacing(4)
         self.glTabGrid.setObjectName("glTabGrid")
+        self.gridLayout_2.addLayout(self.glTabGrid, 0, 0, 1, 1)
         self.centerTabWidget.addTab(self.glTab, "")
         self.conversationTab = QtWidgets.QWidget()
         self.conversationTab.setObjectName("conversationTab")
@@ -336,7 +337,7 @@ class Ui_MainWindow(object):
         self.linesToExecuteLabel.setGeometry(QtCore.QRect(320, 30, 66, 21))
         self.linesToExecuteLabel.setObjectName("linesToExecuteLabel")
         self.centerTabWidget.addTab(self.scriptTab, "")
-        self.grid_opengl.addWidget(self.centerTabWidget, 0, 0, 1, 1)
+        self.grid_opengl.addWidget(self.centerTabWidget, 0, 1, 1, 1)
         self.gridLayout.addLayout(self.grid_opengl, 4, 3, 10, 8)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
@@ -397,7 +398,7 @@ class Ui_MainWindow(object):
         self.scrollArea_loginput.setWidgetResizable(True)
         self.scrollArea_loginput.setObjectName("scrollArea_loginput")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 276))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 319))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea_loginput.setWidget(self.scrollAreaWidgetContents)
         self.gridLayout.addWidget(self.scrollArea_loginput, 4, 12, 4, 3)
