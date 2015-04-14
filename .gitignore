@@ -20,3 +20,5 @@
 *.crd
 
 data
+log
+*.user
