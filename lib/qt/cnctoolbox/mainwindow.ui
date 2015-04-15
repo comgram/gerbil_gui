@@ -469,7 +469,7 @@
       <item row="0" column="0">
        <widget class="QTabWidget" name="centerTabWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="glTab">
          <attribute name="title">
