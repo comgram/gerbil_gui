@@ -141,7 +141,7 @@ G53
 :Move in Machine Coordinates
 
 G92
-: Coordinate System Offset
+: Set Coordinate System Offset
 
 G92.1
 :Reset Coordinate System Offsets
@@ -255,3 +255,8 @@ M5
 ### Valid Non-Command Words
 
 F, I, J, K, L, N, P, R, S, T, X, Y, Z
+
+
+
+Go to Machine Zero: G53 G0 X0 Y0 Z0
+

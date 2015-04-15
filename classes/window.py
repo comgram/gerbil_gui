@@ -4,6 +4,7 @@ import math
 import numpy
 import logging
 import collections
+import time
 
 
 from classes.grbl import GRBL
@@ -39,8 +40,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl = GRBL()
         COMPILER.receiver(self.grbl)
         COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
-        self.grbl.poll_interval = 0.05
-        self.grbl.callback = self.on_grbl_event
+        self.grbl.poll_interval = 0.1
+        self.grbl.set_callback(self.on_grbl_event)
         
         self.filename = None
         
@@ -63,7 +64,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.glWidget = GLWidget()
         self.glTabGrid.addWidget(self.glWidget)
         
-        self.pushButton_connect.clicked.connect(lambda x: self.grbl.cnect(self.line_edit_devicePath.text()))
+        self.pushButton_connect.clicked.connect(self.cnect)
         self.pushButton_disconnect.clicked.connect(self.disconnect)
         self.pushButton_homing.clicked.connect(self.grbl.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
@@ -113,7 +114,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer.timeout.connect(self.refresh)
         self.timer.start(30)
         
-
+        self.pushButton_disconnect.setEnabled(False)
+        self.pushButton_connect.setEnabled(True)
         
         
         #QFont f( "Cantarell", 10, QFont::Bold);
@@ -179,7 +181,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.state = data[0]
             self.mpos = data[1]
             self.wpos = data[2]
-            self.changed_state = True
+            if self.grbl.connected:
+                self.changed_state = True
             
         elif event == "on_send_command":
             pass
@@ -222,7 +225,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.grbl.set_incremental_streaming(True)
             
         elif event == "on_boot":
-            pass
+            self.pushButton_disconnect.setEnabled(True)
+            self.pushButton_connect.setEnabled(False)
+            
+        elif event == "on_disconnected":
+            self.pushButton_disconnect.setEnabled(False)
+            self.pushButton_connect.setEnabled(True)
+            self.lcdNumber_mx.display("{:0.2f}".format(8888.88))
+            self.lcdNumber_my.display("{:0.2f}".format(8888.88))
+            self.lcdNumber_mz.display("{:0.2f}".format(8888.88))
+            self.lcdNumber_wx.display("{:0.2f}".format(8888.88))
+            self.lcdNumber_wy.display("{:0.2f}".format(8888.88))
+            self.lcdNumber_wz.display("{:0.2f}".format(8888.88))
+            self.label_state.setText("disconnected")
+            self._add_to_loginput("<i>Successfully disconnected!</i>")
+            self._add_to_loginput("")
         
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
@@ -260,7 +277,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 color = "red"
                 
             self.label_state.setText("<span style='color: {}'>{}</span>".format(color, self.state))
-            
             
             self.changed_state = False
             
@@ -464,16 +480,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send("G0 X0 Y0 Z0")
         
         
+    def cnect(self):
+        self.pushButton_connect.setEnabled(False)
+        #self.pushButton_disconnect.setEnabled(False)
+        self.grbl.cnect(self.line_edit_devicePath.text())
+        
     def disconnect(self):
+        #self.pushButton_connect.setEnabled(False)
+        self.pushButton_disconnect.setEnabled(False)
         self.grbl.disconnect()
-        self.lcdNumber_mx.display("{:0.2f}".format(8888.88))
-        self.lcdNumber_my.display("{:0.2f}".format(8888.88))
-        self.lcdNumber_mz.display("{:0.2f}".format(8888.88))
-        self.lcdNumber_wx.display("{:0.2f}".format(8888.88))
-        self.lcdNumber_wy.display("{:0.2f}".format(8888.88))
-        self.lcdNumber_wz.display("{:0.2f}".format(8888.88))
-        self.label_state.setText("disconnected")
-        #self.label_loginputline.setText("")
         
         
     # call: =bbox(True)

@@ -18,7 +18,7 @@ class RS232:
     def start(self, q):
         self.queue = q
         logging.log(100, "%s: connecting to %s", self.name, self.path)
-        self.serialport = serial.Serial(self.path, self.baud, timeout=5)
+        self.serialport = serial.Serial(self.path, self.baud, timeout=1)
         
         self.serialport.flushInput()
         self.serialport.flushOutput()
