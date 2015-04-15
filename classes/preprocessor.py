@@ -12,20 +12,24 @@ class Preprocessor:
         
         self.callback = self._default_callback
         
-        self._vars[1] = -11
         self._re_var = re.compile(".*#(\d)")
         self._re_var_assign = re.compile(".*#(\d)=([\d.-]+)")
         self._re_var_replace = re.compile(r"#\d")
         self._re_feed = re.compile(".*F([.\d]+)")
         self._re_feed_replace = re.compile(r"F[.\d]+")
+        
+    def cleanup(self):
+        self._current_feed = None
     
     def set_feed_override(self, val):
         self._feed_override = val
         #logging.log(260, "Preprocessor: Feed override set to %s", val)
+            
         
-    def set_feed(self, val):
+    def request_feed(self, val):
         self._requested_feed = val
         #logging.log(260, "Preprocessor: Feed request set to %s", val)
+        
     
     def do(self, line):
         self.line = line
@@ -82,28 +86,28 @@ class Preprocessor:
             else:
                 self.callback("on_log", "VAR #{} UNDEFINED".format(key))
    
+   
     def _handle_feed(self):
         match = re.match(self._re_feed, self.line)
         contains_feed = True if match else False
         
-        # Update the UI for detected feed
-        if contains_feed:
-            if self._feed_override == False:
-                parsed_feed = match.group(1)
-                self._current_feed = float(parsed_feed)
-                self.callback("on_feed_change", self._current_feed)
-                #self.callback("on_log", "FEED" + str(self._current_feed))
+        
+        if self._feed_override == False and contains_feed:
+            # Simiply update the UI for detected feed
+            parsed_feed = match.group(1)
+            self._current_feed = float(parsed_feed)
+            self.callback("on_feed_change", self._current_feed)
             
-        if self._feed_override == True:
-            if self._requested_feed:
-                if contains_feed:
-                    # strip the original F setting
-                    self.line = re.sub(self._re_feed_replace, "", self.line)
-                    
-                if self._current_feed != self._requested_feed:
-                    self.line += "F{:0.1f}".format(self._requested_feed)
-                    self._current_feed = self._requested_feed
-                    self.callback("on_log", "OVERRIDING FEED: " + str(self._current_feed))
+        if self._feed_override == True and self._requested_feed:
+            if contains_feed:
+                # strip the original F setting
+                self.line = re.sub(self._re_feed_replace, "", self.line)
+                self.line = "; cnctoolbox_stripped_feed"
+                
+            if self._current_feed != self._requested_feed:
+                self.line += "F{:0.1f}".format(self._requested_feed)
+                self._current_feed = self._requested_feed
+                self.callback("on_log", "OVERRIDING FEED: " + str(self._current_feed))
                     
             
             

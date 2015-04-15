@@ -36,6 +36,10 @@ class GRBL:
         self._gcodefilename = None
         self._gcodefilesize = 999999999
         
+        #self._requested_feed = None
+        #self._current_feed = None
+        #self._feed_override = False
+        
         self._current_line = "; cnctools_INIT" # explicit init string for debugging
         self._current_line_sent = True
 
@@ -73,10 +77,9 @@ class GRBL:
         self._iface = None
         self._queue = Queue()
         
-        self._callback_onboot =  lambda : None
         self.callback = self._default_callback
         
-        self.preprocessor = Preprocessor()
+        self._preprocessor = Preprocessor()
         
         atexit.register(self.disconnect)
         
@@ -85,7 +88,7 @@ class GRBL:
     
     def set_callback(self, cb):
         self.callback = cb
-        self.preprocessor.callback = cb
+        self._preprocessor.callback = cb
       
     def cnect(self,path=False):
         """
@@ -114,9 +117,6 @@ class GRBL:
         self._iface_read_do = True
         self._thread_read_iface = threading.Thread(target=self._onread)
         self._thread_read_iface.start()
-        
-        self._callback_onboot = self.poll_start
-        #self.softreset()
         
         
     def disconnect(self):
@@ -173,7 +173,7 @@ class GRBL:
         An alias for sending $X, but also performs a cleanup of data
         """
         self._iface_write("$X\n")
-        self._cleanup()
+        #self._cleanup()
         
         
     def softreset(self):
@@ -203,7 +203,7 @@ class GRBL:
             self._thread_polling.start()
             self.callback("on_log", "{}: Polling thread started".format(self.name))
         else:
-            self.callback("on_log", "{}: Cannot start polling task: Another polling thread seems to be already running".format(self.name))
+            self.callback("on_log", "{}: Polling thread already running...".format(self.name))
             
         
     def poll_stop(self):
@@ -245,17 +245,19 @@ class GRBL:
         `set_feed()`.
         """
         #logging.log(260, "Setting feed_override to %s", val)
-        self.preprocessor.set_feed_override(val)
+        self._preprocessor.set_feed_override(val)
+        #self._feed_override = val
         
         
-    def set_feed(self, requested_feed):
+    def request_feed(self, requested_feed):
         """
         Override the feed speed (in mm/min). Effecive only when you set `set_feed_override(True)`.
         An 'overriding' F gcode command will be inserted into the stream only when the currently
         requested feed differs from the last requested feed.
         """
         #logging.log(260, "Setting _requested_feed to %s", requested_feed)
-        self.preprocessor.set_feed(float(requested_feed))
+        self._preprocessor.request_feed(float(requested_feed))
+        #self._requested_feed = float(requested_feed)
         
         
     def set_incremental_streaming(self, a):
@@ -439,7 +441,6 @@ class GRBL:
             
         if re.match("G90($|[^.])", line):
             self.distance_mode_linear = "absolute"
-            print("HERE")
             self.callback("on_linear_distance_mode_change", self.distance_mode_linear)
         
         if re.match("G91($|[^.])", line):
@@ -455,7 +456,7 @@ class GRBL:
             self.callback("on_arc_distance_mode_change", self.distance_mode_arc)
             
         # gcode processing
-        line = self.preprocessor.do(line)
+        line = self._preprocessor.do(line)
         
         if line == None:
             # preprocessor had an error. this is critical.
@@ -505,11 +506,8 @@ class GRBL:
                     self._update_state(line)
                     
                 elif "Grbl " in line:
-                    if self.connected == False:
-                        logging.log(200, "%s <----- %s", self.name, line)
-                        self._on_bootup()
-                    else:
-                        logging.log(200, "%s Got second bootup message but already connected. Ignoring.", self.name)
+                    logging.log(200, "%s <----- %s", self.name, line)
+                    self._on_bootup()
                     
                 elif line == "ok":
                     logging.log(200, "%s <----- %s", self.name, line)
@@ -561,12 +559,11 @@ class GRBL:
         """
         Inform UI and bring distance modes to absolute.
         """
+        self._cleanup()
         self.connected = True
         self.callback("on_log", "{}: Booted!".format(self.name))
-        self._callback_onboot()
         self.callback("on_boot")
-        #self.send("G90")
-        #self.send("G90.1")
+        self.poll_start()
             
             
     def _update_state(self, line):
@@ -590,6 +587,10 @@ class GRBL:
     
     
     def _cleanup(self):
+        """
+        called after boot. Should mimic Grbl's initial state after boot.
+        """
+        
         del self._buffer[:]
         del self._rx_buffer_fill[:]
         del self._rx_buffer_backlog[:]
@@ -606,7 +607,6 @@ class GRBL:
         self._set_job_finished(True)
         self._set_streaming_src_end_reached(True)
         self._error = False
-        self._callback_onboot =  lambda : None
         self._current_line = "; cnctools_CLEANUP" # explicit magic string for debugging
         self._current_line_sent = True
         self._gcodefilesize = 999999999
@@ -615,6 +615,9 @@ class GRBL:
         self._streamed_lines = 0
         self._added_lines = 0
         self._clear_queue()
+        
+        self._preprocessor.cleanup()
+        
         
         
     def _clear_queue(self):

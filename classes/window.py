@@ -22,7 +22,7 @@ from lib import gcodetools
 from lib import utility
 
 log_format = '%(asctime)s %(levelname)s %(message)s'
-logging.basicConfig(level=250, format=log_format)
+logging.basicConfig(level=200, format=log_format)
 
 #G91 G0 Y1 G90
 #G10 P0 L20 X0 Y0 Z0
@@ -430,11 +430,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _feedoverride_value_changed(self):
         val = self.horizontalSlider_feed.value()
         self.lcdNumber_feed.display(val)
-        self.grbl.set_feed(val)
+        self.grbl.request_feed(val)
         
     def _feedoverride_changed(self, val):
         val = False if val == 0 else True
+        # first write feed to Grbl
         self._feedoverride_value_changed()
+        # next set the boolean flag
         self.grbl.set_feed_override(val)
         
     def _incremental_changed(self, val):
@@ -452,8 +454,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     
     def stream_file(self):
-        self.grbl.set_feed_override(self.checkBox_feedoverride.isChecked())
-        self.grbl.set_feed(self.horizontalSlider_feed.value())
+        #self.grbl.set_feed_override(self.checkBox_feedoverride.isChecked())
+        #self.grbl.set_feed(self.horizontalSlider_feed.value())
         self.grbl.send("f:" + self.filename)
         
         
@@ -491,10 +493,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.pushButton_disconnect.setEnabled(False)
         self.grbl.cnect(self.line_edit_devicePath.text())
         
+        #self.horizontalSlider_feed.setValue(100)
+        #self.checkBox_feedoverride.setChecked(False)
+        
+        
     def disconnect(self):
         #self.pushButton_connect.setEnabled(False)
         self.pushButton_disconnect.setEnabled(False)
         self.grbl.disconnect()
+        
+        #self.horizontalSlider_feed.setValue(100)
+        #self.checkBox_feedoverride.setChecked(False)
         
         
     # call: =bbox(True)
