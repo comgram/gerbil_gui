@@ -468,8 +468,14 @@
       </property>
       <item row="0" column="1">
        <widget class="QTabWidget" name="centerTabWidget">
+        <property name="tabPosition">
+         <enum>QTabWidget::North</enum>
+        </property>
+        <property name="tabShape">
+         <enum>QTabWidget::Rounded</enum>
+        </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="glTab">
          <attribute name="title">
@@ -861,6 +867,31 @@
             <string>Window</string>
            </property>
           </widget>
+         </widget>
+        </widget>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>Preprocessor</string>
+         </attribute>
+         <widget class="QTableWidget" name="tableWidget_variables">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>60</y>
+            <width>221</width>
+            <height>371</height>
+           </rect>
+          </property>
+          <property name="rowCount">
+           <number>2</number>
+          </property>
+          <property name="columnCount">
+           <number>2</number>
+          </property>
+          <row/>
+          <row/>
+          <column/>
+          <column/>
          </widget>
         </widget>
        </widget>
