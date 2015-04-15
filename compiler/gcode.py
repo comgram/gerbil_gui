@@ -131,7 +131,7 @@ def fast():
     global Settings
     return Settings['max_feed_speed']
 def comment(txt):
-    log(txt)
+    #log(txt)
     emit(";%s" % txt)
 def push_z():
     global ZStack
@@ -213,7 +213,7 @@ def emit(txt=";Nothing Emitted\n"):
     if Settings['debug_gcode'] == True or txt[0] != ';':
         for x in range(0,State['white_space']):
             Settings['port'].write(" ")  
-        log("Writing Text: %s" % txt)
+        #log("Writing Text: %s" % txt)
         if txt and isinstance(txt,basestring) and len(txt) > 2:
             Settings['port'].write("%s\n" % txt)
             
