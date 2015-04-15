@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Wed Apr 15 13:03:20 2015
+# Created: Wed Apr 15 14:22:02 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -309,14 +309,16 @@ class Ui_MainWindow(object):
         self.scriptTextEdit.setGeometry(QtCore.QRect(10, 10, 611, 341))
         font = QtGui.QFont()
         font.setFamily("Linux Libertine Mono O")
-        font.setPointSize(14)
+        font.setPointSize(11)
         self.scriptTextEdit.setFont(font)
         self.scriptTextEdit.setObjectName("scriptTextEdit")
         self.scriptFileGroupBox = QtWidgets.QGroupBox(self.scriptTab)
-        self.scriptFileGroupBox.setGeometry(QtCore.QRect(10, 360, 611, 91))
+        self.scriptFileGroupBox.setGeometry(QtCore.QRect(10, 360, 611, 111))
         self.scriptFileGroupBox.setObjectName("scriptFileGroupBox")
         self.filenameLineEdit = QtWidgets.QLineEdit(self.scriptFileGroupBox)
+        self.filenameLineEdit.setEnabled(True)
         self.filenameLineEdit.setGeometry(QtCore.QRect(12, 50, 301, 33))
+        self.filenameLineEdit.setText("")
         self.filenameLineEdit.setObjectName("filenameLineEdit")
         self.saveScriptFileButton = QtWidgets.QPushButton(self.scriptFileGroupBox)
         self.saveScriptFileButton.setGeometry(QtCore.QRect(400, 50, 61, 31))
@@ -336,6 +338,13 @@ class Ui_MainWindow(object):
         self.linesToExecuteLabel = QtWidgets.QLabel(self.scriptFileGroupBox)
         self.linesToExecuteLabel.setGeometry(QtCore.QRect(320, 30, 66, 21))
         self.linesToExecuteLabel.setObjectName("linesToExecuteLabel")
+        self.compilerScopeCheckbox = QtWidgets.QCheckBox(self.scriptFileGroupBox)
+        self.compilerScopeCheckbox.setGeometry(QtCore.QRect(20, 90, 95, 26))
+        self.compilerScopeCheckbox.setChecked(True)
+        self.compilerScopeCheckbox.setObjectName("compilerScopeCheckbox")
+        self.windowScopeCheckbox = QtWidgets.QCheckBox(self.scriptFileGroupBox)
+        self.windowScopeCheckbox.setGeometry(QtCore.QRect(130, 90, 95, 26))
+        self.windowScopeCheckbox.setObjectName("windowScopeCheckbox")
         self.centerTabWidget.addTab(self.scriptTab, "")
         self.grid_opengl.addWidget(self.centerTabWidget, 0, 1, 1, 1)
         self.gridLayout.addLayout(self.grid_opengl, 4, 3, 10, 8)
@@ -482,7 +491,10 @@ class Ui_MainWindow(object):
         self.loadScriptButton.setText(_translate("MainWindow", "Load"))
         self.executeScriptButton.setText(_translate("MainWindow", "Execute"))
         self.filenameLabel.setText(_translate("MainWindow", "Filename"))
+        self.linesToExecute.setText(_translate("MainWindow", "0"))
         self.linesToExecuteLabel.setText(_translate("MainWindow", "Lines"))
+        self.compilerScopeCheckbox.setText(_translate("MainWindow", "Compiler"))
+        self.windowScopeCheckbox.setText(_translate("MainWindow", "Window"))
         self.centerTabWidget.setTabText(self.centerTabWidget.indexOf(self.scriptTab), _translate("MainWindow", "Script"))
         self.pushButton_filestream.setText(_translate("MainWindow", "Stream File"))
         self.checkBox_incremental.setText(_translate("MainWindow", "Incremental"))

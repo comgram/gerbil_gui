@@ -722,7 +722,7 @@
           <property name="font">
            <font>
             <family>Linux Libertine Mono O</family>
-            <pointsize>14</pointsize>
+            <pointsize>11</pointsize>
            </font>
           </property>
          </widget>
@@ -732,13 +732,16 @@
             <x>10</x>
             <y>360</y>
             <width>611</width>
-            <height>91</height>
+            <height>111</height>
            </rect>
           </property>
           <property name="title">
            <string>File Operations</string>
           </property>
           <widget class="QLineEdit" name="filenameLineEdit">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="geometry">
             <rect>
              <x>12</x>
@@ -746,6 +749,9 @@
              <width>301</width>
              <height>33</height>
             </rect>
+           </property>
+           <property name="text">
+            <string/>
            </property>
           </widget>
           <widget class="QPushButton" name="saveScriptFileButton">
@@ -809,6 +815,9 @@
              <height>33</height>
             </rect>
            </property>
+           <property name="text">
+            <string>0</string>
+           </property>
           </widget>
           <widget class="QLabel" name="linesToExecuteLabel">
            <property name="geometry">
@@ -821,6 +830,35 @@
            </property>
            <property name="text">
             <string>Lines</string>
+           </property>
+          </widget>
+          <widget class="QCheckBox" name="compilerScopeCheckbox">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>90</y>
+             <width>95</width>
+             <height>26</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Compiler</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QCheckBox" name="windowScopeCheckbox">
+           <property name="geometry">
+            <rect>
+             <x>130</x>
+             <y>90</y>
+             <width>95</width>
+             <height>26</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Window</string>
            </property>
           </widget>
          </widget>
