@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Tue Apr 14 11:20:57 2015
+# Created: Wed Apr 15 13:03:20 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -305,13 +305,13 @@ class Ui_MainWindow(object):
         self.centerTabWidget.addTab(self.conversationTab, "")
         self.scriptTab = QtWidgets.QWidget()
         self.scriptTab.setObjectName("scriptTab")
-        self.plainTextEdit = QtWidgets.QPlainTextEdit(self.scriptTab)
-        self.plainTextEdit.setGeometry(QtCore.QRect(10, 10, 611, 341))
+        self.scriptTextEdit = QtWidgets.QPlainTextEdit(self.scriptTab)
+        self.scriptTextEdit.setGeometry(QtCore.QRect(10, 10, 611, 341))
         font = QtGui.QFont()
         font.setFamily("Linux Libertine Mono O")
         font.setPointSize(14)
-        self.plainTextEdit.setFont(font)
-        self.plainTextEdit.setObjectName("plainTextEdit")
+        self.scriptTextEdit.setFont(font)
+        self.scriptTextEdit.setObjectName("scriptTextEdit")
         self.scriptFileGroupBox = QtWidgets.QGroupBox(self.scriptTab)
         self.scriptFileGroupBox.setGeometry(QtCore.QRect(10, 360, 611, 91))
         self.scriptFileGroupBox.setObjectName("scriptFileGroupBox")
@@ -435,7 +435,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.centerTabWidget.setCurrentIndex(0)
+        self.centerTabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
