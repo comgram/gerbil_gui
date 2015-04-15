@@ -415,6 +415,3 @@ def pocket(sx,sy,ex,ey,d):
 ##circle(60,60,15,3,-3)
 
 #done()
-include_gcode_from("./tests/vars.ngc",False)
-setv("#1",-120)
-send_gcode_lines()
