@@ -31,9 +31,19 @@ class Preprocessor:
         self.line = line
         self._strip_comments()
         self._strip()
+        self._strip_unsupported()
         self._handle_feed()
         self._handle_vars()
         return self.line
+    
+    def _strip_unsupported(self):
+        """
+        This silently strips gcode unsupported by Grbl, but ONLY those commands that are safe to strip without making the program deviate from its original purpose. For example it is  safe to strip a tool change. All other encountered unsupported commands should be sent to Grbl nevertheless so that an error is raised. The user then can make an informed decision.
+        """
+        if "T" in self.line or "M6" in self.line:
+            self.line = "; cnctools_stripped_unsupported {}".format(self.line)
+        
+        
         
     def _strip_comments(self):
         """
