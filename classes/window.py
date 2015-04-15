@@ -6,7 +6,7 @@ import logging
 import collections
 import time
 
-
+from classes.highlighter import Highlighter
 from classes.grbl import GRBL
 from classes.glwidget2 import GLWidget
 from classes.commandlineedit import CommandLineEdit
@@ -14,7 +14,7 @@ import compiler.gcode as COMPILER
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor,QPalette
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem)
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
@@ -36,6 +36,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         _logbuffer_size = 200
         
         self.setupUi(self)
+        self.setupScripting()
         
         self.grbl = GRBL()
         COMPILER.receiver(self.grbl)
@@ -175,7 +176,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.setUpdatesEnabled(True)
         
+    def setupScripting(self):
+        print("Setting up Scripting Tab")
+        p = self.scriptTextEdit.palette();
         
+        self.scriptTextEdit.setStyleSheet("QPlainTextEdit { background-color: rgb(51, 51, 51); color: rgb(255,255,255); }");
+        self.highlighter = Highlighter(self.scriptTextEdit.document())
     def on_grbl_event(self, event, *data):
         if event == "on_stateupdate":
             self.state = data[0]
