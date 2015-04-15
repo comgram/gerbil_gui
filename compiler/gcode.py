@@ -4,6 +4,7 @@ import pprint
 import copy
 import math
 import inspect
+import re
 try:
     unicode = unicode
 except NameError:
@@ -58,11 +59,15 @@ Settings = {
         'centered': False,
   }
 }
+FileLines = []
 State = {
     'x': 0,
     'y': 0,
     'z': 0,
-    'white_space': 0
+    'white_space': 0,
+    'vars': { },
+    're_var': re.compile(".*(#[\da-z]+)"),
+    're_var_assign': re.compile(".*(#[\da-z+])=([\d.-]+)"),
 }
 '''
     LOW LEVEL FUNCTIONS
@@ -75,6 +80,47 @@ State = {
 PositionStack = []
 ''' We have to save the z-depth separately '''
 ZStack = []
+def getv(name):
+    if name in State['vars']:
+        return State['vars'][name]
+    else:
+        raise NameError("Compiler: {} is not defined".format(name))
+def setv(name,val):
+    global State
+    State['vars'][name] = val
+def add_gcode_line(l):
+    global FileLines
+    FileLines.append(l)
+def _process_line(line,rep=True):
+    global State
+    line = line.strip()
+    match = re.match(State['re_var_assign'], line)
+    contains_var_assignment = True if match else False
+    if contains_var_assignment:
+        key = match.group(1)
+        val = float(match.group(2))
+        setv(key,val)
+        return ""
+    if rep:
+        match = re.match(State['re_var'], line)
+        contains_var = True if match else False
+        if contains_var:
+            key = match.group(1)
+            line = line.replace(key, str(getv(key)) )
+            return _process_line(line)
+    return line
+def include_gcode_from(fname,rep=True):
+    global FileLines
+    FileLines = [_process_line(line,rep) for line in open(fname,'r')]
+def send_gcode_lines():
+    global FileLines
+    for line in FileLines:
+        line = _process_line(line,True)
+        emit(line)
+def flush():
+    global FileLines
+    send_gcode_lines()
+    FileLines = []       
 def log(str):
     global Settings
     Settings['log_callback'](str)
@@ -158,13 +204,18 @@ def done():
 def emit(txt=";Nothing Emitted\n"):
     global Settings
     global State
+
+    if txt == "\n":
+        return
+    if len(txt) < 1:
+        return
     
     if Settings['debug_gcode'] == True or txt[0] != ';':
         for x in range(0,State['white_space']):
             Settings['port'].write(" ")  
         log("Writing Text: %s" % txt)
         if txt and isinstance(txt,basestring) and len(txt) > 2:
-            Settings['port'].write("%s" % txt)
+            Settings['port'].write("%s\n" % txt)
             
 '''
     USE THESE TO PRETTY UP GCODE!!
@@ -364,3 +415,6 @@ def pocket(sx,sy,ex,ey,d):
 ##circle(60,60,15,3,-3)
 
 #done()
+include_gcode_from("./tests/vars.ngc",False)
+setv("#1",-120)
+send_gcode_lines()
