@@ -2,11 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-<<<<<<< HEAD
 # Created: Wed Apr 15 13:11:11 2015
-=======
-# Created: Wed Apr 15 13:03:20 2015
->>>>>>> e8c7297b863b9c48918a91ca16c6f2a5c4a25905
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -449,11 +445,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-<<<<<<< HEAD
         self.centerTabWidget.setCurrentIndex(3)
-=======
-        self.centerTabWidget.setCurrentIndex(2)
->>>>>>> e8c7297b863b9c48918a91ca16c6f2a5c4a25905
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
