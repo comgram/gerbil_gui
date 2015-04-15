@@ -1,5 +1,5 @@
 from __future__ import division                 
-import sys
+import sys,traceback
 import pprint
 import copy
 import math
@@ -80,6 +80,12 @@ State = {
 PositionStack = []
 ''' We have to save the z-depth separately '''
 ZStack = []
+def evaluate(txt):
+    try:
+        exec(txt)
+    except:
+        print("Compiler: Exception in user code:")
+        log(traceback.format_exc())
 def getv(name):
     if name in State['vars']:
         return State['vars'][name]

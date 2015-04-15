@@ -1,4 +1,3 @@
-receiver("./cross_compiled.ngc")
 include_gcode_from("/media/ayon/KINGSTON/Cross1.ngc")
 send_gcode_lines()
 i = -3

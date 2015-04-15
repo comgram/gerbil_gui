@@ -52,7 +52,9 @@ class Highlighter(QtGui.QSyntaxHighlighter):
         "\\blambda\\b","\\bprint\\b","\\bformat\\b",
         "\\bif\\b","\\belse\\b","\\belif\\b","\\bline\\b",
         "\\bline_to\\b","\\bcircle\\b","\\barc\\b","\\barc_to\\b",
-        "\\bpocket\\b","\\bsquare\\b","\\btriangle\\b",]
+        "\\bpocket\\b","\\bsquare\\b","\\btriangle\\b",
+        "\\bsetv\\b","\\bgetv\\b","\\binclude_gcode_from\\b","\\bsend_gcode_lines\\b",
+        "\\bcomment\\b","\\bmove\\b","\\bdepth\\b","\\bwhile\\b","\\bfor\\b","\\bin\\b",]
         
         for pattern in keywordPatterns:
             self.highlightingRules.append( (QtCore.QRegExp(pattern), keywordFormat) )

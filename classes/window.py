@@ -188,7 +188,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.linesToExecute.setDisabled(False)
         self.loadScriptButton.clicked.connect(self.load_script_clicked)
         self.saveScriptFileButton.clicked.connect(self.save_script_clicked)
-
+        self.executeScriptButton.clicked.connect(self.execute_script_clicked)
+    def execute_script_clicked(self,item):
+        code = self.scriptTextEdit.toPlainText()
+        COMPILER.evaluate(code)
     def load_script_clicked(self,item):
         fname = self.filenameLineEdit.text()
         with open(fname, 'r') as content_file:
