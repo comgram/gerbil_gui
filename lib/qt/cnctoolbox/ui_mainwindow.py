@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Tue Apr 14 11:20:57 2015
+# Created: Wed Apr 15 13:11:11 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -235,6 +235,8 @@ class Ui_MainWindow(object):
         self.grid_opengl.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.grid_opengl.setObjectName("grid_opengl")
         self.centerTabWidget = QtWidgets.QTabWidget(self.centralWidget)
+        self.centerTabWidget.setTabPosition(QtWidgets.QTabWidget.North)
+        self.centerTabWidget.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.centerTabWidget.setObjectName("centerTabWidget")
         self.glTab = QtWidgets.QWidget()
         self.glTab.setObjectName("glTab")
@@ -337,6 +339,14 @@ class Ui_MainWindow(object):
         self.linesToExecuteLabel.setGeometry(QtCore.QRect(320, 30, 66, 21))
         self.linesToExecuteLabel.setObjectName("linesToExecuteLabel")
         self.centerTabWidget.addTab(self.scriptTab, "")
+        self.tab = QtWidgets.QWidget()
+        self.tab.setObjectName("tab")
+        self.tableWidget_variables = QtWidgets.QTableWidget(self.tab)
+        self.tableWidget_variables.setGeometry(QtCore.QRect(20, 60, 221, 371))
+        self.tableWidget_variables.setRowCount(2)
+        self.tableWidget_variables.setColumnCount(2)
+        self.tableWidget_variables.setObjectName("tableWidget_variables")
+        self.centerTabWidget.addTab(self.tab, "")
         self.grid_opengl.addWidget(self.centerTabWidget, 0, 1, 1, 1)
         self.gridLayout.addLayout(self.grid_opengl, 4, 3, 10, 8)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -435,7 +445,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.centerTabWidget.setCurrentIndex(0)
+        self.centerTabWidget.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -484,6 +494,7 @@ class Ui_MainWindow(object):
         self.filenameLabel.setText(_translate("MainWindow", "Filename"))
         self.linesToExecuteLabel.setText(_translate("MainWindow", "Lines"))
         self.centerTabWidget.setTabText(self.centerTabWidget.indexOf(self.scriptTab), _translate("MainWindow", "Script"))
+        self.centerTabWidget.setTabText(self.centerTabWidget.indexOf(self.tab), _translate("MainWindow", "Preprocessor"))
         self.pushButton_filestream.setText(_translate("MainWindow", "Stream File"))
         self.checkBox_incremental.setText(_translate("MainWindow", "Incremental"))
         self.pushButton_fileload.setText(_translate("MainWindow", "Set File"))

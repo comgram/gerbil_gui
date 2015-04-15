@@ -76,7 +76,7 @@ class GRBL:
         self._callback_onboot =  lambda : None
         self.callback = self._default_callback
         
-        self._preprocessor = Preprocessor()
+        self.preprocessor = Preprocessor()
         
         atexit.register(self.disconnect)
         
@@ -85,7 +85,7 @@ class GRBL:
     
     def set_callback(self, cb):
         self.callback = cb
-        self._preprocessor.callback = cb
+        self.preprocessor.callback = cb
       
     def cnect(self,path=False):
         """
@@ -245,7 +245,7 @@ class GRBL:
         `set_feed()`.
         """
         #logging.log(260, "Setting feed_override to %s", val)
-        self._preprocessor.set_feed_override(val)
+        self.preprocessor.set_feed_override(val)
         
         
     def set_feed(self, requested_feed):
@@ -255,7 +255,7 @@ class GRBL:
         requested feed differs from the last requested feed.
         """
         #logging.log(260, "Setting _requested_feed to %s", requested_feed)
-        self._preprocessor.set_feed(float(requested_feed))
+        self.preprocessor.set_feed(float(requested_feed))
         
         
     def set_incremental_streaming(self, a):
@@ -455,7 +455,12 @@ class GRBL:
             self.callback("on_arc_distance_mode_change", self.distance_mode_arc)
             
         # gcode processing
-        line = self._preprocessor.do(line)
+        line = self.preprocessor.do(line)
+        
+        if line == None:
+            # preprocessor had an error. this is critical.
+            self._error = True
+            self.abort()
         return line
     
         

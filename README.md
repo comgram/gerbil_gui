@@ -260,3 +260,4 @@ F, I, J, K, L, N, P, R, S, T, X, Y, Z
 
 Go to Machine Zero: G53 G0 X0 Y0 Z0
 
+Set coordinate for G54-G59: G10 L2 Px Xblah Yblah Zblah

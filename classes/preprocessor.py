@@ -8,7 +8,16 @@ class Preprocessor:
         self._requested_feed = None
         self._current_feed = None
         
+        self._vars = {}
+        
         self.callback = self._default_callback
+        
+        self._vars[1] = -11
+        self._re_var = re.compile(".*#(\d)")
+        self._re_var_assign = re.compile(".*#(\d)=([\d.-]+)")
+        self._re_var_replace = re.compile(r"#\d")
+        self._re_feed = re.compile(".*F([.\d]+)")
+        self._re_feed_replace = re.compile(r"F[.\d]+")
     
     def set_feed_override(self, val):
         self._feed_override = val
@@ -23,6 +32,7 @@ class Preprocessor:
         self._strip_comments()
         self._strip()
         self._handle_feed()
+        self._handle_vars()
         return self.line
         
     def _strip_comments(self):
@@ -40,13 +50,36 @@ class Preprocessor:
         self.line = self.line.replace(" ", "")
         
         
+    def _handle_vars(self):
+        match = re.match(self._re_var_assign, self.line)
+        contains_var_assignment = True if match else False
+        if contains_var_assignment:
+            key = int(match.group(1))
+            val = float(match.group(2))
+            self._vars[key] = val
+            self.callback("on_log", "SET VAR #{}={}".format(key, val))
+            self.line = "; cnctools_var_set {}".format(self.line)
+            return
+        
+        match = re.match(self._re_var, self.line)
+        contains_var = True if match else False
+        if contains_var:
+            key = int(match.group(1))
+            if key in self._vars:
+                val = str(self._vars[key])
+                self.line = re.sub(self._re_var_replace, val, self.line)
+                self.callback("on_log", "SUBSTITUED VAR #{} -> {}".format(key, val))
+            else:
+                self.callback("on_log", "VAR #{} UNDEFINED".format(key))
+   
     def _handle_feed(self):
-        contains_feed = True if re.match(".*F[.\d]+", self.line) else False
+        match = re.match(self._re_feed, self.line)
+        contains_feed = True if match else False
         
         # Update the UI for detected feed
         if contains_feed:
             if self._feed_override == False:
-                parsed_feed = re.match(".*F([.\d]+)", self.line).group(1)
+                parsed_feed = match.group(1)
                 self._current_feed = float(parsed_feed)
                 self.callback("on_feed_change", self._current_feed)
                 #self.callback("on_log", "FEED" + str(self._current_feed))
@@ -55,7 +88,7 @@ class Preprocessor:
             if self._requested_feed:
                 if contains_feed:
                     # strip the original F setting
-                    self.line = re.sub(r"F[.\d]+", "", self.line)
+                    self.line = re.sub(self._re_feed_replace, "", self.line)
                     
                 if self._current_feed != self._requested_feed:
                     self.line += "F{:0.1f}".format(self._requested_feed)
