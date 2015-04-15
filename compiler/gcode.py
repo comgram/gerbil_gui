@@ -51,7 +51,7 @@ Settings = {
     },
 
     'bit': {
-        'diameter': 2,
+        'diameter': 6,
         'length': 0,
         'type': 'flat',
         'v_angle': 0,
@@ -396,15 +396,17 @@ def pocket(sx,sy,ex,ey,d):
     osx = sx
     osy = sy
     block_start("Pocket")
-    inc = Settings['bit']['diameter'] / 2
+    inc = Settings['bit']['diameter'] * 0.75
     up()
     move(sx,sy)
     while sx < ex - inc:
         print("sx: %.3f ey: %.3f" % (sx,ey))
         line_to(sx,ey,d)
         sx += inc
+        line_to(sx,ey,d)
         line_to(sx,sy,d)
         sx += inc
+        line_to(sx,sy,d)
         
     block_end("Pocket")
 
