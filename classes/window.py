@@ -22,7 +22,7 @@ from lib import gcodetools
 from lib import utility
 
 log_format = '%(asctime)s %(levelname)s %(message)s'
-logging.basicConfig(level=200, format=log_format)
+logging.basicConfig(level=100, format=log_format)
 
 #G91 G0 Y1 G90
 #G10 P0 L20 X0 Y0 Z0
@@ -30,7 +30,7 @@ logging.basicConfig(level=200, format=log_format)
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self):
+    def __init__(self, path):
         super(MainWindow, self).__init__()
         
         _logbuffer_size = 200
@@ -38,9 +38,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setupScripting()
         
-        self.grbl = GRBL()
+        self.grbl = GRBL("mygrbl", path)
+        
         COMPILER.receiver(self.grbl)
         COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
+        
         self.grbl.poll_interval = 0.1
         self.grbl.set_callback(self.on_grbl_event)
         
@@ -63,7 +65,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # UI SETUP
         #=glWidget.add_vertex((0.5,0.5))
         self.glWidget = GLWidget()
-        self.glTabGrid.addWidget(self.glWidget)
+        self.gridLayout_glwidget_container.addWidget(self.glWidget)
         
         self.pushButton_connect.clicked.connect(self.cnect)
         self.pushButton_disconnect.clicked.connect(self.disconnect)
@@ -84,7 +86,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_check.clicked.connect(self.check)
         
         self.pushButton_w2mcoord.clicked.connect(self.w2mcoord)
-        self.pushButton_g0wzerosafe.clicked.connect(self.g0wzerosafe)
+        #self.pushButton_g0wzerosafe.clicked.connect(self.g0wzerosafe)
         self.pushButton_g0wzero.clicked.connect(self.g0wzero)
         
         self.pushButton_xminus.clicked.connect(self.xminus)
@@ -94,13 +96,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_zminus.clicked.connect(self.zminus)
         self.pushButton_zplus.clicked.connect(self.zplus)
         
-        self.horizontalSlider_feed.valueChanged.connect(self._feedoverride_value_changed)
-        self.checkBox_feedoverride.stateChanged.connect(self._feedoverride_changed)
+        self.horizontalSlider_feed_override.valueChanged.connect(self._feedoverride_value_changed)
+        self.checkBox_feed_override.stateChanged.connect(self._feedoverride_changed)
         
         self.checkBox_incremental.stateChanged.connect(self._incremental_changed)
 
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
-        self.line_edit_devicePath.setText("/dev/ttyACM0")
+        #self.line_edit_devicePath.setText("/dev/ttyACM0")
         self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
     
         self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
@@ -117,6 +119,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.pushButton_disconnect.setEnabled(False)
         self.pushButton_connect.setEnabled(True)
+        
+        #self.widget_jog.mouseMoveEvent.connect(self._on_jog_mousemove)
         
         
         #QFont f( "Cantarell", 10, QFont::Bold);
@@ -479,9 +483,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send("G92.1")
         
         
-    def g0wzerosafe(self):
-        self.grbl.send("G0 Z20")
-        self.grbl.send("G0 X0 Y0")
+    #def g0wzerosafe(self):
+        #self.grbl.send("G0 Z20")
+        #self.grbl.send("G0 X0 Y0")
         
         
     def g0wzero(self):
@@ -491,7 +495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def cnect(self):
         self.pushButton_connect.setEnabled(False)
         #self.pushButton_disconnect.setEnabled(False)
-        self.grbl.cnect(self.line_edit_devicePath.text())
+        self.grbl.cnect()
         
         #self.horizontalSlider_feed.setValue(100)
         #self.checkBox_feedoverride.setChecked(False)
@@ -531,4 +535,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return slider
 
+
+    def _on_jog_mousemove(self, event):
+        print("MOVE", event.pos.x(), event.pos.y())
 

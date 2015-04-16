@@ -180,6 +180,11 @@ def main():
     
     # define arguments for the 'gui' subcommand
     gui_parser = subparsers.add_parser("gui", help="Start GUI")
+    gui_parser.add_argument(
+        'path',
+        metavar='PATH',
+        help='e.g. /dev/ttyACM0'
+        )
 
     args = parser.parse_args()
     
@@ -234,7 +239,7 @@ def main():
         #styles = [line.strip() for line in open("stylesheet.css")]
         #styles = " ".join(styles)
         #app.setStyleSheet(styles)
-        window = MainWindow()
+        window = MainWindow(args.path)
         #ui = Ui_MainWindow()
         #ui.setupUi(window)
         #window = Window()
