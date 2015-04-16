@@ -258,11 +258,13 @@ F, I, J, K, L, N, P, R, S, T, X, Y, Z
 
 
 
-Move in machine coordinates: G53 G0 X0 Y0 Z0
+Move in machine coordinates: G53 G0 X10 Y10 Z10
 
 Set working coordinate systems 1-6 or G54-G59:
 G10 L2 Px Xblah Yblah Zblah
-e.g. G10 L2 P1 X3Y3Z3
+G10 L2 P3 X3Y3Z3
+G10 L2 P1 X0Y0Z0
+
 
 Set offset for all 6 coordinate systems, relative from current coordinate system position. Will be zero after reset:
 G92 X11Y11Z11
