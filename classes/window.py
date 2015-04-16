@@ -69,7 +69,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.glWidget = GLWidget()
         self.gridLayout_glwidget_container.addWidget(self.glWidget)
         
-        self.jogWidget = JogWidget(self)
+        self.jogWidget = JogWidget(self, self.grbl.send)
         #self.jogWidget.setStyleSheet("background-color: black")
         self.gridLayout_jog_container.addWidget(self.jogWidget)
         
@@ -296,15 +296,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.glWidget.updateGL()
         
         if self.changed_state:
-            self.lcdNumber_mx.display("{:0.2f}".format(self.mpos[0]))
-            self.lcdNumber_my.display("{:0.2f}".format(self.mpos[1]))
-            self.lcdNumber_mz.display("{:0.2f}".format(self.mpos[2]))
-            self.lcdNumber_wx.display("{:0.2f}".format(self.wpos[0]))
-            self.lcdNumber_wy.display("{:0.2f}".format(self.wpos[1]))
-            self.lcdNumber_wz.display("{:0.2f}".format(self.wpos[2]))
+            mx = self.mpos[0]
+            my = self.mpos[1]
+            mz = self.mpos[2]
+            wx = self.wpos[0]
+            wy = self.wpos[1]
+            wz = self.wpos[2]
+            self.lcdNumber_mx.display("{:0.2f}".format(mx))
+            self.lcdNumber_my.display("{:0.2f}".format(my))
+            self.lcdNumber_mz.display("{:0.2f}".format(mz))
+            self.lcdNumber_wx.display("{:0.2f}".format(wx))
+            self.lcdNumber_wy.display("{:0.2f}".format(wy))
+            self.lcdNumber_wz.display("{:0.2f}".format(wz))
             self.glWidget.mpos = self.mpos
-            self.glWidget.add_vertex((self.wpos[0],self.wpos[1]))
+            self.glWidget.add_vertex((wx, wy))
             self.glWidget.paintGL()
+            self.jogWidget.wx_current = wx
+            self.jogWidget.wy_current = wy
+            self.jogWidget.wz_current = wz
             
 
             if self.state == "Idle":
