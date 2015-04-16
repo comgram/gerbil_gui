@@ -9,6 +9,7 @@ import time
 from classes.highlighter import Highlighter
 from classes.grbl import GRBL
 from classes.glwidget2 import GLWidget
+from classes.jogwidget import JogWidget
 from classes.commandlineedit import CommandLineEdit
 import compiler.gcode as COMPILER
 
@@ -63,10 +64,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
         # UI SETUP
-        #=glWidget.add_vertex((0.5,0.5))
+        
+        ## dynamically add subclassed widgets
         self.glWidget = GLWidget()
         self.gridLayout_glwidget_container.addWidget(self.glWidget)
         
+        self.jogWidget = JogWidget(self)
+        #self.jogWidget.setStyleSheet("background-color: black")
+        self.gridLayout_jog_container.addWidget(self.jogWidget)
+        
+        #self.jogWidget.mouseMoveEvent.connect(self._on_jog_mousemove)
+        
+        ## connect slots to signals
         self.pushButton_connect.clicked.connect(self.cnect)
         self.pushButton_disconnect.clicked.connect(self.disconnect)
         self.pushButton_homing.clicked.connect(self.grbl.homing)
@@ -122,7 +131,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_disconnect.setEnabled(False)
         self.pushButton_connect.setEnabled(True)
         
-        #self.widget_jog.mouseMoveEvent.connect(self._on_jog_mousemove)
+        
         
         
         #QFont f( "Cantarell", 10, QFont::Bold);
@@ -560,5 +569,5 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def _on_jog_mousemove(self, event):
-        print("MOVE", event.pos.x(), event.pos.y())
+        pass
 

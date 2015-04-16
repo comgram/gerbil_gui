@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Thu Apr 16 11:58:12 2015
+# Created: Thu Apr 16 12:08:57 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -300,14 +300,14 @@ class Ui_MainWindow(object):
         self.pushButton_w2mcoord.setObjectName("pushButton_w2mcoord")
         self.gridLayout_8.addWidget(self.pushButton_w2mcoord, 3, 1, 1, 1)
         self.tabWidget.addTab(self.tab_coordinates, "")
-        self.tab = QtWidgets.QWidget()
-        self.tab.setObjectName("tab")
-        self.widget_jog = QtWidgets.QWidget(self.tab)
-        self.widget_jog.setGeometry(QtCore.QRect(100, 70, 451, 441))
-        self.widget_jog.setAutoFillBackground(False)
-        self.widget_jog.setStyleSheet("background-color: \"#EEE\"")
-        self.widget_jog.setObjectName("widget_jog")
-        self.tabWidget.addTab(self.tab, "")
+        self.tab_jog = QtWidgets.QWidget()
+        self.tab_jog.setObjectName("tab_jog")
+        self.gridLayout_10 = QtWidgets.QGridLayout(self.tab_jog)
+        self.gridLayout_10.setObjectName("gridLayout_10")
+        self.gridLayout_jog_container = QtWidgets.QGridLayout()
+        self.gridLayout_jog_container.setObjectName("gridLayout_jog_container")
+        self.gridLayout_10.addLayout(self.gridLayout_jog_container, 0, 0, 1, 1)
+        self.tabWidget.addTab(self.tab_jog, "")
         self.verticalLayout_center.addWidget(self.tabWidget)
         self.gridLayout.addLayout(self.verticalLayout_center, 5, 11, 9, 1)
         self.gridLayout_3 = QtWidgets.QGridLayout()
@@ -594,7 +594,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(5)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -638,7 +638,7 @@ class Ui_MainWindow(object):
         self.pushButton_zeroz.setText(_translate("MainWindow", "Zero Z"))
         self.pushButton_w2mcoord.setText(_translate("MainWindow", "W -> M"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_coordinates), _translate("MainWindow", "Coordinates"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Jog"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_jog), _translate("MainWindow", "Jog"))
         self.pushButton_zplus.setText(_translate("MainWindow", "Z↑"))
         self.pushButton_g0wzero.setText(_translate("MainWindow", "G0 X0 Y0"))
         self.pushButton_xplus.setText(_translate("MainWindow", "X→"))
@@ -676,6 +676,6 @@ class Ui_MainWindow(object):
         self.label_11.setText(_translate("MainWindow", "Feed"))
         self.label_feedspeed.setText(_translate("MainWindow", "0"))
         self.label_13.setText(_translate("MainWindow", "State"))
-        self.label_state.setText(_translate("MainWindow", "TextLabel"))
+        self.label_state.setText(_translate("MainWindow", "disconnected"))
         self.checkBox_feed_override.setText(_translate("MainWindow", "Feed override"))
 
