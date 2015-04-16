@@ -42,7 +42,7 @@ class RS232:
         
     def write(self, data):
         if len(data) > 0:
-            if not "?" in data:
+            if not "?" in data and not "$" in data:
                 logging.log(200, "%s:     -----------> %ibytes %s", self.name, len(data), data.strip())
             num_written = self.serialport.write(bytes(data,"ascii"))
             return num_written

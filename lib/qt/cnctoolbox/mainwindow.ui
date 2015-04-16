@@ -258,7 +258,7 @@
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-         <number>5</number>
+         <number>4</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
@@ -584,64 +584,63 @@
          <attribute name="title">
           <string>Coordinates</string>
          </attribute>
-         <layout class="QGridLayout" name="gridLayout_8">
-          <item row="0" column="0">
-           <widget class="QPushButton" name="pushButton_2">
-            <property name="text">
-             <string>G54</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="pushButton_zeroxyz">
-            <property name="text">
-             <string>Zero XYZ</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="pushButton_3">
-            <property name="text">
-             <string>G55</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPushButton" name="pushButton_zeroxy">
-            <property name="text">
-             <string>Zero XY</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QPushButton" name="pushButton_zeroz">
-            <property name="text">
-             <string>Zero Z</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QPushButton" name="pushButton_w2mcoord">
-            <property name="font">
-             <font>
-              <italic>true</italic>
-              <underline>false</underline>
-             </font>
-            </property>
-            <property name="text">
-             <string>W -&gt; M</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         <widget class="QComboBox" name="comboBox_coordinate_systems">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>50</y>
+            <width>83</width>
+            <height>29</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_8">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>20</y>
+            <width>66</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Use CS:</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_current_cs_setzero">
+          <property name="geometry">
+           <rect>
+            <x>150</x>
+            <y>50</y>
+            <width>95</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Set to Zero</string>
+          </property>
+         </widget>
         </widget>
         <widget class="QWidget" name="tab_jog">
          <attribute name="title">
           <string>Jog</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_10">
-          <item row="0" column="0">
+          <item row="1" column="0">
            <layout class="QGridLayout" name="gridLayout_jog_container"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Empty field below: Click and drag mouse to move X and Y axis from the current coordinates.&lt;/p&gt;&lt;p&gt;Use the scroll wheel to modify Z axis. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -665,7 +664,7 @@
     <item row="5" column="0" rowspan="2">
      <layout class="QVBoxLayout" name="verticalLayout_xyz">
       <property name="sizeConstraint">
-       <enum>QLayout::SetNoConstraint</enum>
+       <enum>QLayout::SetMaximumSize</enum>
       </property>
       <item>
        <widget class="QLabel" name="label_9">
@@ -872,7 +871,7 @@ Stream</string>
        </widget>
       </item>
       <item row="5" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton_g0wzero">
+       <widget class="QPushButton" name="pushButton_g0xyorigin">
         <property name="text">
          <string>G0 X0 Y0</string>
         </property>
@@ -984,7 +983,7 @@ Stream</string>
        </widget>
       </item>
       <item row="4" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="pushButton_clearz">
         <property name="text">
          <string>Clear Z</string>
         </property>
@@ -1049,7 +1048,7 @@ Stream</string>
     <item row="5" column="1" rowspan="2" colspan="2">
      <layout class="QGridLayout" name="gridLayout_12">
       <property name="sizeConstraint">
-       <enum>QLayout::SetNoConstraint</enum>
+       <enum>QLayout::SetMaximumSize</enum>
       </property>
       <item row="1" column="1">
        <widget class="QLabel" name="label_motion">
@@ -1071,6 +1070,12 @@ Stream</string>
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
         </property>
         <property name="text">
          <string>disconn</string>

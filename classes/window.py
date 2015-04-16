@@ -48,13 +48,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.set_callback(self.on_grbl_event)
         
         self.filename = None
-        
         self.changed_state = False
         self.changed_loginput = False
         
         self.logbuffer = collections.deque(maxlen=_logbuffer_size)
         for i in range(1, _logbuffer_size):
             self.logbuffer.append("")
+            
+
+        
         
         self._rx_buffer_fill = 0
         self._rx_buffer_fill_last = 0
@@ -88,15 +90,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_resume.clicked.connect(self.grbl.resume)
         self.pushButton_abort.clicked.connect(self.abort)
         
-        self.pushButton_zeroxyz.clicked.connect(self.zero_xyz)
-        self.pushButton_zeroxy.clicked.connect(self.zero_xy)
-        self.pushButton_zeroz.clicked.connect(self.zero_z)
-        
         self.pushButton_check.clicked.connect(self.check)
         
-        self.pushButton_w2mcoord.clicked.connect(self.w2mcoord)
-        #self.pushButton_g0wzerosafe.clicked.connect(self.g0wzerosafe)
-        self.pushButton_g0wzero.clicked.connect(self.g0wzero)
+        self.pushButton_clearz.setDisabled(True)
+        self.pushButton_clearz.clicked.connect(self.clearz)
+        self.pushButton_g0xyorigin.clicked.connect(self.g0xyorigin)
         
         self.pushButton_xminus.clicked.connect(self.xminus)
         self.pushButton_xplus.clicked.connect(self.xplus)
@@ -131,7 +129,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_disconnect.setEnabled(False)
         self.pushButton_connect.setEnabled(True)
         
+        self._cs_names = {
+            1: "G54",
+            2: "G55",
+            3: "G56",
+            4: "G57",
+            5: "G58",
+            6: "G59",
+                }
         
+        self.pushButton_current_cs_setzero.clicked.connect(self._current_cs_setzero)
+        
+        for key, val in self._cs_names.items():
+            self.comboBox_coordinate_systems.insertItem(key, val)
+        self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
         
         
         #QFont f( "Cantarell", 10, QFont::Bold);
@@ -225,6 +236,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.wpos = data[2]
             if self.grbl.connected:
                 self.changed_state = True
+                
+        elif event == "on_gcode_parser_stateupdate":
+            gps = data[0]
+            cs_string ="G" + gps[1]
+            ivd = {v: k for k, v in self._cs_names.items()}
+            cs_nr = ivd[cs_string]
+            print("FOUND CS", cs_nr, cs_string)
+            self.set_cs(cs_nr)
             
         elif event == "on_send_command":
             pass
@@ -508,30 +527,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send("$C")
         
         
-    def zero_xyz(self):
-        self.grbl.send("G92 X0 Y0 Z0")
+    def g0xyorigin(self):
+        self.grbl.send("G0 X0 Y0")
         
-        
-    def zero_xy(self):
-        self.grbl.send("G92 X0 Y0")
-        
-        
-    def zero_z(self):
-        self.grbl.send("G92 Z0")
-        
-        
-    def w2mcoord(self):
-        self.grbl.send("G92.1")
-        
-        
-    #def g0wzerosafe(self):
-        #self.grbl.send("G0 Z20")
-        #self.grbl.send("G0 X0 Y0")
-        
-        
-    def g0wzero(self):
-        self.grbl.send("G0 X0 Y0 Z0")
-        
+    def clearz(self):
+        self.grbl.send("G53 Z-10")
         
     def cnect(self):
         self.pushButton_connect.setEnabled(False)
@@ -575,7 +575,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         slider.setTickPosition(QSlider.TicksRight)
 
         return slider
+    
+    
+    ## Coordinate stuff
+    def set_cs(self, nr):
+        """
+        A convenience method to select CS 1-6 and update the UI at the same time
+        """
+        self._current_cs = nr
+        self.label_current_cs.setText(self._cs_names[self._current_cs])
+        self.comboBox_coordinate_systems.setCurrentIndex(nr - 1)
+        self._cs_names[self._current_cs]
 
+    def _cs_selected(self, idx):
+        self._current_cs = idx + 1
+        #self.label_current_cs.setText(self._cs_names[self._current_cs])
+        self.grbl.send(self._cs_names[self._current_cs])
+        print("XXX", idx)
+        
+    def _current_cs_setzero(self):
+        self.grbl.send("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
 
     def _on_jog_mousemove(self, event):
         pass

@@ -20,10 +20,15 @@ class GRBL:
         self._ifacepath = ifacepath
         
         self.cmode = None
+        self._last_cmode = None
         self.cmpos = (0, 0, 0)
         self.cwpos = (0, 0, 0)
         
+        # Grbl's Gcode parser state variables
+        self.gps = [None]*12
+        
         self.poll_interval = 0.2 # suggested by Grbl documentation
+        self.poll_counter = 0
         
         # 'private' stuff, don't mess
         self._rx_buffer_size = 128
@@ -505,6 +510,9 @@ class GRBL:
                 if line[0] == "<":
                     self._update_state(line)
                     
+                elif line[0] == "[":
+                    self._update_gcode_parser_state(line)
+                    
                 elif "Grbl " in line:
                     logging.log(200, "%s <----- %s", self.name, line)
                     self._on_bootup()
@@ -565,6 +573,25 @@ class GRBL:
         self.callback("on_boot")
         self.poll_start()
             
+    def _update_gcode_parser_state(self, line):
+        """
+        Parse Grbl's Gcode parser state report and inform via callback
+        """
+        m = re.match("\[G(\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) M(\d) M(\d) M(\d) T(\d) F([\d.-]*?) S([\d.-]*?)\]", line)
+        self.gps[0] = m.group(1) # motionmode
+        self.gps[1] = m.group(2) # coordinate system
+        self.gps[2] = m.group(3) # _plane
+        self.gps[3] = m.group(4) # _distmode
+        self.gps[4] = m.group(5) # _arcmode
+        self.gps[5] = m.group(6) # _feedmode
+        self.gps[6] = m.group(7) # _unitmode
+        self.gps[7] = m.group(8) # _cutterradiusmode
+        self.gps[8] = m.group(9) # _tlomode
+        self.gps[9] = m.group(10) # _pmode
+        self.gps[10] = m.group(11) # _sstate
+        self.gps[11] = m.group(12) # _cstate
+        self.callback("on_gcode_parser_stateupdate", self.gps)
+        
             
     def _update_state(self, line):
         """
@@ -578,6 +605,14 @@ class GRBL:
         self.cwpos = (float(wpos_parts[0]), float(wpos_parts[1]), float(wpos_parts[2]))
         #self.callback("on_log", "=== STATE === %s %s %s", self.name, self.cmode, self.cmpos, self.cwpos)
         self.callback("on_stateupdate", self.cmode, self.cmpos, self.cwpos)
+        
+        if self.cmode != self._last_cmode:
+            # when mode has changed
+            if self.cmode == "Idle":
+                # when entering Idle mode, request Gcode parser state
+                self.send("$G")
+        
+        self._last_cmode = self.cmode
         
         
     def is_connected(self):
@@ -630,7 +665,14 @@ class GRBL:
             
     def _poll_state(self):
         while self._poll_do == True:
-            self._get_state()
+            if self.cmode == "Idle" and self.poll_counter % 10 == 0:
+                # every 10th time, get Gcode parser state instead of general state
+                self._iface.write("$G\n")
+            else:
+                self._get_state()
+            
+            self.poll_counter += 1
+            self.poll_counter = 0 if self.poll_counter > 10000 else self.poll_counter
             time.sleep(self.poll_interval)
         self.callback("on_log", "{}: Polling has been stopped".format(self.name))
         
