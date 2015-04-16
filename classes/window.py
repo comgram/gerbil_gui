@@ -102,7 +102,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.checkBox_incremental.stateChanged.connect(self._incremental_changed)
 
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
+
         #self.line_edit_devicePath.setText("/dev/ttyACM0")
+
         self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
     
         self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
@@ -186,6 +188,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.scriptTextEdit.setStyleSheet("QPlainTextEdit { background-color: rgb(51, 51, 51); color: rgb(255,255,255); }");
         self.highlighter = Highlighter(self.scriptTextEdit.document())
+        self.filenameLineEdit.setText("./compiler/examples.py")
+        self.filenameLineEdit.setDisabled(False)
+        self.linesToExecute.setDisabled(False)
+        self.loadScriptButton.clicked.connect(self.load_script_clicked)
+        self.saveScriptFileButton.clicked.connect(self.save_script_clicked)
+        self.executeScriptButton.clicked.connect(self.execute_script_clicked)
+    def execute_script_clicked(self,item):
+        code = self.scriptTextEdit.toPlainText()
+        COMPILER.evaluate(code)
+    def load_script_clicked(self,item):
+        fname = self.filenameLineEdit.text()
+        with open(fname, 'r') as content_file:
+            content = content_file.read()
+        self.scriptTextEdit.setPlainText(content)
+    def save_script_clicked(self,item):
+        fname = self.filenameLineEdit.text()
+        with open(fname, 'w') as content_file:
+            content_file.write(self.scriptTextEdit.toPlainText())
+        self._add_to_loginput("File {} written.".format(fname))
+
+        
     def on_grbl_event(self, event, *data):
         if event == "on_stateupdate":
             self.state = data[0]

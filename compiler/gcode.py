@@ -1,9 +1,10 @@
 from __future__ import division                 
-import sys
+import sys,traceback
 import pprint
 import copy
 import math
 import inspect
+import re
 try:
     unicode = unicode
 except NameError:
@@ -50,7 +51,7 @@ Settings = {
     },
 
     'bit': {
-        'diameter': 2,
+        'diameter': 6,
         'length': 0,
         'type': 'flat',
         'v_angle': 0,
@@ -58,11 +59,15 @@ Settings = {
         'centered': False,
   }
 }
+FileLines = []
 State = {
     'x': 0,
     'y': 0,
     'z': 0,
-    'white_space': 0
+    'white_space': 0,
+    'vars': { },
+    're_var': re.compile(".*(#[\da-z]+)"),
+    're_var_assign': re.compile(".*(#[\da-z+])=([\d.-]+)"),
 }
 '''
     LOW LEVEL FUNCTIONS
@@ -75,6 +80,53 @@ State = {
 PositionStack = []
 ''' We have to save the z-depth separately '''
 ZStack = []
+def evaluate(txt):
+    try:
+        exec(txt)
+    except:
+        print("Compiler: Exception in user code:")
+        log(traceback.format_exc())
+def getv(name):
+    if name in State['vars']:
+        return State['vars'][name]
+    else:
+        raise NameError("Compiler: {} is not defined".format(name))
+def setv(name,val):
+    global State
+    State['vars'][name] = val
+def add_gcode_line(l):
+    global FileLines
+    FileLines.append(l)
+def _process_line(line,rep=True):
+    global State
+    line = line.strip()
+    match = re.match(State['re_var_assign'], line)
+    contains_var_assignment = True if match else False
+    if contains_var_assignment:
+        key = match.group(1)
+        val = float(match.group(2))
+        setv(key,val)
+        return ""
+    if rep:
+        match = re.match(State['re_var'], line)
+        contains_var = True if match else False
+        if contains_var:
+            key = match.group(1)
+            line = line.replace(key, str(getv(key)) )
+            return _process_line(line)
+    return line
+def include_gcode_from(fname,rep=True):
+    global FileLines
+    FileLines = [_process_line(line,rep) for line in open(fname,'r')]
+def send_gcode_lines():
+    global FileLines
+    for line in FileLines:
+        line = _process_line(line,True)
+        emit(line)
+def flush():
+    global FileLines
+    send_gcode_lines()
+    FileLines = []       
 def log(str):
     global Settings
     Settings['log_callback'](str)
@@ -85,7 +137,7 @@ def fast():
     global Settings
     return Settings['max_feed_speed']
 def comment(txt):
-    log(txt)
+    #log(txt)
     emit(";%s" % txt)
 def push_z():
     global ZStack
@@ -158,13 +210,18 @@ def done():
 def emit(txt=";Nothing Emitted\n"):
     global Settings
     global State
+
+    if txt == "\n":
+        return
+    if len(txt) < 1:
+        return
     
     if Settings['debug_gcode'] == True or txt[0] != ';':
         for x in range(0,State['white_space']):
             Settings['port'].write(" ")  
-        log("Writing Text: %s" % txt)
+        #log("Writing Text: %s" % txt)
         if txt and isinstance(txt,basestring) and len(txt) > 2:
-            Settings['port'].write("%s" % txt)
+            Settings['port'].write("%s\n" % txt)
             
 '''
     USE THESE TO PRETTY UP GCODE!!
@@ -339,15 +396,17 @@ def pocket(sx,sy,ex,ey,d):
     osx = sx
     osy = sy
     block_start("Pocket")
-    inc = Settings['bit']['diameter'] / 2
+    inc = Settings['bit']['diameter'] * 0.75
     up()
     move(sx,sy)
     while sx < ex - inc:
         print("sx: %.3f ey: %.3f" % (sx,ey))
         line_to(sx,ey,d)
         sx += inc
+        line_to(sx,ey,d)
         line_to(sx,sy,d)
         sx += inc
+        line_to(sx,sy,d)
         
     block_end("Pocket")
 
