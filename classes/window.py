@@ -261,7 +261,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.label_arcdistancemode.setText(data[0])
             
         elif event == "on_feed_change":
-            self.horizontalSlider_feed.setValue(data[0])
+            self.horizontalSlider_feed_override.setValue(data[0])
             
         elif event == "on_streaming_complete":
             self.grbl.set_incremental_streaming(True)
@@ -473,8 +473,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def _feedoverride_value_changed(self):
-        val = self.horizontalSlider_feed.value()
-        self.lcdNumber_feed.display(val)
+        val = self.horizontalSlider_feed_override.value()
+        self.lcdNumber_feed_override.display(val)
         self.grbl.request_feed(val)
         
     def _feedoverride_changed(self, val):
