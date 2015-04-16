@@ -273,14 +273,10 @@ Stream</string>
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-<<<<<<< HEAD
          <number>5</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
-=======
-         <number>2</number>
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
         </property>
         <widget class="QWidget" name="tab_simulation">
          <attribute name="title">
@@ -519,13 +515,8 @@ Stream</string>
            <rect>
             <x>10</x>
             <y>10</y>
-<<<<<<< HEAD
             <width>611</width>
             <height>211</height>
-=======
-            <width>661</width>
-            <height>391</height>
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
            </rect>
           </property>
           <property name="font">

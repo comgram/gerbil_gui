@@ -2,11 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-<<<<<<< HEAD
-# Created: Thu Apr 16 10:36:32 2015
-=======
-# Created: Wed Apr 15 19:26:29 2015
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
+# Created: Thu Apr 16 11:51:55 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -219,76 +215,50 @@ class Ui_MainWindow(object):
         self.rLineEdit = QtWidgets.QLineEdit(self.argumentsGroupBox)
         self.rLineEdit.setGeometry(QtCore.QRect(290, 60, 51, 33))
         self.rLineEdit.setObjectName("rLineEdit")
-<<<<<<< HEAD
         self.tabWidget.addTab(self.tab_conversation, "")
         self.tab_script = QtWidgets.QWidget()
         self.tab_script.setObjectName("tab_script")
         self.scriptTextEdit = QtWidgets.QPlainTextEdit(self.tab_script)
         self.scriptTextEdit.setGeometry(QtCore.QRect(10, 10, 611, 211))
-=======
-        self.centerTabWidget.addTab(self.conversationTab, "")
-        self.scriptTab = QtWidgets.QWidget()
-        self.scriptTab.setObjectName("scriptTab")
-        self.scriptTextEdit = QtWidgets.QPlainTextEdit(self.scriptTab)
-        self.scriptTextEdit.setGeometry(QtCore.QRect(10, 10, 661, 391))
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
         font = QtGui.QFont()
         font.setFamily("Linux Libertine Mono O")
         font.setPointSize(11)
         self.scriptTextEdit.setFont(font)
         self.scriptTextEdit.setObjectName("scriptTextEdit")
-<<<<<<< HEAD
-        self.scriptFileGroupBox = QtWidgets.QGroupBox(self.tab_script)
-        self.scriptFileGroupBox.setGeometry(QtCore.QRect(10, 360, 611, 91))
-        self.scriptFileGroupBox.setObjectName("scriptFileGroupBox")
-        self.filenameLineEdit = QtWidgets.QLineEdit(self.scriptFileGroupBox)
-        self.filenameLineEdit.setGeometry(QtCore.QRect(12, 50, 301, 33))
-=======
-        self.linesToExecuteLabel = QtWidgets.QLabel(self.scriptTab)
+        self.linesToExecuteLabel = QtWidgets.QLabel(self.tab_script)
         self.linesToExecuteLabel.setGeometry(QtCore.QRect(320, 410, 66, 21))
         self.linesToExecuteLabel.setObjectName("linesToExecuteLabel")
-        self.filenameLineEdit = QtWidgets.QLineEdit(self.scriptTab)
+        self.filenameLineEdit = QtWidgets.QLineEdit(self.tab_script)
         self.filenameLineEdit.setEnabled(True)
         self.filenameLineEdit.setGeometry(QtCore.QRect(12, 430, 301, 33))
         self.filenameLineEdit.setText("")
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
         self.filenameLineEdit.setObjectName("filenameLineEdit")
-        self.filenameLabel = QtWidgets.QLabel(self.scriptTab)
+        self.filenameLabel = QtWidgets.QLabel(self.tab_script)
         self.filenameLabel.setGeometry(QtCore.QRect(10, 410, 66, 21))
         self.filenameLabel.setObjectName("filenameLabel")
-        self.loadScriptButton = QtWidgets.QPushButton(self.scriptTab)
+        self.loadScriptButton = QtWidgets.QPushButton(self.tab_script)
         self.loadScriptButton.setGeometry(QtCore.QRect(470, 430, 61, 31))
         self.loadScriptButton.setObjectName("loadScriptButton")
-        self.windowScopeCheckbox = QtWidgets.QCheckBox(self.scriptTab)
+        self.windowScopeCheckbox = QtWidgets.QCheckBox(self.tab_script)
         self.windowScopeCheckbox.setGeometry(QtCore.QRect(130, 470, 95, 26))
         self.windowScopeCheckbox.setObjectName("windowScopeCheckbox")
-        self.compilerScopeCheckbox = QtWidgets.QCheckBox(self.scriptTab)
+        self.compilerScopeCheckbox = QtWidgets.QCheckBox(self.tab_script)
         self.compilerScopeCheckbox.setGeometry(QtCore.QRect(20, 470, 95, 26))
         self.compilerScopeCheckbox.setChecked(True)
         self.compilerScopeCheckbox.setObjectName("compilerScopeCheckbox")
-        self.executeScriptButton = QtWidgets.QPushButton(self.scriptTab)
+        self.executeScriptButton = QtWidgets.QPushButton(self.tab_script)
         self.executeScriptButton.setGeometry(QtCore.QRect(540, 430, 71, 31))
         self.executeScriptButton.setObjectName("executeScriptButton")
-        self.linesToExecute = QtWidgets.QLineEdit(self.scriptTab)
+        self.linesToExecute = QtWidgets.QLineEdit(self.tab_script)
         self.linesToExecute.setGeometry(QtCore.QRect(320, 430, 71, 33))
         self.linesToExecute.setObjectName("linesToExecute")
-<<<<<<< HEAD
-        self.linesToExecuteLabel = QtWidgets.QLabel(self.scriptFileGroupBox)
-        self.linesToExecuteLabel.setGeometry(QtCore.QRect(320, 30, 66, 21))
-        self.linesToExecuteLabel.setObjectName("linesToExecuteLabel")
+        self.saveScriptFileButton = QtWidgets.QPushButton(self.tab_script)
+        self.saveScriptFileButton.setGeometry(QtCore.QRect(400, 430, 61, 31))
+        self.saveScriptFileButton.setObjectName("saveScriptFileButton")
         self.tabWidget.addTab(self.tab_script, "")
         self.tab_preprocessor = QtWidgets.QWidget()
         self.tab_preprocessor.setObjectName("tab_preprocessor")
         self.tableWidget_variables = QtWidgets.QTableWidget(self.tab_preprocessor)
-=======
-        self.saveScriptFileButton = QtWidgets.QPushButton(self.scriptTab)
-        self.saveScriptFileButton.setGeometry(QtCore.QRect(400, 430, 61, 31))
-        self.saveScriptFileButton.setObjectName("saveScriptFileButton")
-        self.centerTabWidget.addTab(self.scriptTab, "")
-        self.tab = QtWidgets.QWidget()
-        self.tab.setObjectName("tab")
-        self.tableWidget_variables = QtWidgets.QTableWidget(self.tab)
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
         self.tableWidget_variables.setGeometry(QtCore.QRect(20, 60, 221, 371))
         self.tableWidget_variables.setRowCount(2)
         self.tableWidget_variables.setColumnCount(2)
@@ -613,11 +583,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-<<<<<<< HEAD
         self.tabWidget.setCurrentIndex(5)
-=======
-        self.centerTabWidget.setCurrentIndex(2)
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -643,22 +609,15 @@ class Ui_MainWindow(object):
         self.dLabel.setText(_translate("MainWindow", "depth"))
         self.exLabel.setText(_translate("MainWindow", "ex"))
         self.sxLabel.setText(_translate("MainWindow", "sx/h"))
-<<<<<<< HEAD
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_conversation), _translate("MainWindow", "Conversation"))
-        self.scriptFileGroupBox.setTitle(_translate("MainWindow", "File Operations"))
-        self.saveScriptFileButton.setText(_translate("MainWindow", "Save"))
-=======
-        self.centerTabWidget.setTabText(self.centerTabWidget.indexOf(self.conversationTab), _translate("MainWindow", "Conversation"))
         self.linesToExecuteLabel.setText(_translate("MainWindow", "Lines"))
         self.filenameLabel.setText(_translate("MainWindow", "Filename"))
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
         self.loadScriptButton.setText(_translate("MainWindow", "Load"))
         self.windowScopeCheckbox.setText(_translate("MainWindow", "Window"))
         self.compilerScopeCheckbox.setText(_translate("MainWindow", "Compiler"))
         self.executeScriptButton.setText(_translate("MainWindow", "Execute"))
-<<<<<<< HEAD
-        self.filenameLabel.setText(_translate("MainWindow", "Filename"))
-        self.linesToExecuteLabel.setText(_translate("MainWindow", "Lines"))
+        self.linesToExecute.setText(_translate("MainWindow", "0"))
+        self.saveScriptFileButton.setText(_translate("MainWindow", "Save"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_script), _translate("MainWindow", "Script"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_preprocessor), _translate("MainWindow", "Preprocessor"))
         self.pushButton_zeroxyz.setText(_translate("MainWindow", "Zero XYZ"))
@@ -681,15 +640,6 @@ class Ui_MainWindow(object):
         self.pushButton_abort.setText(_translate("MainWindow", "RESET"))
         self.pushButton_killalarm.setText(_translate("MainWindow", "Kill Alarm"))
         self.pushButton_resume.setText(_translate("MainWindow", "Resume ~"))
-=======
-        self.linesToExecute.setText(_translate("MainWindow", "0"))
-        self.saveScriptFileButton.setText(_translate("MainWindow", "Save"))
-        self.centerTabWidget.setTabText(self.centerTabWidget.indexOf(self.scriptTab), _translate("MainWindow", "Script"))
-        self.centerTabWidget.setTabText(self.centerTabWidget.indexOf(self.tab), _translate("MainWindow", "Preprocessor"))
-        self.pushButton_filestream.setText(_translate("MainWindow", "Stream File"))
-        self.checkBox_incremental.setText(_translate("MainWindow", "Incremental"))
-        self.pushButton_fileload.setText(_translate("MainWindow", "Set File"))
->>>>>>> 35878f7e66f03ff7008c271334da51cd3af77b3f
         self.pushButton_check.setText(_translate("MainWindow", "Check"))
         self.pushButton_homing.setText(_translate("MainWindow", "Homing"))
         self.label.setText(_translate("MainWindow", "Motion"))
