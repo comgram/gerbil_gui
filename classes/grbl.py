@@ -578,19 +578,22 @@ class GRBL:
         Parse Grbl's Gcode parser state report and inform via callback
         """
         m = re.match("\[G(\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) M(\d) M(\d) M(\d) T(\d) F([\d.-]*?) S([\d.-]*?)\]", line)
-        self.gps[0] = m.group(1) # motionmode
-        self.gps[1] = m.group(2) # coordinate system
-        self.gps[2] = m.group(3) # _plane
-        self.gps[3] = m.group(4) # _distmode
-        self.gps[4] = m.group(5) # _arcmode
-        self.gps[5] = m.group(6) # _feedmode
-        self.gps[6] = m.group(7) # _unitmode
-        self.gps[7] = m.group(8) # _cutterradiusmode
-        self.gps[8] = m.group(9) # _tlomode
-        self.gps[9] = m.group(10) # _pmode
-        self.gps[10] = m.group(11) # _sstate
-        self.gps[11] = m.group(12) # _cstate
-        self.callback("on_gcode_parser_stateupdate", self.gps)
+        if m:
+            self.gps[0] = m.group(1) # motionmode
+            self.gps[1] = m.group(2) # coordinate system
+            self.gps[2] = m.group(3) # _plane
+            self.gps[3] = m.group(4) # _distmode
+            self.gps[4] = m.group(5) # _arcmode
+            self.gps[5] = m.group(6) # _feedmode
+            self.gps[6] = m.group(7) # _unitmode
+            self.gps[7] = m.group(8) # _cutterradiusmode
+            self.gps[8] = m.group(9) # _tlomode
+            self.gps[9] = m.group(10) # _pmode
+            self.gps[10] = m.group(11) # _sstate
+            self.gps[11] = m.group(12) # _cstate
+            self.callback("on_gcode_parser_stateupdate", self.gps)
+        else:
+            logging.log(300, "%s: Could not parse gcode parser report: '%s'", self.name, line)
         
             
     def _update_state(self, line):
