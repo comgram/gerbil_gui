@@ -473,7 +473,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.filename = filename_tuple[0]
         self._add_to_loginput("<i>Set file {}</i>".format(self.filename))
-        self.label_filename.setText(self.filename)
+        #self.label_filename.setText(self.filename)
         #self.plainTextEdit_log()
         
     
