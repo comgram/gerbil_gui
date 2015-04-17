@@ -252,11 +252,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pm_string = "G" + gps[2]
             self.label_planemode.setText(pm_string)
             
-            dm_string = "G" + gps[3]
+            um_string = "G" + gps[3]
+            self.label_unitmode.setText(um_string)
+            
+            dm_string = "G" + gps[4]
             self.label_distmode.setText(dm_string)
             
-            am_string = "G" + gps[4]
-            self.label_arcmode.setText(dm_string)
+            fm_string = "G" + gps[5]
+            self.label_feedmode.setText(fm_string)
+            
+            pm_string = "M" + gps[6]
+            self.label_programmode.setText(pm_string)
+            
+            um_string = "M" + gps[7]
+            self.label_spindle_state.setText(um_string)
+            
+            um_string = gps[11]
+            self.label_current_rpm.setText(um_string)
             
         elif event == "on_send_command":
             pass
@@ -287,14 +299,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._progress_percent = data[0]
             
         elif event == "on_linear_distance_mode_change":
-            self.label_distancemode.setText(data[0])
+            self.label_distmode.setText(data[0])
             
         elif event == "on_arc_distance_mode_change":
-            self.label_arcdistancemode.setText(data[0])
+            pass
+            #self.label_arcdistancemode.setText(data[0])
             
         elif event == "on_feed_change":
             #self.horizontalSlider_feed_override.setValue(data[0])
-            self.lcdNumber_feed_current.setValue(data[0])
+            self.lcdNumber_feed_current.display("{:d}".format(int(data[0])))
             
         elif event == "on_streaming_complete":
             self.grbl.set_incremental_streaming(True)

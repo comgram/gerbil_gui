@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Fri Apr 17 10:40:27 2015
+# Created: Fri Apr 17 10:49:18 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -483,14 +483,14 @@ class Ui_MainWindow(object):
         self.label_12.setFont(font)
         self.label_12.setObjectName("label_12")
         self.gridLayout_12.addWidget(self.label_12, 8, 0, 1, 1)
-        self.label_spindle_speed = QtWidgets.QLabel(self.centralWidget)
+        self.label_current_rpm = QtWidgets.QLabel(self.centralWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_spindle_speed.sizePolicy().hasHeightForWidth())
-        self.label_spindle_speed.setSizePolicy(sizePolicy)
-        self.label_spindle_speed.setObjectName("label_spindle_speed")
-        self.gridLayout_12.addWidget(self.label_spindle_speed, 8, 1, 1, 1)
+        sizePolicy.setHeightForWidth(self.label_current_rpm.sizePolicy().hasHeightForWidth())
+        self.label_current_rpm.setSizePolicy(sizePolicy)
+        self.label_current_rpm.setObjectName("label_current_rpm")
+        self.gridLayout_12.addWidget(self.label_current_rpm, 8, 1, 1, 1)
         self.label_13 = QtWidgets.QLabel(self.centralWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
@@ -543,14 +543,14 @@ class Ui_MainWindow(object):
         self.label_5.setFont(font)
         self.label_5.setObjectName("label_5")
         self.gridLayout_12.addWidget(self.label_5, 6, 0, 1, 1)
-        self.label_spindle = QtWidgets.QLabel(self.centralWidget)
+        self.label_spindle_state = QtWidgets.QLabel(self.centralWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_spindle.sizePolicy().hasHeightForWidth())
-        self.label_spindle.setSizePolicy(sizePolicy)
-        self.label_spindle.setObjectName("label_spindle")
-        self.gridLayout_12.addWidget(self.label_spindle, 7, 1, 1, 1)
+        sizePolicy.setHeightForWidth(self.label_spindle_state.sizePolicy().hasHeightForWidth())
+        self.label_spindle_state.setSizePolicy(sizePolicy)
+        self.label_spindle_state.setObjectName("label_spindle_state")
+        self.gridLayout_12.addWidget(self.label_spindle_state, 7, 1, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_12, 6, 1, 2, 2)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
@@ -668,7 +668,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(3)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -725,13 +725,13 @@ class Ui_MainWindow(object):
         self.label_feedmode.setText(_translate("MainWindow", "G94"))
         self.label_10.setText(_translate("MainWindow", "Distance"))
         self.label_12.setText(_translate("MainWindow", "RPM"))
-        self.label_spindle_speed.setText(_translate("MainWindow", "0"))
+        self.label_current_rpm.setText(_translate("MainWindow", "0"))
         self.label_13.setText(_translate("MainWindow", "State"))
         self.label_2.setText(_translate("MainWindow", "Plane"))
         self.label_6.setText(_translate("MainWindow", "Spindle"))
         self.label_3.setText(_translate("MainWindow", "Feed"))
         self.label_5.setText(_translate("MainWindow", "Program"))
-        self.label_spindle.setText(_translate("MainWindow", "M5"))
+        self.label_spindle_state.setText(_translate("MainWindow", "M5"))
         self.checkBox_feed_override.setText(_translate("MainWindow", "Feed override"))
         self.checkBox_incremental.setText(_translate("MainWindow", "Incremental\n"
 "Stream"))
