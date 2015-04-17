@@ -307,7 +307,8 @@ class GRBL:
             return
     
         if self._error:
-            self.callback("on_log", "{}: GRBL class is in a state of error. Please reset before you continue.".format(self.name))
+            pass
+            #self.callback("on_log", "{}: GRBL class is in a state of error. Please reset before you continue.".format(self.name))
     
         if "f:" in source:
             requested_mode = "file"
@@ -462,11 +463,7 @@ class GRBL:
             
         # gcode processing
         line = self._preprocessor.do(line)
-        
-        if line == None:
-            # preprocessor had an error. this is critical.
-            self._error = True
-            self.abort()
+
         return line
     
         
