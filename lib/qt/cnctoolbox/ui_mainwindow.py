@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Fri Apr 17 11:17:04 2015
+# Created: Fri Apr 17 11:35:54 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -401,7 +401,7 @@ class Ui_MainWindow(object):
         self.scrollArea_loginput.setWidgetResizable(True)
         self.scrollArea_loginput.setObjectName("scrollArea_loginput")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 242))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 304, 242))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea_loginput.setWidget(self.scrollAreaWidgetContents)
         self.gridLayout.addWidget(self.scrollArea_loginput, 2, 13, 7, 4)
@@ -659,7 +659,7 @@ class Ui_MainWindow(object):
         self.spinBox_current_line.setMaximum(99999999)
         self.spinBox_current_line.setProperty("value", 0)
         self.spinBox_current_line.setObjectName("spinBox_current_line")
-        self.gridLayout.addWidget(self.spinBox_current_line, 1, 14, 1, 2)
+        self.gridLayout.addWidget(self.spinBox_current_line, 1, 15, 1, 1)
         self.label_grbl = QtWidgets.QLabel(self.centralWidget)
         self.label_grbl.setGeometry(QtCore.QRect(279, 493, 334, 31))
         self.label_grbl.setText("")

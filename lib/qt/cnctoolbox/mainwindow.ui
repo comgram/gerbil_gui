@@ -903,7 +903,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>285</width>
+         <width>304</width>
          <height>242</height>
         </rect>
        </property>
@@ -1356,7 +1356,7 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="14" colspan="2">
+    <item row="1" column="15">
      <widget class="QSpinBox" name="spinBox_current_line">
       <property name="maximum">
        <number>99999999</number>

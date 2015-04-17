@@ -55,7 +55,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for i in range(1, _logbuffer_size):
             self.logbuffer.append("")
             
-
+        self._current_line = 0
         
         
         self._rx_buffer_fill = 0
@@ -279,7 +279,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_processed_command":
             self._add_to_loginput("<span style='color: green'>Line {}: {}</span>".format(data[0], data[1]))
-            self.spinBox_current_line.setValue(data[0])
+            self._current_line = int(data[0])
             
         elif event == "on_error":
             self._add_to_loginput("<span style='color: red'><b>{}</b></span>".format(data[0]))
@@ -341,6 +341,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         
     def refresh(self):
+        self.spinBox_current_line.setValue(self._current_line)
         self.glWidget.updateGL()
         
         if self.changed_state:
@@ -551,6 +552,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.grbl.set_feed_override(self.checkBox_feedoverride.isChecked())
         #self.grbl.set_feed(self.horizontalSlider_feed.value())
         self.grbl.send("f:" + self.filename)
+        self.spinBox_current_line.setValue(0)
         
     def stream_pause(self):
         pass

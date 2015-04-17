@@ -477,8 +477,8 @@ class GRBL:
         if len(self._rx_buffer_fill) > 0:
             self._rx_buffer_fill.pop(0)
             processed_command = self._rx_buffer_backlog.pop(0)
-            processed_line = self._rx_buffer_backlog_line_number.pop(0)
-            self.callback("on_processed_command", processed_line, processed_command)
+            self._current_line_number = self._rx_buffer_backlog_line_number.pop(0)
+            self.callback("on_processed_command", self._current_line_number, processed_command)
             
         if self._streaming_src_end_reached == True and len(self._rx_buffer_fill) == 0:
             self._set_job_finished(True)
