@@ -239,11 +239,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
         elif event == "on_gcode_parser_stateupdate":
             gps = data[0]
-            cs_string ="G" + gps[1]
+            
+            mm_string = "G" + gps[0]
+            self.label_motionmode.setText(mm_string)
+            
+            cs_string = "G" + gps[1]
             ivd = {v: k for k, v in self._cs_names.items()}
             cs_nr = ivd[cs_string]
             print("FOUND CS", cs_nr, cs_string)
             self.set_cs(cs_nr)
+
+            pm_string = "G" + gps[2]
+            self.label_planemode.setText(pm_string)
+            
+            dm_string = "G" + gps[3]
+            self.label_distmode.setText(dm_string)
+            
+            am_string = "G" + gps[4]
+            self.label_arcmode.setText(dm_string)
             
         elif event == "on_send_command":
             pass
@@ -446,7 +459,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.filename = filename_tuple[0]
-        #self.pushButton_filestream.setText(self.filename)
+        self._add_to_loginput("<i>Set file {}</i>".format(self.filename))
+        self.label_filename.setText(self.filename)
         #self.plainTextEdit_log()
         
     

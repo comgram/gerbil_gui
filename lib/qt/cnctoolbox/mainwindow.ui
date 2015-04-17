@@ -808,7 +808,7 @@
        <enum>QLayout::SetMaximumSize</enum>
       </property>
       <item row="1" column="1">
-       <widget class="QLabel" name="label_motion">
+       <widget class="QLabel" name="label_motionmode">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -852,7 +852,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QLabel" name="label_plane">
+       <widget class="QLabel" name="label_planemode">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -901,7 +901,7 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLabel" name="label_distance">
+       <widget class="QLabel" name="label_distmode">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -914,7 +914,7 @@
        </widget>
       </item>
       <item row="6" column="1">
-       <widget class="QLabel" name="label_program">
+       <widget class="QLabel" name="label_programmode">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -927,7 +927,7 @@
        </widget>
       </item>
       <item row="5" column="1">
-       <widget class="QLabel" name="label_unit">
+       <widget class="QLabel" name="label_unitmode">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -953,7 +953,7 @@
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="label_distancemode">
+       <widget class="QLabel" name="label_10">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
           <horstretch>0</horstretch>
@@ -1350,10 +1350,10 @@ Stream</string>
       </item>
      </layout>
     </item>
-    <item row="1" column="13">
-     <widget class="QLabel" name="label_10">
+    <item row="1" column="13" colspan="3">
+     <widget class="QLabel" name="label_filename">
       <property name="text">
-       <string>TextLabel</string>
+       <string>No file selected</string>
       </property>
      </widget>
     </item>
