@@ -39,7 +39,7 @@
       </property>
      </widget>
     </item>
-    <item row="10" column="13" colspan="3">
+    <item row="11" column="13" colspan="3">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QProgressBar" name="progressBar_buffer">
@@ -91,7 +91,7 @@
       </item>
      </layout>
     </item>
-    <item row="7" column="1" rowspan="2" colspan="2">
+    <item row="8" column="1" rowspan="2" colspan="2">
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="1" column="0">
        <widget class="QPushButton" name="pushButton_hold">
@@ -165,7 +165,7 @@
       </item>
      </layout>
     </item>
-    <item row="10" column="0" colspan="3">
+    <item row="11" column="0" colspan="3">
      <widget class="QSlider" name="horizontalSlider_feed_override">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
@@ -202,7 +202,7 @@
       </property>
      </widget>
     </item>
-    <item row="7" column="13" rowspan="2" colspan="3">
+    <item row="8" column="13" rowspan="2" colspan="3">
      <widget class="QListWidget" name="listWidget_logoutput">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -238,7 +238,7 @@
       </property>
      </widget>
     </item>
-    <item row="5" column="11" rowspan="6">
+    <item row="6" column="11" rowspan="6">
      <layout class="QGridLayout" name="gridLayout_11">
       <item row="0" column="0">
        <widget class="QTabWidget" name="tabWidget">
@@ -258,7 +258,7 @@
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-         <number>4</number>
+         <number>3</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
@@ -661,7 +661,7 @@
       </property>
      </widget>
     </item>
-    <item row="5" column="0" rowspan="2">
+    <item row="6" column="0" rowspan="2">
      <layout class="QVBoxLayout" name="verticalLayout_xyz">
       <property name="sizeConstraint">
        <enum>QLayout::SetMaximumSize</enum>
@@ -802,250 +802,7 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="15">
-     <widget class="QCheckBox" name="checkBox_incremental">
-      <property name="text">
-       <string>Incremental
-Stream</string>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="13" colspan="3">
-     <widget class="QScrollArea" name="scrollArea_loginput">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>300</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="verticalScrollBarPolicy">
-       <enum>Qt::ScrollBarAlwaysOn</enum>
-      </property>
-      <property name="widgetResizable">
-       <bool>true</bool>
-      </property>
-      <widget class="QWidget" name="scrollAreaWidgetContents">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>285</width>
-         <height>256</height>
-        </rect>
-       </property>
-      </widget>
-     </widget>
-    </item>
-    <item row="9" column="13" colspan="3">
-     <layout class="QVBoxLayout" name="verticalLayout_cmd">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetMinimumSize</enum>
-      </property>
-     </layout>
-    </item>
-    <item row="7" column="0" rowspan="2">
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="3" column="1">
-       <widget class="QPushButton" name="pushButton_zplus">
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Z↑</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton_g0xyorigin">
-        <property name="text">
-         <string>G0 X0 Y0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="pushButton_xplus">
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>X→</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QPushButton" name="pushButton_zminus">
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Z↓</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="pushButton_yplus">
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Y↗</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="pushButton_xminus">
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>←X</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_jogstep">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>100.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>1.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="pushButton_yminus">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <stylestrategy>PreferDefault</stylestrategy>
-          <kerning>true</kerning>
-         </font>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string>Y↙</string>
-        </property>
-        <property name="default">
-         <bool>false</bool>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton_clearz">
-        <property name="text">
-         <string>Clear Z</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="9" column="0" colspan="3">
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QCheckBox" name="checkBox_feed_override">
-        <property name="text">
-         <string>Feed override</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLCDNumber" name="lcdNumber_feed_override">
-        <property name="maximumSize">
-         <size>
-          <width>16777</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-         </font>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">color: brown</string>
-        </property>
-        <property name="digitCount">
-         <number>4</number>
-        </property>
-        <property name="segmentStyle">
-         <enum>QLCDNumber::Flat</enum>
-        </property>
-        <property name="value" stdset="0">
-         <double>100.000000000000000</double>
-        </property>
-        <property name="intValue" stdset="0">
-         <number>100</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLCDNumber" name="lcdNumber_feed_current">
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
-        <property name="digitCount">
-         <number>4</number>
-        </property>
-        <property name="segmentStyle">
-         <enum>QLCDNumber::Flat</enum>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="5" column="1" rowspan="2" colspan="2">
+    <item row="6" column="1" rowspan="2" colspan="2">
      <layout class="QGridLayout" name="gridLayout_12">
       <property name="sizeConstraint">
        <enum>QLayout::SetMaximumSize</enum>
@@ -1071,6 +828,18 @@ Stream</string>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="font">
          <font>
           <weight>75</weight>
@@ -1078,7 +847,7 @@ Stream</string>
          </font>
         </property>
         <property name="text">
-         <string>disconn</string>
+         <string>disconnnected</string>
         </property>
        </widget>
       </item>
@@ -1337,6 +1106,256 @@ Stream</string>
        </widget>
       </item>
      </layout>
+    </item>
+    <item row="10" column="0" colspan="3">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QCheckBox" name="checkBox_feed_override">
+        <property name="text">
+         <string>Feed override</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLCDNumber" name="lcdNumber_feed_override">
+        <property name="maximumSize">
+         <size>
+          <width>16777</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: brown</string>
+        </property>
+        <property name="digitCount">
+         <number>4</number>
+        </property>
+        <property name="segmentStyle">
+         <enum>QLCDNumber::Flat</enum>
+        </property>
+        <property name="value" stdset="0">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="intValue" stdset="0">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLCDNumber" name="lcdNumber_feed_current">
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="digitCount">
+         <number>4</number>
+        </property>
+        <property name="segmentStyle">
+         <enum>QLCDNumber::Flat</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="15">
+     <widget class="QCheckBox" name="checkBox_incremental">
+      <property name="text">
+       <string>Incremental
+Stream</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="13" colspan="3">
+     <widget class="QScrollArea" name="scrollArea_loginput">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>300</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOn</enum>
+      </property>
+      <property name="widgetResizable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="scrollAreaWidgetContents">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>285</width>
+         <height>229</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
+    </item>
+    <item row="10" column="13" colspan="3">
+     <layout class="QVBoxLayout" name="verticalLayout_cmd">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinimumSize</enum>
+      </property>
+     </layout>
+    </item>
+    <item row="8" column="0" rowspan="2">
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="3" column="1">
+       <widget class="QPushButton" name="pushButton_zplus">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Z↑</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QPushButton" name="pushButton_g0xyorigin">
+        <property name="text">
+         <string>G0 X0 Y0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="pushButton_xplus">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>X→</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QPushButton" name="pushButton_zminus">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Z↓</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QPushButton" name="pushButton_yplus">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Y↗</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="pushButton_xminus">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>←X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_jogstep">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="pushButton_yminus">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <stylestrategy>PreferDefault</stylestrategy>
+          <kerning>true</kerning>
+         </font>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="text">
+         <string>Y↙</string>
+        </property>
+        <property name="default">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QPushButton" name="pushButton_clearz">
+        <property name="text">
+         <string>Clear Z</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="13">
+     <widget class="QLabel" name="label_10">
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
     </item>
    </layout>
    <widget class="QLabel" name="label_grbl">
