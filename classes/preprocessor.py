@@ -108,6 +108,7 @@ class Preprocessor:
                 self.line += "F{:0.1f}".format(self._requested_feed)
                 self._current_feed = self._requested_feed
                 self.callback("on_log", "OVERRIDING FEED: " + str(self._current_feed))
+                self.callback("on_feed_change", self._current_feed)
                     
             
             

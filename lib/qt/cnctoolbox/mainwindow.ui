@@ -703,7 +703,7 @@
      </layout>
     </item>
     <item row="0" column="13">
-     <widget class="QPushButton" name="pushButton_fileload">
+     <widget class="QPushButton" name="pushButton_file_set">
       <property name="text">
        <string>Set File</string>
       </property>
@@ -846,7 +846,7 @@
      </layout>
     </item>
     <item row="0" column="14">
-     <widget class="QPushButton" name="pushButton_filestream">
+     <widget class="QPushButton" name="pushButton_stream_play">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -854,12 +854,12 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Stream File</string>
+       <string>Stream</string>
       </property>
      </widget>
     </item>
     <item row="0" column="15">
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="pushButton_stream_pause">
       <property name="text">
        <string>Pause</string>
       </property>
@@ -903,8 +903,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>290</width>
-         <height>245</height>
+         <width>285</width>
+         <height>242</height>
         </rect>
        </property>
       </widget>
@@ -1355,6 +1355,16 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item row="1" column="14" colspan="2">
+     <widget class="QSpinBox" name="spinBox_current_line">
+      <property name="maximum">
+       <number>99999999</number>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+     </widget>
     </item>
    </layout>
    <widget class="QLabel" name="label_grbl">

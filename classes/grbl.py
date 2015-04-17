@@ -523,15 +523,11 @@ class GRBL:
                     
                 elif "error" in line:
                     logging.log(200, "%s <----- %s", self.name, line)
-                    if self._error == False:
-                        # First time
-                        self._error = True
-                        logging.log(200, "%s: _rx_buffer_backlog at time of error: %s", self.name,  self._rx_buffer_backlog)
-                        problem_command = self._rx_buffer_backlog[0]
-                        problem_line = self._rx_buffer_backlog_line_number[0]
-                        self.callback("on_error", line, problem_command, problem_line)
-                    else:
-                        self.callback("on_log", "{}: Receiving additional errors: {}".format(self.name, line))
+                    self._error = True
+                    logging.log(200, "%s: _rx_buffer_backlog at time of error: %s", self.name,  self._rx_buffer_backlog)
+                    problem_command = self._rx_buffer_backlog[0]
+                    problem_line = self._rx_buffer_backlog_line_number[0]
+                    self.callback("on_error", line, problem_command, problem_line)
                         
                 else:
                     logging.log(200, "%s <----- %s", self.name, line)
@@ -542,19 +538,14 @@ class GRBL:
         """
         When we receive an 'ok' from Grbl, submit more.
         """
-
-        if self._error == False:
-            if self._streaming_complete == False:
-                self._rx_buffer_fill_pop()
-                if not (self._wait_empty_buffer and len(self._rx_buffer_fill) > 0):
-                    self._wait_empty_buffer = False
-                    self._stream()
-                    
-            else:
-                logging.log(200, "%s handle_ok(): Streaming is already completed, Grbl is just sending OK's for the commands in its buffer.", self.name)
+        if self._streaming_complete == False:
+            self._rx_buffer_fill_pop()
+            if not (self._wait_empty_buffer and len(self._rx_buffer_fill) > 0):
+                self._wait_empty_buffer = False
+                self._stream()
                 
-        else: 
-            self.callback("on_log", "{}: GRBL class is in state of error, will not send any more. Please reset/abort before you can continue.".format(self.name))
+        else:
+            logging.log(200, "%s handle_ok(): Streaming is already completed, Grbl is just sending OK's for the commands in its buffer.", self.name)
         
         self._rx_buffer_fill_percent = int(100 - 100 * (self._rx_buffer_size - sum(self._rx_buffer_fill)) / self._rx_buffer_size)
         self.callback("on_rx_buffer_percentage", self._rx_buffer_fill_percent)

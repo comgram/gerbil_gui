@@ -83,8 +83,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_homing.clicked.connect(self.grbl.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
         
-        self.pushButton_filestream.clicked.connect(self.stream_file)
-        self.pushButton_fileload.clicked.connect(self.pick_file)
+        self.pushButton_stream_play.clicked.connect(self.stream_play)
+        self.pushButton_stream_pause.clicked.connect(self.stream_pause)
+        self.pushButton_file_set.clicked.connect(self.pick_file)
         
         self.pushButton_hold.clicked.connect(self.grbl.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
@@ -278,6 +279,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_processed_command":
             self._add_to_loginput("<span style='color: green'>Line {}: {}</span>".format(data[0], data[1]))
+            self.spinBox_current_line.setValue(data[0])
             
         elif event == "on_error":
             self._add_to_loginput("<span style='color: red'><b>{}</b></span>".format(data[0]))
@@ -545,10 +547,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.abort()
         
     
-    def stream_file(self):
+    def stream_play(self):
         #self.grbl.set_feed_override(self.checkBox_feedoverride.isChecked())
         #self.grbl.set_feed(self.horizontalSlider_feed.value())
         self.grbl.send("f:" + self.filename)
+        
+    def stream_pause(self):
+        pass
         
         
     def check(self):
