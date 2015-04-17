@@ -37,6 +37,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         _logbuffer_size = 200
         
         self.setupUi(self)
+        self.modifyUi()
         self.setupScripting()
         
         self.grbl = GRBL("mygrbl", path)
@@ -202,7 +203,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.zSlider.setValue(1 * 16)
         
         self.setUpdatesEnabled(True)
-        
+    def modifyUi(self):
+        self.pushButton_homing.setStyleSheet("background-color: rgb(102,217,239);")
+        self.pushButton_resume.setStyleSheet("background-color: rgb(166,226,46);")
+        self.pushButton_killalarm.setStyleSheet("background-color: rgb(198,31,31);color: white;")
+        self.pushButton_hold.setStyleSheet("background-color: rgb(219,213,50);")
+        self.pushButton_check.setStyleSheet("background-color: rgb(235,122,9);")
     def setupScripting(self):
         print("Setting up Scripting Tab")
         p = self.scriptTextEdit.palette();

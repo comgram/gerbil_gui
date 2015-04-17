@@ -47,17 +47,28 @@ class Highlighter(QtGui.QSyntaxHighlighter):
         keywordFormat.setForeground(QColor(249,38,114))
         keywordFormat.setFontWeight(QtGui.QFont.Bold)
 
+        
+
         keywordPatterns = ["\\bclass\\b","\\bdef\\b","\\bsuper\\b",
         "\\bNone\\b","\\bFalse\\b","\\bTrue\\b","\\bself\\b","\\breturn\\b",
         "\\blambda\\b","\\bprint\\b","\\bformat\\b",
-        "\\bif\\b","\\belse\\b","\\belif\\b","\\bline\\b",
-        "\\bline_to\\b","\\bcircle\\b","\\barc\\b","\\barc_to\\b",
-        "\\bpocket\\b","\\bsquare\\b","\\btriangle\\b",
-        "\\bsetv\\b","\\bgetv\\b","\\binclude_gcode_from\\b","\\bsend_gcode_lines\\b",
-        "\\bcomment\\b","\\bmove\\b","\\bdepth\\b","\\bwhile\\b","\\bfor\\b","\\bin\\b",]
+        "\\bif\\b","\\belse\\b","\\belif\\b","\\bwhile\\b","\\bfor\\b","\\bin\\b",]
         
         for pattern in keywordPatterns:
             self.highlightingRules.append( (QtCore.QRegExp(pattern), keywordFormat) )
+
+        compilerFormat = QtGui.QTextCharFormat()
+        compilerFormat.setForeground(QColor(102,217,239))
+        compilerFormat.setFontWeight(QtGui.QFont.Bold)
+
+        compilerPatterns = ["\\bline\\b",
+        "\\bline_to\\b","\\bcircle\\b","\\barc\\b","\\barc_to\\b",
+        "\\bpocket\\b","\\bsquare\\b","\\btriangle\\b",
+        "\\bsetv\\b","\\bgetv\\b","\\binclude_gcode_from\\b","\\bsend_gcode_lines\\b",
+        "\\bcomment\\b","\\bmove\\b","\\bdepth\\b"]
+        
+        for pattern in compilerPatterns:
+            self.highlightingRules.append( (QtCore.QRegExp(pattern), compilerFormat) )
 
         self.highlightingRules.append((QtCore.QRegExp("[\\-\\+=%\\/]+"),
                 keywordFormat))
