@@ -38,6 +38,7 @@ Settings = {
     'header': "G17 G21 G91 G94 G54;header\n",
     'ignoreZ': False,
     'port': sys.stdout,
+    'port_stack': [],
     'feed_speed': 400,
     'max_feed_speed': 800,
     'debug': True,
@@ -80,7 +81,24 @@ State = {
 PositionStack = []
 ''' We have to save the z-depth separately '''
 ZStack = []
+def speed(s):
+    global Settings
+    Settings['max_feed_speed'] = s
+def diameter(d):
+    global Settings
+    Settings['bit']['diameter'] = d
+def push_receiver():
+    global Settings
+    Settings['port_stack'].append(Settings['port'])
+def pop_receiver():
+    global Settings
+    Settings['port'] = Settings['port_stack'].pop()
 def evaluate(txt):
+    global Settings
+    global ZStack
+    global PositionStack
+    global State
+    global FileLines
     try:
         exec(txt)
     except:
@@ -132,7 +150,10 @@ def log(str):
     Settings['log_callback'](str)
 def slow():
     global Settings
-    return Settings['feed_speed'] / 2
+    return int(math.floor(Settings['feed_speed'] * 0.25))
+def slowly():
+    global Settings
+    return int(math.floor(Settings['feed_speed'] * 0.35))
 def fast():
     global Settings
     return Settings['max_feed_speed']
@@ -364,13 +385,15 @@ def circle(h,k,r,d,dth):
     up()
     move(h,k)
     
-def hole(h,k,r,d,dth):
+def hole(h,k,r,d=0.5,dth=0.5):
     global Settings
     inc = Settings['bit']['diameter'] / 2
-    i = 0.5
+    i = inc
     while i < r:
         circle(h,k,i,d,dth)
-        i = i + 0.1
+        i += inc
+        if i > r:
+            i = r
 
 def triangle(blx,bly,brx,bry,ax,ay,d):
     block_start("Triangle")

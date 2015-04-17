@@ -24,13 +24,7 @@ class Highlighter(QtGui.QSyntaxHighlighter):
         self.highlightingRules.append((QtCore.QRegExp("\\bQ[A-Za-z]+\\b"),
                 classFormat))
 
-        singleLineCommentFormat = QtGui.QTextCharFormat()
-        singleLineCommentFormat.setForeground(QtCore.Qt.red)
-        self.highlightingRules.append((QtCore.QRegExp("//[^\n]*"),
-                singleLineCommentFormat))
-
-        self.multiLineCommentFormat = QtGui.QTextCharFormat()
-        self.multiLineCommentFormat.setForeground(QtCore.Qt.red)
+        
 
         quotationFormat = QtGui.QTextCharFormat()
         quotationFormat.setForeground( QColor(230,219,116) )
@@ -65,13 +59,32 @@ class Highlighter(QtGui.QSyntaxHighlighter):
         "\\bline_to\\b","\\bcircle\\b","\\barc\\b","\\barc_to\\b",
         "\\bpocket\\b","\\bsquare\\b","\\btriangle\\b",
         "\\bsetv\\b","\\bgetv\\b","\\binclude_gcode_from\\b","\\bsend_gcode_lines\\b",
-        "\\bcomment\\b","\\bmove\\b","\\bdepth\\b"]
+        "\\bcomment\\b","\\bmove\\b","\\bdepth\\b","\\bspeed\\b","\\bdiameter\\b","\\bpush_z\\b",
+        "\\bpop_z\\b","\\bpush_receiver\\b","\\bpop_receiver\\b","\\bfast\\b","\\bslow\\b","\\bslowly\\b",
+        "\\bemit\\b","\\b_process_line\\b",]
         
         for pattern in compilerPatterns:
             self.highlightingRules.append( (QtCore.QRegExp(pattern), compilerFormat) )
 
+        globalFormat = QtGui.QTextCharFormat()
+        globalFormat.setForeground(QColor(230,219,116))
+        globalFormat.setFontWeight(QtGui.QFont.Bold)
+
+        globalPatterns = ["\\State\\b","\\FileLines\\b","\\ZStack\\b","\\bSettings\\b",]
+        
+        for pattern in globalPatterns:
+            self.highlightingRules.append( (QtCore.QRegExp(pattern), globalFormat) )
+
         self.highlightingRules.append((QtCore.QRegExp("[\\-\\+=%\\/]+"),
                 keywordFormat))
+
+        singleLineCommentFormat = QtGui.QTextCharFormat()
+        singleLineCommentFormat.setForeground(QtCore.Qt.white)
+        self.highlightingRules.append((QtCore.QRegExp("#[^\n]*"),
+                singleLineCommentFormat))
+
+        self.multiLineCommentFormat = QtGui.QTextCharFormat()
+        self.multiLineCommentFormat.setForeground(QtCore.Qt.white)
 
         self.commentStartExpression = QtCore.QRegExp("/\\*")
         self.commentEndExpression = QtCore.QRegExp("\\*/")
