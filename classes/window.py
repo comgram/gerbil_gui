@@ -72,7 +72,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.glWidget = GLWidget()
         self.gridLayout_glwidget_container.addWidget(self.glWidget)
         
-        self.jogWidget = JogWidget(self, self.grbl.send_immediately)
+        self.jogWidget = JogWidget(self, self.grbl.send)
         #self.jogWidget.setStyleSheet("background-color: black")
         self.gridLayout_jog_container.addWidget(self.jogWidget)
         

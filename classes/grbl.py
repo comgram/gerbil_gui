@@ -280,9 +280,6 @@ class GRBL:
         
         
     def send(self, source):
-        """
-        Append to buffer and execute immediately.
-        """
         print("XXXXXXXXXXXXXXXX SENDING", source)
         self.load_string(source)
         #self.stream_start()
