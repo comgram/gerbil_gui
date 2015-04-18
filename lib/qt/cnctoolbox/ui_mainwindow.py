@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Sat Apr 18 14:54:02 2015
+# Created: Sat Apr 18 15:06:08 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -315,13 +315,16 @@ class Ui_MainWindow(object):
         self.gridLayout.addLayout(self.verticalLayout_cmd, 11, 13, 1, 4)
         self.gridLayout_3 = QtWidgets.QGridLayout()
         self.gridLayout_3.setObjectName("gridLayout_3")
+        self.pushButton_clearz = QtWidgets.QPushButton(self.centralWidget)
+        self.pushButton_clearz.setObjectName("pushButton_clearz")
+        self.gridLayout_3.addWidget(self.pushButton_clearz, 4, 0, 1, 2)
         self.pushButton_zplus = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_zplus.setMaximumSize(QtCore.QSize(50, 16777215))
         self.pushButton_zplus.setObjectName("pushButton_zplus")
         self.gridLayout_3.addWidget(self.pushButton_zplus, 3, 1, 1, 1)
         self.pushButton_g0xyorigin = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_g0xyorigin.setObjectName("pushButton_g0xyorigin")
-        self.gridLayout_3.addWidget(self.pushButton_g0xyorigin, 5, 0, 1, 2)
+        self.gridLayout_3.addWidget(self.pushButton_g0xyorigin, 6, 0, 1, 2)
         self.pushButton_xplus = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_xplus.setMaximumSize(QtCore.QSize(50, 16777215))
         self.pushButton_xplus.setObjectName("pushButton_xplus")
@@ -362,9 +365,9 @@ class Ui_MainWindow(object):
         self.pushButton_yminus.setFlat(False)
         self.pushButton_yminus.setObjectName("pushButton_yminus")
         self.gridLayout_3.addWidget(self.pushButton_yminus, 2, 1, 1, 1)
-        self.pushButton_clearz = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_clearz.setObjectName("pushButton_clearz")
-        self.gridLayout_3.addWidget(self.pushButton_clearz, 4, 0, 1, 2)
+        self.pushButton_clearxy = QtWidgets.QPushButton(self.centralWidget)
+        self.pushButton_clearxy.setObjectName("pushButton_clearxy")
+        self.gridLayout_3.addWidget(self.pushButton_clearxy, 5, 0, 1, 2)
         self.gridLayout.addLayout(self.gridLayout_3, 9, 0, 2, 1)
         self.verticalLayout_xyz = QtWidgets.QVBoxLayout()
         self.verticalLayout_xyz.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
@@ -671,7 +674,7 @@ class Ui_MainWindow(object):
         self.scrollArea_loginput.setWidgetResizable(True)
         self.scrollArea_loginput.setObjectName("scrollArea_loginput")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 193))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 163))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea_loginput.setWidget(self.scrollAreaWidgetContents)
         self.gridLayout.addWidget(self.scrollArea_loginput, 3, 13, 6, 4)
@@ -736,6 +739,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_coordinates), _translate("MainWindow", "Coordinates"))
         self.label_7.setText(_translate("MainWindow", "<html><head/><body><p>Empty field below: Click and drag mouse to move X and Y axis from the current coordinates.</p><p>Use the scroll wheel to modify Z axis. </p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_jog), _translate("MainWindow", "Jog"))
+        self.pushButton_clearz.setText(_translate("MainWindow", "Clear Z"))
         self.pushButton_zplus.setText(_translate("MainWindow", "Z↑"))
         self.pushButton_g0xyorigin.setText(_translate("MainWindow", "G0 X0 Y0"))
         self.pushButton_xplus.setText(_translate("MainWindow", "X→"))
@@ -743,7 +747,7 @@ class Ui_MainWindow(object):
         self.pushButton_yplus.setText(_translate("MainWindow", "Y↗"))
         self.pushButton_xminus.setText(_translate("MainWindow", "←X"))
         self.pushButton_yminus.setText(_translate("MainWindow", "Y↙"))
-        self.pushButton_clearz.setText(_translate("MainWindow", "Clear Z"))
+        self.pushButton_clearxy.setText(_translate("MainWindow", "Clear XY"))
         self.label_9.setText(_translate("MainWindow", "G53:"))
         self.label_current_cs.setText(_translate("MainWindow", "Coord System"))
         self.label_motionmode.setText(_translate("MainWindow", "G0"))

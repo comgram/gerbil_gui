@@ -690,6 +690,13 @@
     </item>
     <item row="9" column="0" rowspan="2">
      <layout class="QGridLayout" name="gridLayout_3">
+      <item row="4" column="0" colspan="2">
+       <widget class="QPushButton" name="pushButton_clearz">
+        <property name="text">
+         <string>Clear Z</string>
+        </property>
+       </widget>
+      </item>
       <item row="3" column="1">
        <widget class="QPushButton" name="pushButton_zplus">
         <property name="maximumSize">
@@ -703,7 +710,7 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="2">
+      <item row="6" column="0" colspan="2">
        <widget class="QPushButton" name="pushButton_g0xyorigin">
         <property name="text">
          <string>G0 X0 Y0</string>
@@ -815,10 +822,10 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton_clearz">
+      <item row="5" column="0" colspan="2">
+       <widget class="QPushButton" name="pushButton_clearxy">
         <property name="text">
-         <string>Clear Z</string>
+         <string>Clear XY</string>
         </property>
        </widget>
       </item>
@@ -1392,7 +1399,7 @@
          <x>0</x>
          <y>0</y>
          <width>285</width>
-         <height>193</height>
+         <height>163</height>
         </rect>
        </property>
       </widget>

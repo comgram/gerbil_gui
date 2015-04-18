@@ -123,7 +123,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_check.clicked.connect(self.check)
         
         self.pushButton_clearz.setDisabled(True)
+        self.pushButton_clearxy.setDisabled(True)
         self.pushButton_clearz.clicked.connect(self.clearz)
+        self.pushButton_clearxy.clicked.connect(self.clearxy)
         self.pushButton_g0xyorigin.clicked.connect(self.g0xyorigin)
         
         self.pushButton_xminus.clicked.connect(self.xminus)
@@ -275,6 +277,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def homing(self):
         self.pushButton_clearz.setDisabled(False)
+        self.pushButton_clearxy.setDisabled(False)
         self.grbl.homing()
         
     def on_grbl_event(self, event, *data):
@@ -623,6 +626,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def clearz(self):
         self.grbl.send("G53 Z-10")
+        
+    def clearxy(self):
+        """
+        TODO: Make this configurable. Right now is the approx middle of our machine
+        """
+        self.grbl.send("G53 X-400 Y-600")
         
     def cnect(self):
         #self.pushButton_connect.setEnabled(False)
