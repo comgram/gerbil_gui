@@ -16,7 +16,7 @@ import compiler.gcode as COMPILER
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
 from PyQt5.QtGui import QColor,QPalette
-from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem)
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
 from lib import gcodetools
@@ -76,17 +76,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.jogWidget.setStyleSheet("background-color: black")
         self.gridLayout_jog_container.addWidget(self.jogWidget)
         
+        
+        ## MENU BAR SETUP
+        self.menuBar = QMenuBar(self)
+        
+        self.action_file_set = QAction("Set", self)
+        self.action_file_set.triggered.connect(self._pick_file)
+        
+        self.action_file_quit = QAction("Quit", self)
+        self.action_file_quit.triggered.connect(self._quit)
+            
+        self.action_grbl_connect = QAction("Connect", self)
+        self.action_grbl_connect.triggered.connect(self.cnect)
+        
+        self.action_grbl_disconnect = QAction("Disconnect", self)
+        self.action_grbl_disconnect.triggered.connect(self.disconnect)
+        
+        self.menu_file = self.menuBar.addMenu("File")
+        self.menu_grbl = self.menuBar.addMenu("Grbl")
+        
+        self.menu_file.addAction(self.action_file_set)
+        self.menu_file.addAction(self.action_file_quit)
+        
+        self.menu_grbl.addAction(self.action_grbl_connect)
+        self.menu_grbl.addAction(self.action_grbl_disconnect)
+        
+        #fileMenu = menuBar()->addMenu(tr("&File"));
+        #fileMenu->addAction(newAct);
+        
         #self.jogWidget.mouseMoveEvent.connect(self._on_jog_mousemove)
         
         ## connect slots to signals
-        self.pushButton_connect.clicked.connect(self.cnect)
-        self.pushButton_disconnect.clicked.connect(self.disconnect)
-        self.pushButton_homing.clicked.connect(self.grbl.homing)
+        #self.pushButton_connect.clicked.connect(self.cnect)
+        #self.pushButton_disconnect.clicked.connect(self.disconnect)
+        self.pushButton_homing.clicked.connect(self.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
         
-        self.pushButton_stream_play.clicked.connect(self.stream_play)
-        self.pushButton_stream_pause.clicked.connect(self.stream_pause)
-        self.pushButton_file_set.clicked.connect(self.pick_file)
+        self.pushButton_stream_start.clicked.connect(self.stream_start)
+        self.pushButton_stream_stop.clicked.connect(self.stream_stop)
+        #self.pushButton_file_set.clicked.connect(self._pick_file)
         
         self.pushButton_hold.clicked.connect(self.grbl.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
@@ -128,8 +156,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer.timeout.connect(self.refresh)
         self.timer.start(30)
         
-        self.pushButton_disconnect.setEnabled(False)
-        self.pushButton_connect.setEnabled(True)
+        self.action_grbl_disconnect.setEnabled(False)
+        self.action_grbl_connect.setEnabled(True)
         
         self._cs_names = {
             1: "G54",
@@ -203,12 +231,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.zSlider.setValue(1 * 16)
         
         self.setUpdatesEnabled(True)
+        
+        
     def modifyUi(self):
         self.pushButton_homing.setStyleSheet("background-color: rgb(102,217,239);")
         self.pushButton_resume.setStyleSheet("background-color: rgb(166,226,46);")
         self.pushButton_killalarm.setStyleSheet("background-color: rgb(198,31,31);color: white;")
         self.pushButton_hold.setStyleSheet("background-color: rgb(219,213,50);")
         self.pushButton_check.setStyleSheet("background-color: rgb(235,122,9);")
+        
+        
     def setupScripting(self):
         print("Setting up Scripting Tab")
         p = self.scriptTextEdit.palette();
@@ -221,20 +253,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.loadScriptButton.clicked.connect(self.load_script_clicked)
         self.saveScriptFileButton.clicked.connect(self.save_script_clicked)
         self.executeScriptButton.clicked.connect(self.execute_script_clicked)
+        
+        
     def execute_script_clicked(self,item):
         code = self.scriptTextEdit.toPlainText()
         COMPILER.evaluate(code)
+        
+        
     def load_script_clicked(self,item):
         fname = self.filenameLineEdit.text()
         with open(fname, 'r') as content_file:
             content = content_file.read()
         self.scriptTextEdit.setPlainText(content)
+        
+        
     def save_script_clicked(self,item):
         fname = self.filenameLineEdit.text()
         with open(fname, 'w') as content_file:
             content_file.write(self.scriptTextEdit.toPlainText())
         self._add_to_loginput("File {} written.".format(fname))
 
+    def homing(self):
+        self.pushButton_clearz.setDisabled(False)
+        self.grbl.homing()
         
     def on_grbl_event(self, event, *data):
         if event == "on_stateupdate":
@@ -321,12 +362,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.grbl.set_incremental_streaming(True)
             
         elif event == "on_boot":
-            self.pushButton_disconnect.setEnabled(True)
-            self.pushButton_connect.setEnabled(False)
+            self.action_grbl_disconnect.setEnabled(True)
+            self.action_grbl_connect.setEnabled(False)
             
         elif event == "on_disconnected":
-            self.pushButton_disconnect.setEnabled(False)
-            self.pushButton_connect.setEnabled(True)
+            self.action_grbl_disconnect.setEnabled(False)
+            self.action_grbl_connect.setEnabled(True)
             self.lcdNumber_mx.display("{:0.2f}".format(8888.88))
             self.lcdNumber_my.display("{:0.2f}".format(8888.88))
             self.lcdNumber_mz.display("{:0.2f}".format(8888.88))
@@ -477,8 +518,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _on_logoutput_current_item_changed(self, item_current, item_previous):
         self.lineEdit_cmdline.setText(item_current.text())
         self.logoutput_at_end = False
+        
+    def _quit(self):
+        self.grbl.disconnect()
+        QApplication.quit()
 
-    def pick_file(self):
+    def _pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.filename = filename_tuple[0]
         self._add_to_loginput("<i>Set file {}</i>".format(self.filename))
@@ -547,11 +592,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def abort(self):
         #self.label_loginputline.setText("")
         self.grbl.abort()
-        
-        
+       
     def reset(self):
         #self.label_loginputline.setText("")
         self.grbl.abort()
+        
+    def stream_start(self):
+        pass
+    
+    def stream_stop(self):
+        pass
         
     
     def stream_play(self):
@@ -575,7 +625,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send("G53 Z-10")
         
     def cnect(self):
-        self.pushButton_connect.setEnabled(False)
+        #self.pushButton_connect.setEnabled(False)
+        self.action_grbl_connect.setEnabled(False)
         #self.pushButton_disconnect.setEnabled(False)
         self.grbl.cnect()
         
@@ -585,7 +636,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def disconnect(self):
         #self.pushButton_connect.setEnabled(False)
-        self.pushButton_disconnect.setEnabled(False)
+        #self.pushButton_disconnect.setEnabled(False)
+        self.action_grbl_disconnect.setEnabled(False)
         self.grbl.disconnect()
         
         #self.horizontalSlider_feed.setValue(100)

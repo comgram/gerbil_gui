@@ -27,8 +27,10 @@ class JogWidget(QWidget):
         
         
     def mouseReleaseEvent(self, event):
-        pass
-        #self.callback("G90") # set back to absolute coordinates
+        """
+        Safe Feed
+        """
+        self.callback("F100")
         
         
     def wheelEvent(self, event):
@@ -42,4 +44,4 @@ class JogWidget(QWidget):
         y_current_screen = pos.y()
         x_goto = self._relative_origin_x + (x_current_screen - self._x_start_screen) / 20
         y_goto = self._relative_origin_y + (self._y_start_screen - y_current_screen) / 20
-        self.callback("G0 X{:0.2f} Y{:0.2f}".format(x_goto, y_goto))
+        self.callback("G1 X{:0.2f} Y{:0.2f} F2000".format(x_goto, y_goto))
