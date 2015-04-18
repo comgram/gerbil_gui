@@ -242,6 +242,7 @@ def emit(txt=";Nothing Emitted\n"):
             Settings['port'].write(" ")  
         #log("Writing Text: %s" % txt)
         if txt and isinstance(txt,basestring) and len(txt) > 2:
+            print("WRITING", txt)
             Settings['port'].write("%s\n" % txt)
             
 '''
