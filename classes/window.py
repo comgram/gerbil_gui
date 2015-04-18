@@ -72,7 +72,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.glWidget = GLWidget()
         self.gridLayout_glwidget_container.addWidget(self.glWidget)
         
-        self.jogWidget = JogWidget(self, self.grbl.send)
+        self.jogWidget = JogWidget(self, self.grbl.send_immediately)
         #self.jogWidget.setStyleSheet("background-color: black")
         self.gridLayout_jog_container.addWidget(self.jogWidget)
         
@@ -114,6 +114,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.pushButton_stream_start.clicked.connect(self.stream_start)
         self.pushButton_stream_stop.clicked.connect(self.stream_stop)
+        self.pushButton_stream_clear.clicked.connect(self.grbl.stream_clear)
         #self.pushButton_file_set.clicked.connect(self._pick_file)
         
         self.pushButton_hold.clicked.connect(self.grbl.hold)
@@ -176,6 +177,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.comboBox_coordinate_systems.insertItem(key, val)
         self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
         
+        self.comboBox_target.insertItem(0, "serialport")
+        self.comboBox_target.insertItem(1, "simulator")
+        self.comboBox_target.insertItem(2, "file")
+        self.comboBox_target.currentIndexChanged.connect(self._target_selected)
+        self.grbl.set_target("serialport")
         
         #QFont f( "Cantarell", 10, QFont::Bold);
         #textLabel->setFont( f);
@@ -297,7 +303,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cs_string = "G" + gps[1]
             ivd = {v: k for k, v in self._cs_names.items()}
             cs_nr = ivd[cs_string]
-            print("FOUND CS", cs_nr, cs_string)
             self.set_cs(cs_nr)
 
             pm_string = "G" + gps[2]
@@ -331,6 +336,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<span style='color: green'>Line {}: {}</span>".format(data[0], data[1]))
             self._current_line = int(data[0])
             
+        elif event == "on_line_number_change":
+            self._current_line = int(data[0])
+            
         elif event == "on_error":
             self._add_to_loginput("<span style='color: red'><b>{}</b></span>".format(data[0]))
             self._add_to_loginput("<span style='color: red'><b>Error was in line {}: {}</b></span>".format(data[2], data[1]))
@@ -344,18 +352,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_log":
             self._add_to_loginput("<i>" + data[0] + "</i>")
             
+        elif event == "on_loaded":
+            what = data[0]
+            if what == "string":
+                msg = "{:d} Lines in buffer".format(data[1])
+            else:
+                msg = "{:d} Lines from {}".format(data[1], os.path.basename(data[2]))
+                
+            self.label_sourceinfo.setText(msg)
+            
         elif event == "on_rx_buffer_percentage":
             self._rx_buffer_fill = data[0]
             
         elif event == "on_progress_percent":
             self._progress_percent = data[0]
-            
-        elif event == "on_linear_distance_mode_change":
-            self.label_distmode.setText(data[0])
-            
-        elif event == "on_arc_distance_mode_change":
-            pass
-            #self.label_arcdistancemode.setText(data[0])
             
         elif event == "on_feed_change":
             #self.horizontalSlider_feed_override.setValue(data[0])
@@ -391,7 +401,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         
     def refresh(self):
-        self.spinBox_current_line.setValue(self._current_line)
+        self.label_current_line.setText(str(self._current_line))
         self.glWidget.updateGL()
         
         if self.changed_state:
@@ -480,7 +490,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 print("Exception in user code:")
                 traceback.print_exc(file=sys.stdout)
         else:
-            self.grbl.send(cmd)
+            self.grbl.send_immediately(cmd)
 
         
     # UI SLOTS
@@ -529,51 +539,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.filename = filename_tuple[0]
-        self._add_to_loginput("<i>Set file {}</i>".format(self.filename))
+        self.grbl.load_file(self.filename)
         #self.label_filename.setText(self.filename)
         #self.plainTextEdit_log()
         
     
     def xminus(self):
         step = - self.doubleSpinBox_jogstep.value()
-        self.grbl.send("G91")
-        self.grbl.send("G0 X" + str(step))
-        self.grbl.send("G90")
+        self.grbl.send_immediately("G91")
+        self.grbl.send_immediately("G0 X" + str(step))
+        self.grbl.send_immediately("G90")
         
         
     def xplus(self):
         step = self.doubleSpinBox_jogstep.value()
-        self.grbl.send("G91")
-        self.grbl.send("G0 X" + str(step))
-        self.grbl.send("G90")
+        self.grbl.send_immediately("G91")
+        self.grbl.send_immediately("G0 X" + str(step))
+        self.grbl.send_immediately("G90")
         
     
     def yminus(self):
         step = - self.doubleSpinBox_jogstep.value()
-        self.grbl.send("G91")
-        self.grbl.send("G0 Y" + str(step))
-        self.grbl.send("G90")
+        self.grbl.send_immediately("G91")
+        self.grbl.send_immediately("G0 Y" + str(step))
+        self.grbl.send_immediately("G90")
         
         
     def yplus(self):
         step = self.doubleSpinBox_jogstep.value()
-        self.grbl.send("G91")
-        self.grbl.send("G0 Y" + str(step))
-        self.grbl.send("G90")
+        self.grbl.send_immediately("G91")
+        self.grbl.send_immediately("G0 Y" + str(step))
+        self.grbl.send_immediately("G90")
         
     
     def zminus(self):
         step = - self.doubleSpinBox_jogstep.value()
-        self.grbl.send("G91")
-        self.grbl.send("G0 Z" + str(step))
-        self.grbl.send("G90")
+        self.grbl.send_immediately("G91")
+        self.grbl.send_immediately("G0 Z" + str(step))
+        self.grbl.send_immediately("G90")
         
         
     def zplus(self):
         step = self.doubleSpinBox_jogstep.value()
-        self.grbl.send("G91")
-        self.grbl.send("G0 Z" + str(step))
-        self.grbl.send("G90")
+        self.grbl.send_immediately("G91")
+        self.grbl.send_immediately("G0 Z" + str(step))
+        self.grbl.send_immediately("G90")
         
         
     def _feedoverride_value_changed(self):
@@ -601,37 +611,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.abort()
         
     def stream_start(self):
-        pass
+        line_nr = self.spinBox_start_line.value()
+        self.grbl.stream_start(line_nr)
     
     def stream_stop(self):
-        pass
+        self.grbl.stream_stop()
         
     
     def stream_play(self):
         #self.grbl.set_feed_override(self.checkBox_feedoverride.isChecked())
         #self.grbl.set_feed(self.horizontalSlider_feed.value())
-        self.grbl.send("f:" + self.filename)
-        self.spinBox_current_line.setValue(0)
+        self.grbl.stream_start()
+        self.label_current_line.setText("0")
         
     def stream_pause(self):
         pass
         
         
     def check(self):
-        self.grbl.send("$C")
+        self.grbl.send_immediately("$C")
         
         
     def g0xyorigin(self):
-        self.grbl.send("G0 X0 Y0")
+        self.grbl.send_immediately("G0 X0 Y0")
         
     def clearz(self):
-        self.grbl.send("G53 Z-10")
+        self.grbl.send_immediately("G53 Z-10")
         
     def clearxy(self):
         """
         TODO: Make this configurable. Right now is the approx middle of our machine
         """
-        self.grbl.send("G53 X-400 Y-600")
+        self.grbl.send_immediately("G53 X-400 Y-600")
         
     def cnect(self):
         #self.pushButton_connect.setEnabled(False)
@@ -664,7 +675,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<i>No file set and no gcode provided.</i>")
             return
         
-        self.grbl.send(movements)
+        self.grbl.send_immediately(movements)
         
         
     def createSlider(self):
@@ -692,11 +703,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _cs_selected(self, idx):
         self._current_cs = idx + 1
         #self.label_current_cs.setText(self._cs_names[self._current_cs])
-        self.grbl.send(self._cs_names[self._current_cs])
+        self.grbl.send_immediately(self._cs_names[self._current_cs])
         print("XXX", idx)
         
+    def _target_selected(self, idx):
+        pass
+        
     def _current_cs_setzero(self):
-        self.grbl.send("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
+        self.grbl.send_immediately("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
 
     def _on_jog_mousemove(self, event):
         pass

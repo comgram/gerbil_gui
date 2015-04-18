@@ -37,13 +37,8 @@ class GRBL:
         self._rx_buffer_backlog_line_number = []
         self._rx_buffer_fill_percent = 0
         
-        self._gcodefile = None
         self._gcodefilename = None
         self._gcodefilesize = 999999999
-        
-        #self._requested_feed = None
-        #self._current_feed = None
-        #self._feed_override = False
         
         self._current_line = "; cnctools_INIT" # explicit init string for debugging
         self._current_line_sent = True
@@ -54,22 +49,18 @@ class GRBL:
         
         self._wait_empty_buffer = False
         
-        self.distance_mode_arc = None
-        self.distance_mode_linear = None
-        
         self._streaming_complete = True
         self._job_finished = True
         self._streaming_src_end_reached = True
-        
+        self._streaming_enabled = True
         self._error = False
         self._alarm = False
         
         self._buffer = []
+        self._buffer_size = 0
+        self._current_line_nr = 0
 
         self.connected = False
-        self._streamed_bytes = 0 # to calculate progress percentage when streaming a file
-        self._streamed_lines = 0 # keep track of the line number in a file
-        self._added_lines = 0 # lines submitted as string to the `send()` method
         
         # for interrupting long-running tasks in threads
         self._poll_do = False
@@ -282,64 +273,121 @@ class GRBL:
         if self._incremental_streaming == True:
             self._wait_empty_buffer = True
         self.callback("on_log", "{}: Incremental streaming is {}".format(self.name, self._incremental_streaming))
-    
-    
-    def write(self,source):
-        """
-        The Gcode compiler requires a method "write" to be present. This is just an alias for `send()`
-        """
-        self.send(source)
         
-    
+        
+    def send_immediately(self, line):
+        self._iface.write(line + "\n")
+        
+        
     def send(self, source):
         """
-        Stream one or many commands to Grbl.
-        
-        - An argument other than a string is rejected.
-        - A single command does not have to be newline-terminated.
-        - To send multiple commands in one go, separate them by newlines.
-        - Gcode comments (semicolon and parentesis) will be filtered out before submission to Grbl
+        Append to buffer and execute immediately.
         """
-        if self.is_connected() == False: return
-    
-        if not isinstance(source, str):
-            self.callback("on_log", "{}: send() can only receive strings.".format(self.name))
-            return
-    
-        if self._error:
-            pass
-            #self.callback("on_log", "{}: GRBL class is in a state of error. Please reset before you continue.".format(self.name))
-    
-        if "f:" in source:
-            requested_mode = "file"
-        else:
-            requested_mode = "string"
-    
-        if self._streaming_mode == "file" and self.cmode == "Run":
-            self.callback("on_log", "{}: You can't append something to a running file stream. You only can append to a string stream. Please wait until the current job has completed or call .abort() for Grbl to become idle".format(self.name))
-            return False
-        
-        self._streaming_mode = requested_mode
-        
-        if self._streaming_mode == "string":
-            arr = source.split("\n")
-            self._added_lines += len(arr) # for percentage calculation
-            self._buffer.extend(arr)
-        
-        elif self._streaming_mode == "file":
-            filename = source.replace("f:", "")
-            self._gcodefile = open(filename)
-            self._gcodefilesize = os.path.getsize(filename)
-            self._streamed_bytes = 0
-            self.callback("on_log", "{}: File size is {:d}".format(self.name, self._gcodefilesize))
-            
+        print("XXXXXXXXXXXXXXXX SENDING", source)
+        self.load_string(source)
+        #self.stream_start()
         self._set_streaming_src_end_reached(False)
         self._set_streaming_complete(False)
         
+        self._stream() 
+        self._set_job_finished(False)
+        
+        
+    def write(self, string):
+        """
+        The Compiler class requires a method "write" to be present. This just adds lines into the buffer. `stream_start()` must be called separately.
+        """
+        lines = string.split("\n")
+        for line in lines:
+            self._buffer.append(line.strip())
+            self._buffer_size += 1
+                
+        self.callback("on_loaded", "string", self._buffer_size)
+        
+        
+    def load_file(self, filename):
+        """
+        _buffer will be erased and filled with all file contents. Line numbers will become the file's line numbers.
+        """
+        if self._job_finished == False:
+            self.callback("on_log", "{}: Job must be finished before you can load a file".format(self.name))
+            return
+        
+        self._gcodefilename = filename # remember filename
+        del self._buffer[:]
+        self._buffer_size = 0
+        self._current_line_nr = 0
+        
+        with open(filename) as f:
+            for line in f:
+                #self._buffer.append("N{:06d} {}".format(self._buffer_size, line.strip()))
+                self._buffer.append(line.strip())
+                self._buffer_size += 1
+                
+        self.callback("on_loaded", "file", self._buffer_size, self._gcodefilename)
+                
+                
+    def load_string(self, string):
+        """
+        Send single lines or several lines. If sending several lines, lines must be \n terminated. Do not send more than a few single lines at once -- prefer concatenating them with \n and send them in one go.
+        """
+        self._gcodefilename = None
+        
         if self._job_finished == True:
-            self._stream() # only needed at beginning, because once the streaming is kicked off, it is self-sustaining via the `handle_ok()` callback
-            self._set_job_finished(False)
+            del self._buffer[:]
+            self._buffer_size = 0
+            self._current_line_nr = 0
+        
+        lines = string.split("\n")
+        for line in lines:
+            #self._buffer.append("N{:06d} {}".format(self._buffer_size, line.strip()))
+            self._buffer.append(line.strip())
+            self._buffer_size += 1
+                
+        self.callback("on_loaded", "string", self._buffer_size)
+                
+        
+    
+    def stream_start(self, line=1):
+        """
+        Start stream from specific line
+        """
+        if self._buffer_size == 0:
+            self.callback("on_log", "{}: Nothing in the buffer!".format(self.name))
+            return
+        
+        self._set_streaming_src_end_reached(False)
+        self._set_streaming_complete(False)
+        
+        self._current_line_nr = line
+        self._stream() 
+        self._set_job_finished(False)
+            
+        self._streaming_enabled = True
+        
+        
+    def stream_stop(self):
+        self._streaming_enabled = False
+        
 
+    def stream_clear(self):
+        del self._buffer[:]
+        self._buffer_size = 0
+        self._current_line_nr = 0
+        self.callback("on_line_number_change", self._current_line_nr)
+        self._gcodefilename = None
+        self.callback("on_loaded", "string", 0)
+        self._set_streaming_complete(True)
+        self._set_job_finished(True)
+        self._set_streaming_src_end_reached(True)
+        self._error = False
+        self._current_line = "; cnctools_CLEANUP" # explicit magic string for debugging
+        self._current_line_sent = True
+    
+    
+    def set_target(self, targetstring):
+        self._target = targetstring
+        
 
 
     # ====== 'private' methods ======
@@ -351,6 +399,10 @@ class GRBL:
         """
         if self._streaming_src_end_reached:
             logging.log(200, "%s: _stream(): Nothing more in _buffer. Doing nothing")
+            return
+        
+        if self._streaming_enabled == False:
+            logging.log(200, "%s: _stream(): Streaming has been stopped. Call `stream_start()` to resume.")
             return
         
         if self._incremental_streaming:
@@ -371,7 +423,7 @@ class GRBL:
             if self._current_line_sent == True:
                 self._set_next_line()
             
-            if self._streaming_src_end_reached == False and self._rx_buf_can_receive_current_line():
+            if self._streaming_src_end_reached == False and  self._rx_buf_can_receive_current_line():
                 self._send_current_line()
             else:
                 break
@@ -383,32 +435,16 @@ class GRBL:
         Gets next line from file or _buffer, and sets _current_gcodeblock
         """
 
-        if self._streaming_mode == "file":
-            l = self._gcodefile.readline()
-            # even blank lines will at least contain \n, at EOF we will get ""
-            if l != "":
-                # EOF not yet reached
-                self._buffer.append(l)
-                self._streamed_bytes += len(l)
-                progress_percent = int(100 * self._streamed_bytes / self._gcodefilesize)
-                self.callback("on_progress_percent", progress_percent)
-            else:
-                # EOF reached
-                self._gcodefile.close()
-                self._gcodefile = None
-                self.callback("on_log", "{}: Closed file.".format(self.name))
-                
-        else:
-            # string streaming mode progress percentage is based on line numbers
-            progress_percent = int(100 * self._streamed_lines / self._added_lines)
-            self.callback("on_progress_percent", progress_percent)
+        progress_percent = int(100 * self._current_line_nr / self._buffer_size)
+        self.callback("on_progress_percent", progress_percent)
 
-        if len(self._buffer) > 0:
+        if self._current_line_nr < self._buffer_size:
             # still something in _buffer, pop it
-            line = self._buffer.pop(0).strip()
+            line = self._buffer[self._current_line_nr].strip()
             preprocessed_line = self._preprocess(line)
             self._current_line = preprocessed_line
             self._current_line_sent = False
+            self._current_line_nr += 1
                 
         else:
             # the buffer is empty, nothing more to read
@@ -423,10 +459,9 @@ class GRBL:
         line_length = len(self._current_line) + 1 # +1 for \n which we will append below
         self._rx_buffer_fill.append(line_length) 
         self._rx_buffer_backlog.append(self._current_line)
-        self._rx_buffer_backlog_line_number.append(self._streamed_lines)
+        self._rx_buffer_backlog_line_number.append(self._current_line_nr)
         self._iface_write(self._current_line + "\n")
         self._current_line_sent = True
-        self._streamed_lines += 1
     
     
     def _rx_buf_can_receive_current_line(self):
@@ -445,22 +480,6 @@ class GRBL:
             self.callback("on_log", "{}: I encountered a settings command '{}' in the gcode stream but the current streaming mode is not set to incremental. Grbl cannot handle that. I will not send the $ command.".format(self.name, line))
             line = ""
             
-        if re.match("G90($|[^.])", line):
-            self.distance_mode_linear = "absolute"
-            self.callback("on_linear_distance_mode_change", self.distance_mode_linear)
-        
-        if re.match("G91($|[^.])", line):
-            self.distance_mode_linear = "incremental"
-            self.callback("on_linear_distance_mode_change", self.distance_mode_linear)
-            
-        if "G90.1" in line:
-            self.distance_mode_arc = "absolute"
-            self.callback("on_arc_distance_mode_change", self.distance_mode_arc)
-            
-        if "G91.1" in line:
-            self.distance_mode_arc = "incremental"
-            self.callback("on_arc_distance_mode_change", self.distance_mode_arc)
-            
         # gcode processing
         line = self._preprocessor.do(line)
 
@@ -473,7 +492,6 @@ class GRBL:
         how full Grbl's rx buffer is. Once we receive an 'ok' from Grbl, we can remove the first
         element in this backlog.
         """
-            
         if len(self._rx_buffer_fill) > 0:
             self._rx_buffer_fill.pop(0)
             processed_command = self._rx_buffer_backlog.pop(0)
@@ -602,7 +620,7 @@ class GRBL:
             # when mode has changed
             if self.cmode == "Idle":
                 # when entering Idle mode, request Gcode parser state
-                self.send("$G")
+                self.send_immediately("$G")
         
         self._last_cmode = self.cmode
         
@@ -617,34 +635,17 @@ class GRBL:
         """
         called after boot. Should mimic Grbl's initial state after boot.
         """
-        
-        del self._buffer[:]
         del self._rx_buffer_fill[:]
         del self._rx_buffer_backlog[:]
         del self._rx_buffer_backlog_line_number[:]
-        
-        if self._gcodefile and not self._gcodefile.closed:
-            logging.log(400, "%s: closing file", self.name)
-            self._gcodefile.close()
-
-        self._gcodefile = None
-        self._gcodefilename = None
-        self._streaming_mode = None
         self._set_streaming_complete(True)
         self._set_job_finished(True)
         self._set_streaming_src_end_reached(True)
         self._error = False
         self._current_line = "; cnctools_CLEANUP" # explicit magic string for debugging
         self._current_line_sent = True
-        self._gcodefilesize = 999999999
-        self._streamed_bytes = 0
-        self._rx_buffer_fill_percent = 0
-        self._streamed_lines = 0
-        self._added_lines = 0
         self._clear_queue()
-        
         self._preprocessor.cleanup()
-        
         
         
     def _clear_queue(self):

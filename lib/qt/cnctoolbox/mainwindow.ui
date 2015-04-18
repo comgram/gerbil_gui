@@ -1289,37 +1289,6 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="13">
-     <widget class="QLabel" name="label_11">
-      <property name="font">
-       <font>
-        <italic>true</italic>
-       </font>
-      </property>
-      <property name="text">
-       <string>Target:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="14">
-     <widget class="QComboBox" name="comboBox_target">
-      <item>
-       <property name="text">
-        <string>Grbl</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Simulator</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>File</string>
-       </property>
-      </item>
-     </widget>
-    </item>
     <item row="1" column="15">
      <widget class="QCheckBox" name="checkBox_incremental">
       <property name="font">
@@ -1342,23 +1311,6 @@
       </property>
       <property name="text">
        <string>Start</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="14">
-     <widget class="QSpinBox" name="spinBox_current_line">
-      <property name="maximum">
-       <number>99999999</number>
-      </property>
-      <property name="value">
-       <number>0</number>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="15">
-     <widget class="QPushButton" name="pushButton_stream_stop">
-      <property name="text">
-       <string>Stop</string>
       </property>
      </widget>
     </item>
@@ -1406,7 +1358,7 @@
      </widget>
     </item>
     <item row="0" column="14">
-     <widget class="QLabel" name="label_source">
+     <widget class="QLabel" name="label_sourceinfo">
       <property name="font">
        <font>
         <pointsize>8</pointsize>
@@ -1414,6 +1366,48 @@
       </property>
       <property name="text">
        <string>Filename or Buf size</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="14">
+     <widget class="QPushButton" name="pushButton_stream_stop">
+      <property name="text">
+       <string>Stop</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="15">
+     <widget class="QPushButton" name="pushButton_stream_clear">
+      <property name="text">
+       <string>Clear</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="13">
+     <widget class="QComboBox" name="comboBox_target"/>
+    </item>
+    <item row="1" column="14">
+     <widget class="QSpinBox" name="spinBox_start_line">
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>99999999</number>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="15">
+     <widget class="QLabel" name="label_current_line">
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>TextLabel</string>
       </property>
      </widget>
     </item>

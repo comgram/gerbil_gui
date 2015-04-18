@@ -276,3 +276,13 @@ G92 X11Y11Z11
 - Feature: Auto-disconnect at startup
 -Feature: Continue after errors
 - 
+
+# Scripting
+
+import logging
+from classes.grbl import GRBL
+log_format = '%(asctime)s %(levelname)s %(message)s'
+logging.basicConfig(level=logging.INFO, format=log_format)
+grbl = GRBL("/dev/ttyACM0")
+
+grbl.send("G0 X10 Y10 Z10")
