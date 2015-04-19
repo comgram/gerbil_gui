@@ -69,7 +69,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # UI SETUP
        
         self.lcdNumber_feed_current.display("---")
-        self.lcdNumber_feed_current.setStyleSheet("color: red")
+        #self.lcdNumber_feed_current.setStyleSheet("color: red")
         
         ## dynamically add subclassed widgets
         self.glWidget = GLWidget()
@@ -375,10 +375,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             feed = data[0]
             if feed == 0:
                 self.lcdNumber_feed_current.display("---")
-                self.lcdNumber_feed_current.setStyleSheet("color: red")
+                #self.lcdNumber_feed_current.setStyleSheet("color: red")
             else:
                 self.lcdNumber_feed_current.display("{:d}".format(int(feed)))
-                self.lcdNumber_feed_current.setStyleSheet("color: black")
+                #self.lcdNumber_feed_current.setStyleSheet("color: black")
                 
             
             
