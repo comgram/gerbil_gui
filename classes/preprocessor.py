@@ -109,9 +109,11 @@ class Preprocessor:
         
         if self._feed_override == False and contains_feed:
             # Simiply update the UI for detected feed
-            parsed_feed = match.group(1)
+            parsed_feed = float(match.group(1))
+            if self._current_feed != parsed_feed:
+                self.callback("on_feed_change", self._current_feed)
             self._current_feed = float(parsed_feed)
-            self.callback("on_feed_change", self._current_feed)
+            
             
         if self._feed_override == True and self._requested_feed:
             if contains_feed:
