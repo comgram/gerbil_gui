@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Sun Apr 19 10:54:06 2015
+# Created: Sun Apr 19 11:37:07 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -710,7 +710,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(6)
+        self.tabWidget.setCurrentIndex(5)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -749,7 +749,7 @@ class Ui_MainWindow(object):
         self.label_8.setText(_translate("MainWindow", "Use CS:"))
         self.pushButton_current_cs_setzero.setText(_translate("MainWindow", "Set to Zero"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_coordinates), _translate("MainWindow", "CS"))
-        self.label_7.setText(_translate("MainWindow", "<html><head/><body><p>Empty field below: Click and drag mouse to move X and Y axis from the current coordinates.</p><p>Use the scroll wheel to modify Z axis. </p></body></html>"))
+        self.label_7.setText(_translate("MainWindow", "<html><head/><body><p>Click and drag mouse to move X and Y axis from the current coordinates.</p><p>Use the scroll wheel to modify Z axis. </p><p>In any event wait until current movement has come to a halt before you start another movement.</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_jog), _translate("MainWindow", "Jog"))
         self.pushButton_show_buffer.setText(_translate("MainWindow", "Show Buffer"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Job"))

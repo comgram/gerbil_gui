@@ -290,10 +290,10 @@ class GRBL:
         """
         self._gcodefilename = None
         
-        if self._job_finished == True:
-            del self._buffer[:]
-            self._buffer_size = 0
-            self._current_line_nr = 0
+        #if self._job_finished == True:
+            #del self._buffer[:]
+            #self._buffer_size = 0
+            #self._current_line_nr = 0
             
         self._load_lines_into_buffer(source)
         self.stream_start()
@@ -342,7 +342,7 @@ class GRBL:
         self.callback("on_loaded", "file", self._buffer_size, self._gcodefilename)
         
     
-    def stream_start(self, line=0):
+    def stream_start(self, line=None):
         """
         Start stream from specific line
         """
@@ -353,7 +353,8 @@ class GRBL:
         self._set_streaming_src_end_reached(False)
         self._set_streaming_complete(False)
         
-        self._current_line_nr = line
+        if line:
+            self._current_line_nr = line
         self._stream() 
         self._set_job_finished(False)
             
