@@ -1,9 +1,9 @@
-#version 130
+#version 120
 
 uniform float scale;
-in vec4 color;
-in vec2 position;
-out vec4 v_color;
+attribute vec4 color;
+attribute vec2 position;
+varying vec4 v_color;
 
 void main()
 {
