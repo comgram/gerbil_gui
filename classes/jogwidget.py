@@ -44,4 +44,4 @@ class JogWidget(QWidget):
         y_current_screen = pos.y()
         x_goto = self._relative_origin_x + (x_current_screen - self._x_start_screen) / 20
         y_goto = self._relative_origin_y + (self._y_start_screen - y_current_screen) / 20
-        self.callback("G1 X{:0.2f} Y{:0.2f} F2000".format(x_goto, y_goto))
+        self.callback("G1 X{:0.2f} Y{:0.2f} F400".format(x_goto, y_goto))
