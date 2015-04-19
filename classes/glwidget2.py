@@ -135,6 +135,12 @@ class GLWidget(QGLWidget):
         #glUniform1f(loc, 1.0)
         #print("XXXXXXXXXX DOUBLE", self.doubleBuffer())
         
+        
+    def wipe(self):
+        self.colors = []
+        self.positions = []
+        
+        
     def add_vertex(self, tuple):
         #self.colors = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
         #self.positions = [ (-1,-1),   (-1,+1),   (+1,-1),   (+1,+1)   ]

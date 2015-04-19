@@ -153,11 +153,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.logoutput_items = []
         self.logoutput_current_index = -1
         
+        self.checkBox_sim_enable.stateChanged.connect(self._sim_enabled_changed)
+        self.pushButton_sim_wipe.clicked.connect(self._sim_wipe)
+        
         self.setWindowTitle("cnctoolbox")
         
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh)
-        self.timer.start(30)
+        self.timer.start(100)
         
         self.action_grbl_disconnect.setEnabled(False)
         self.action_grbl_connect.setEnabled(True)
@@ -409,6 +412,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def refresh(self):
         self.label_current_line.setText(str(self._current_line))
+        
         self.glWidget.updateGL()
         
         if self.changed_state:
@@ -424,12 +428,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lcdNumber_wx.display("{:0.2f}".format(wx))
             self.lcdNumber_wy.display("{:0.2f}".format(wy))
             self.lcdNumber_wz.display("{:0.2f}".format(wz))
-            self.glWidget.mpos = self.mpos
-            self.glWidget.add_vertex((wx, wy))
-            self.glWidget.paintGL()
+            
             self.jogWidget.wx_current = wx
             self.jogWidget.wy_current = wy
             self.jogWidget.wz_current = wz
+            
+            # simulator update
+            if self._sim_enabled == True:
+                self.glWidget.mpos = self.mpos
+                self.glWidget.add_vertex((wx, wy))
+                self.glWidget.paintGL()
             
 
             if self.state == "Idle":
@@ -726,4 +734,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _on_jog_mousemove(self, event):
         pass
+    
+    def _sim_enabled_changed(self, val):
+        val = False if val == 0 else True
+        self._sim_enabled = val
+        
+    def _sim_wipe(self):
+        self.glWidget.wipe()
+        self.glWidget.paintGL()
+        
+        
 
