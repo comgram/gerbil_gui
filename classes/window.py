@@ -50,6 +50,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.filename = None
         self.changed_state = False
         self.changed_loginput = False
+        self._sim_enabled = False
         
         self.logbuffer = collections.deque(maxlen=_logbuffer_size)
         for i in range(1, _logbuffer_size):
