@@ -22,3 +22,5 @@
 data
 log
 *.user
+cnctoolbox.log
+compiler.log
