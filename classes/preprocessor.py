@@ -116,7 +116,7 @@ class Preprocessor:
             # Simiply update the UI for detected feed
             parsed_feed = float(match.group(1))
             if self._current_feed != parsed_feed:
-                self.callback("on_feed_change", self._current_feed)
+                self.callback("on_feed_change", parsed_feed)
             self._current_feed = float(parsed_feed)
             
             

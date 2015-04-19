@@ -434,6 +434,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.state == "Idle":
                 color = "green"
+                self.jogWidget.onIdle()
             elif self.state == "Run":
                 color = "blue"
             elif self.state == "Check":

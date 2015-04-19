@@ -291,7 +291,7 @@
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-         <number>6</number>
+         <number>5</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
@@ -671,7 +671,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Empty field below: Click and drag mouse to move X and Y axis from the current coordinates.&lt;/p&gt;&lt;p&gt;Use the scroll wheel to modify Z axis. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click and drag mouse to move X and Y axis from the current coordinates.&lt;/p&gt;&lt;p&gt;Use the scroll wheel to modify Z axis. &lt;/p&gt;&lt;p&gt;In any event wait until current movement has come to a halt before you start another movement.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
            </widget>
           </item>
