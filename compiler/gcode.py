@@ -6,7 +6,7 @@ import math
 import inspect
 import logging
 import re
-module_logger = logging.getLogger('cnctoolbox.compiler')
+
 try:
     unicode = unicode
 except NameError:
@@ -21,7 +21,24 @@ else:
     unicode = unicode
     bytes = str
     basestring = basestring
-
+module_logger = logging.getLogger('cnctollbox.compiler')
+def own_log_file():
+    global module_logger
+    module_logger.setLevel(logging.DEBUG)
+    module_logger_fh = logging.FileHandler('compiler.log')
+    module_logger_fh.setLevel(logging.DEBUG)
+    # This is the console module_logger, it hass a higher level than the
+    # logfile to keep the console clear for errors and splats
+    module_logger_ch = logging.StreamHandler()
+    module_logger_ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    module_logger_fh.setFormatter(formatter)
+    module_logger_ch.setFormatter(formatter)
+    # add the handlers to the module_logger i.e. now we have a console module_logger, and a file module_logger at the same time
+    module_logger.addHandler(module_logger_fh)
+    module_logger.addHandler(module_logger_ch)
+    module_logger.info("New Compiler")
 '''
     When considering a bit, think of it like this.
     Does the point specified mean the center of the
@@ -41,7 +58,7 @@ Settings = {
     'ignoreZ': False,
     'port': sys.stdout,
     'port_stack': [],
-    'feed_speed': 400,
+    'feed_speed': 800,
     'max_feed_speed': 800,
     'debug': True,
     'debug_gcode': True,
@@ -83,11 +100,25 @@ State = {
 PositionStack = []
 ''' We have to save the z-depth separately '''
 ZStack = []
+def x():
+    global State
+    return State['x']
+def y():
+    global State
+    return State['y']
+def bit(b=None):
+    global Settings
+    if b == None:
+        return Settings['bit']
+    else:
+        Settings['bit'] = b
 def speed(s):
     global Settings
     Settings['max_feed_speed'] = s
-def diameter(d):
+def diameter(d=None):
     global Settings
+    if d == None:
+        return Settings['bit']['diameter']
     Settings['bit']['diameter'] = d
 def push_receiver():
     global Settings
@@ -156,11 +187,16 @@ def slow():
 def slowly():
     global Settings
     return int(math.floor(Settings['feed_speed'] * 0.35))
+def quickly():
+    global Settings
+    s = int(math.floor(fast() * 0.75))
+    return s
 def fast():
     global Settings
     return Settings['max_feed_speed']
 def comment(txt):
-    #log(txt)
+    global module_logger
+    module_logger.info( "Comment: %s" % txt)
     emit(";%s" % txt)
 def push_z():
     global ZStack
@@ -233,6 +269,8 @@ def done():
 def emit(txt=";Nothing Emitted\n"):
     global Settings
     global State
+    global module_logger
+    module_logger.info("Emit received: {}".format(txt))
 
     if txt == "\n":
         return
@@ -240,12 +278,13 @@ def emit(txt=";Nothing Emitted\n"):
         return
     
     if Settings['debug_gcode'] == True or txt[0] != ';':
+        fstr = ''
         for x in range(0,State['white_space']):
-            Settings['port'].write(" ")  
+            fstr += " " 
         #log("Writing Text: %s" % txt)
         if txt and isinstance(txt,basestring) and len(txt) > 2:
-            print("WRITING", txt)
-            Settings['port'].write("%s\n" % txt)
+            module_logger.info("WRITING: %s%s" % (fstr, txt) )
+            Settings['port'].write("%s%s\n" % (fstr,txt))
             
 '''
     USE THESE TO PRETTY UP GCODE!!
@@ -255,9 +294,12 @@ def emit(txt=";Nothing Emitted\n"):
 '''
 def block_start(cmnt="BEGIN"):
     global State
+    global module_logger
     comment(cmnt)
     State['white_space'] = State['white_space'] + 4
 def block_end(cmnt="END"):
+    global State
+    global module_logger
     State['white_space'] = State['white_space'] - 4
     comment(cmnt)
     if State['white_space'] < 0:
@@ -278,8 +320,54 @@ def block_end(cmnt="END"):
 '''
 def line_to(ex,ey,d):
     global Settings
+    global State
+    global module_logger
     depth(d)
-    move(ex,ey, Settings['feed_speed'])
+    module_logger.info("line_to.ex %s ey %s" %(ex,ey))
+    ## okay, so we need to know which direction we are going
+    if ey == State['y']:
+        
+        if ex > State['x']:
+            length = ex - State['x']
+            direction= 'xr'
+        else:
+            length = State['x'] - ex
+            direction= 'xl'
+    elif ex == State['x']:
+        
+        if ey > State['y']:
+            length = ey - State['y']
+            direction = 'yu'
+        else:
+            length = State['y'] - ey
+            direction = 'yd'
+    else:
+        direction = 'xy'
+        length = 0
+    module_logger.info("line_to.direction %s, %s" % (direction,length))
+    if length > 0 and length > diameter():
+        steps = int(math.floor(length / diameter()))
+        module_logger.info("line_to.steps %s" % steps)
+        oy = y()
+        ox = x()
+        if direction == 'xr':
+            for i in range(1,steps):
+                move( ox + (i * diameter()),ey)
+            move(ex,ey)
+        elif direction == 'xl':
+            for i in range(1,steps):
+                move( ox - (i * diameter()),ey)
+            move(ex,ey)
+        elif direction == 'yu':
+            for i in range(1,steps):
+                move(ex,oy + (i * diameter()) )
+            move(ex,ey)
+        elif direction == 'yd':
+            for i in range(1,steps):
+                move(ex,oy - (i * diameter()) )
+            move(ex,ey)
+    else:
+        move(ex,ey, Settings['feed_speed'])
 def path(pts,d=0):
     up()
     st = pts.pop(0)
@@ -437,15 +525,16 @@ def pocket(sx,sy,ex,ey,d):
     block_end("Pocket")
 
 #''' Basic Gerometry Functions Test '''
-#receiver("test.ngc")
+##own_log_file()
+##receiver("test.ngc")
 #write_header()
 ##line(10,10,50,50, -3)
 ##square(10,10,110,110, -4)
 ##line(50,10,10,50,-2)
-#pocket(0,0, 450,200,-2)
+##pocket(0,0, 450,200,-2)
 ##equal_triangle(55,10, 85, 10, -3.2)
 ##line(100,100, 150,100, -3)
 ##cw_arc(10,15,11,16,5,0,-3)
 ##circle(60,60,15,3,-3)
 
-#done()
+##done()
