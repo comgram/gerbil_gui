@@ -11,18 +11,15 @@ import OpenGL
 OpenGL.ERROR_CHECKING = False
 OpenGL.FULL_LOGGING = False
 from OpenGL.GL import *
-#from OpenGL.GLUT import *
 
 
-
-
-class GLWidget(QGLWidget):
+class Simulator(QGLWidget):
     xRotationChanged = pyqtSignal(int)
     yRotationChanged = pyqtSignal(int)
     zRotationChanged = pyqtSignal(int)
 
     def __init__(self, parent=None):
-        super(GLWidget, self).__init__(parent)
+        super(Simulator, self).__init__(parent)
         print(glGetString(GL_EXTENSIONS))
         
         self.xRot = 0
@@ -57,12 +54,9 @@ class GLWidget(QGLWidget):
         print("OPENGL RENDERER", glGetString(GL_RENDERER))
         print("OPENGL GLSL VERSION", glGetString(GL_SHADING_LANGUAGE_VERSION))
         
-        
         self.program  = glCreateProgram()
         vertex   = glCreateShader(GL_VERTEX_SHADER)
         fragment = glCreateShader(GL_FRAGMENT_SHADER)
-        
-        
         
         # Set shaders source
         with open("vertex.c", "r") as f: vertex_code = f.read()
@@ -86,54 +80,14 @@ class GLWidget(QGLWidget):
         
         # Request a buffer_label slot from GPU
         self.buffer_label = glGenBuffers(1)
-        #print("XXXXXXXXXX BUF", self.buffer_label)
         
         glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
 
-      
-        
-        glEnable (GL_LINE_SMOOTH);
-        glEnable (GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-        glLineWidth (1);
-        
-        
-        
-        
-        
-        #glEnable(GL_LINE_SMOOTH);
-        #glEnable(GL_POINT_SMOOTH);
-        #glShadeModel(GL_SMOOTH);
-        #glEnable(GL_LINE_STIPPLE);
-        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        #glEnable(GL_BLEND);
-        
-        #glClearColor(0.0, 0.0, 0.0, 1.0);
-        #glClear(GL_COLOR_BUFFER_BIT);
-        #glDisable(GL_DEPTH_TEST);
-        
-        
-        ## the following settings affect the rendering quality of the mesh
-        #glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-        #glEnable (GL_LINE_SMOOTH);
-        #glEnable (GL_BLEND);
-        #glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        #glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-        #glLineWidth (1);
-        
-        ##glShadeModel(GL_FLAT)
-        #glEnable(GL_DEPTH_TEST)
-        #glEnable(GL_CULL_FACE)
-        
-      
-        
-                
-        #loc = glGetUniformLocation(program, "scale")
-        #print("XXXXXXXXXXXX", loc)
-        #glUniform1f(loc, 1.0)
-        #print("XXXXXXXXXX DOUBLE", self.doubleBuffer())
+        glEnable (GL_LINE_SMOOTH)
+        glEnable (GL_BLEND)
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+        glLineWidth (1)
         
         
     def wipe(self):
@@ -142,9 +96,6 @@ class GLWidget(QGLWidget):
         
         
     def add_vertex(self, tuple):
-        #self.colors = [ (1,0,0,1), (0,1,0,1), (0,0,1,1), (1,1,0,1) ]
-        #self.positions = [ (-1,-1),   (-1,+1),   (+1,-1),   (+1,+1)   ]
-        
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, None, GL_DYNAMIC_DRAW) #https://www.opengl.org/wiki/Buffer_Object_Streaming#Buffer_update
         
         tuple = (tuple[0] - 80, tuple[1] - 80)
@@ -155,11 +106,8 @@ class GLWidget(QGLWidget):
         self.data = np.zeros(self._linecount, [("position", np.float32, 2), ("color",    np.float32, 4)])
         self.data['color']    = self.colors
         self.data['position'] = self.positions
-        #glInvalidateBufferData(self.buffer_label)
         
     def _setup_buffer(self):
-        #print("XXXXXXXXXXXXXXX" + str(self.data.nbytes))
-         
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, self.data, GL_DYNAMIC_DRAW)
         
         stride = self.data.strides[0]

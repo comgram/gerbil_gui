@@ -8,7 +8,7 @@ import time
 
 from classes.highlighter import Highlighter
 from classes.grbl import GRBL
-from classes.glwidget2 import GLWidget
+from classes.simulator import Simulator
 from classes.jogwidget import JogWidget
 from classes.commandlineedit import CommandLineEdit
 import compiler.gcode as COMPILER
@@ -24,11 +24,6 @@ from lib import utility
 
 module_logger = logging.getLogger('cnctoolbox.window')
 
-#G91 G0 Y1 G90
-#G10 P0 L20 X0 Y0 Z0
-
-
-
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, path):
         super(MainWindow, self).__init__()
@@ -36,136 +31,137 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         _logbuffer_size = 200
         
         self.setupUi(self)
+        
         self.modifyUi()
         self.setupScripting()
         
+        # GENERIC SETUP BEGIN -----
+        self.setWindowTitle("cnctoolbox")
+        self.lcdNumber_feed_current.display("---")
+        # GENERIC SETUP END -----
+        
+        # GRBL SETUP BEGIN -----
         self.grbl = GRBL("mygrbl", path)
-        
-        COMPILER.receiver(self.grbl)
-        COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
-        
         self.grbl.poll_interval = 0.1
         self.grbl.set_callback(self.on_grbl_event)
+        self.grbl.set_target("serialport")
+        self.comboBox_target.insertItem(0, "serialport")
+        self.comboBox_target.insertItem(1, "simulator")
+        self.comboBox_target.insertItem(2, "file")
+        # GRBL SETUP END -----
         
-        self.filename = None
+        
+        # COMPILER SETUP BEGIN -----
+        COMPILER.receiver(self.grbl)
+        COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
+        # COMPILER SETUP END -----
+        
+        # STATE VARIABLES BEGIN -----
         self.changed_state = False
-        self.changed_loginput = False
-        self._sim_enabled = False
-        
-        self.logbuffer = collections.deque(maxlen=_logbuffer_size)
-        for i in range(1, _logbuffer_size):
-            self.logbuffer.append("")
-            
         self._current_line = 0
-        
-        
         self._rx_buffer_fill = 0
         self._rx_buffer_fill_last = 0
-        
         self._progress_percent = 0
         self._progress_percent_last = 0
+        # STATE VARIABLES END -----
+        
+        ## SIMULATOR SETUP BEGIN -------------
+        self._sim_enabled = False
+        self.simulator = Simulator()
+        self.gridLayout_glwidget_container.addWidget(self.simulator)
+        ## SIMULATOR SETUP END -------------
         
         
-        # UI SETUP
-       
-        self.lcdNumber_feed_current.display("---")
-        #self.lcdNumber_feed_current.setStyleSheet("color: red")
-        
-        ## dynamically add subclassed widgets
-        self.glWidget = GLWidget()
-        self.gridLayout_glwidget_container.addWidget(self.glWidget)
-        
+        ## JOG WIDGET SETUP BEGIN -------------
         self.jogWidget = JogWidget(self, self.grbl.send_with_queue)
-        #self.jogWidget.setStyleSheet("background-color: black")
         self.gridLayout_jog_container.addWidget(self.jogWidget)
-        
-        
-        ## MENU BAR SETUP
+        ## JOG WIDGET SETUP END -------------
+
+
+        ## MENU BAR SETUP BEGIN ----------
         self.menuBar = QMenuBar(self)
-        
         self.action_file_set = QAction("Set", self)
         self.action_file_set.triggered.connect(self._pick_file)
-        
         self.action_file_quit = QAction("Quit", self)
         self.action_file_quit.triggered.connect(self._quit)
-            
         self.action_grbl_connect = QAction("Connect", self)
         self.action_grbl_connect.triggered.connect(self.cnect)
-        
         self.action_grbl_disconnect = QAction("Disconnect", self)
         self.action_grbl_disconnect.triggered.connect(self.disconnect)
-        
         self.menu_file = self.menuBar.addMenu("File")
         self.menu_grbl = self.menuBar.addMenu("Grbl")
-        
         self.menu_file.addAction(self.action_file_set)
         self.menu_file.addAction(self.action_file_quit)
-        
         self.menu_grbl.addAction(self.action_grbl_connect)
         self.menu_grbl.addAction(self.action_grbl_disconnect)
+        self.action_grbl_disconnect.setEnabled(False)
+        self.action_grbl_connect.setEnabled(True)
+        ## MENU BAR SETUP END ----------
         
-        #fileMenu = menuBar()->addMenu(tr("&File"));
-        #fileMenu->addAction(newAct);
+       
         
-        #self.jogWidget.mouseMoveEvent.connect(self._on_jog_mousemove)
-        
-        ## connect slots to signals
-        #self.pushButton_connect.clicked.connect(self.cnect)
-        #self.pushButton_disconnect.clicked.connect(self.disconnect)
+        ## SIGNALS AND SLOTS BEGIN-------
+        self.comboBox_target.currentIndexChanged.connect(self._target_selected)
         self.pushButton_homing.clicked.connect(self.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
-        
         self.pushButton_stream_start.clicked.connect(self.stream_start)
         self.pushButton_stream_stop.clicked.connect(self.stream_stop)
         self.pushButton_stream_clear.clicked.connect(self.grbl.stream_clear)
-        
         self.pushButton_show_buffer.clicked.connect(self._show_buffer)
-        
         self.pushButton_hold.clicked.connect(self.grbl.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
         self.pushButton_abort.clicked.connect(self.abort)
-        
         self.pushButton_check.clicked.connect(self.check)
-        
         self.pushButton_clearz.setDisabled(True)
         self.pushButton_clearxy.setDisabled(True)
         self.pushButton_clearz.clicked.connect(self.clearz)
         self.pushButton_clearxy.clicked.connect(self.clearxy)
         self.pushButton_g0xyorigin.clicked.connect(self.g0xyorigin)
-        
         self.pushButton_xminus.clicked.connect(self.xminus)
         self.pushButton_xplus.clicked.connect(self.xplus)
         self.pushButton_yminus.clicked.connect(self.yminus)
         self.pushButton_yplus.clicked.connect(self.yplus)
         self.pushButton_zminus.clicked.connect(self.zminus)
         self.pushButton_zplus.clicked.connect(self.zplus)
-        
         self.horizontalSlider_feed_override.valueChanged.connect(self._feedoverride_value_changed)
         self.checkBox_feed_override.stateChanged.connect(self._feedoverride_changed)
-        
         self.checkBox_incremental.stateChanged.connect(self._incremental_changed)
-
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
         self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
-    
         self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
         self.listWidget_logoutput.itemClicked.connect(self._on_logoutput_item_clicked)
         self.listWidget_logoutput.currentItemChanged.connect(self._on_logoutput_current_item_changed)
-        self.logoutput_items = []
-        self.logoutput_current_index = -1
-        
         self.checkBox_sim_enable.stateChanged.connect(self._sim_enabled_changed)
         self.pushButton_sim_wipe.clicked.connect(self._sim_wipe)
+        ## SIGNALS AND SLOTS END-------
         
-        self.setWindowTitle("cnctoolbox")
         
+        ## TIMER SETUP BEGIN ----------
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh)
         self.timer.start(100)
+        ## TIMER SETUP END ----------
         
-        self.action_grbl_disconnect.setEnabled(False)
-        self.action_grbl_connect.setEnabled(True)
         
+        ## LOGGING SETUP BEGIN ------
+        # setup ring buffer for logging
+        self.changed_loginput = False
+        self.logoutput_items = []
+        self.logoutput_current_index = -1
+        self.logbuffer = collections.deque(maxlen=_logbuffer_size)
+        
+        for i in range(1, _logbuffer_size):
+            self.logbuffer.append("")
+            
+        self.label_loginput = QLabel()
+        self.label_loginput.setTextFormat(Qt.RichText)
+        self.scrollArea_loginput.setWidget(self.label_loginput)
+        self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
+        self.label_loginput.setStyleSheet("font: 9pt")
+        ## LOGGING SETUP END ------
+        
+
+        ## CS SETUP BEGIN ---------
         self._cs_names = {
             1: "G54",
             2: "G55",
@@ -174,75 +170,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             5: "G58",
             6: "G59",
                 }
-        
         self.pushButton_current_cs_setzero.clicked.connect(self._current_cs_setzero)
         
         for key, val in self._cs_names.items():
             self.comboBox_coordinate_systems.insertItem(key, val)
         self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
-        
-        self.comboBox_target.insertItem(0, "serialport")
-        self.comboBox_target.insertItem(1, "simulator")
-        self.comboBox_target.insertItem(2, "file")
-        self.comboBox_target.currentIndexChanged.connect(self._target_selected)
-        self.grbl.set_target("serialport")
-        
-        #QFont f( "Cantarell", 10, QFont::Bold);
-        #textLabel->setFont( f);
-        
-        self.label_loginput = QLabel()
-        self.label_loginput.setTextFormat(Qt.RichText)
-        self.scrollArea_loginput.setWidget(self.label_loginput)
-        self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
-        self.label_loginput.setStyleSheet("font: 9pt")
-        #self.label_loginput.setText("<b style='color: red'>blah</b>")
-        
-        #self.progressBar_buffer.setValue(50)
-        
-        
-        #self._add_to_logoutput("G0 X0 Y0 Z0")
-        #self._add_to_logoutput("G0 X100")
-        #self._add_to_logoutput("G0 Y100")
-        #self._add_to_logoutput("G0 Z100")
-        
-        return
-    
-        self.xSlider = self.createSlider()
-        self.ySlider = self.createSlider()
-        self.zSlider = self.createSlider()
-        self.xPanSlider = self.createSlider()
-        self.yPanSlider = self.createSlider()
-        self.zPanSlider = self.createSlider()
-
-        self.xSlider.valueChanged.connect(self.glWidget.setXRotation)
-        self.glWidget.xRotationChanged.connect(self.xSlider.setValue)
-        self.ySlider.valueChanged.connect(self.glWidget.setYRotation)
-        self.glWidget.yRotationChanged.connect(self.ySlider.setValue)
-        self.zSlider.valueChanged.connect(self.glWidget.setZRotation)
-        self.glWidget.zRotationChanged.connect(self.zSlider.setValue)
-        self.xPanSlider.valueChanged.connect(self.glWidget.setXPan)
-        self.yPanSlider.valueChanged.connect(self.glWidget.setYPan)
-        self.zPanSlider.valueChanged.connect(self.glWidget.setZPan)
-
-        mainLayout = QHBoxLayout()
-        mainLayout.addWidget(self.label_mpos)
-        mainLayout.addWidget(self.btn_poll)
-        mainLayout.addWidget(self.btn_run)
-        mainLayout.addWidget(self.btn_quit)
-        mainLayout.addWidget(self.glWidget)
-        mainLayout.addWidget(self.xSlider)
-        mainLayout.addWidget(self.ySlider)
-        mainLayout.addWidget(self.zSlider)
-        mainLayout.addWidget(self.xPanSlider)
-        mainLayout.addWidget(self.yPanSlider)
-        mainLayout.addWidget(self.zPanSlider)
-        self.setLayout(mainLayout)
-
-        self.xSlider.setValue(1 * 16)
-        self.ySlider.setValue(355 * 16)
-        self.zSlider.setValue(1 * 16)
-        
-        self.setUpdatesEnabled(True)
+        ## CS SETUP END ---------
         
         
     def modifyUi(self):
@@ -251,7 +184,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_killalarm.setStyleSheet("background-color: rgb(198,31,31);color: white;")
         self.pushButton_hold.setStyleSheet("background-color: rgb(219,213,50);")
         self.pushButton_check.setStyleSheet("background-color: rgb(235,122,9);")
-        
+               
         
     def setupScripting(self):
         print("Setting up Scripting Tab")
@@ -375,13 +308,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             feed = data[0]
             if feed == 0:
                 self.lcdNumber_feed_current.display("---")
-                #self.lcdNumber_feed_current.setStyleSheet("color: red")
             else:
                 self.lcdNumber_feed_current.display("{:d}".format(int(feed)))
-                #self.lcdNumber_feed_current.setStyleSheet("color: black")
                 
-            
-            
         elif event == "on_streaming_complete":
             self.grbl.set_incremental_streaming(True)
             
@@ -414,7 +343,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def refresh(self):
         self.label_current_line.setText(str(self._current_line))
         
-        self.glWidget.updateGL()
+        self.simulator.updateGL()
         
         if self.changed_state:
             mx = self.mpos[0]
@@ -436,9 +365,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             # simulator update
             if self._sim_enabled == True:
-                self.glWidget.mpos = self.mpos
-                self.glWidget.add_vertex((wx, wy))
-                self.glWidget.paintGL()
+                self.simulator.mpos = self.mpos
+                self.simulator.add_vertex((wx, wy))
+                self.simulator.paintGL()
             
 
             if self.state == "Idle":
@@ -555,11 +484,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
-        self.filename = filename_tuple[0]
-        self.grbl.load_file(self.filename)
-        #self.label_filename.setText(self.filename)
-        #self.plainTextEdit_log()
-        
+        self.grbl.load_file(self.filename)        
     
     def xminus(self):
         step = - self.doubleSpinBox_jogstep.value()
@@ -683,10 +608,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     # call: =bbox(True)
     def bbox(self, move_z=False, gcode=None):
+        self._add_to_loginput("<i>BBOX NEEDS REWORK</i>")
+        return
+        
         if gcode:
-            movements = gcodetools.draw_bbox(gcode, move_z)
-        elif self.filename:
-            gcode = utility.read_file_to_linearray(self.filename)
             movements = gcodetools.draw_bbox(gcode, move_z)
         else:
             self._add_to_loginput("<i>No file set and no gcode provided.</i>")
@@ -723,9 +648,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _cs_selected(self, idx):
         self._current_cs = idx + 1
-        #self.label_current_cs.setText(self._cs_names[self._current_cs])
         self.grbl.send_immediately(self._cs_names[self._current_cs])
-        print("XXX", idx)
         
     def _target_selected(self, idx):
         pass
@@ -741,8 +664,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._sim_enabled = val
         
     def _sim_wipe(self):
-        self.glWidget.wipe()
-        self.glWidget.paintGL()
+        self.simulator.wipe()
+        self.simulator.paintGL()
         
         
 
