@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Sat Apr 18 17:54:43 2015
+# Created: Sun Apr 19 10:54:06 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -130,7 +130,7 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(11)
         self.lcdNumber_feed_override.setFont(font)
-        self.lcdNumber_feed_override.setStyleSheet("color: brown")
+        self.lcdNumber_feed_override.setStyleSheet("color: green")
         self.lcdNumber_feed_override.setDigitCount(4)
         self.lcdNumber_feed_override.setSegmentStyle(QtWidgets.QLCDNumber.Flat)
         self.lcdNumber_feed_override.setProperty("value", 100.0)
@@ -307,6 +307,17 @@ class Ui_MainWindow(object):
         self.label_7.setObjectName("label_7")
         self.gridLayout_10.addWidget(self.label_7, 0, 0, 1, 1)
         self.tabWidget.addTab(self.tab_jog, "")
+        self.tab = QtWidgets.QWidget()
+        self.tab.setObjectName("tab")
+        self.gridLayout_8 = QtWidgets.QGridLayout(self.tab)
+        self.gridLayout_8.setObjectName("gridLayout_8")
+        self.plainTextEdit_job = QtWidgets.QPlainTextEdit(self.tab)
+        self.plainTextEdit_job.setObjectName("plainTextEdit_job")
+        self.gridLayout_8.addWidget(self.plainTextEdit_job, 1, 0, 1, 1)
+        self.pushButton_show_buffer = QtWidgets.QPushButton(self.tab)
+        self.pushButton_show_buffer.setObjectName("pushButton_show_buffer")
+        self.gridLayout_8.addWidget(self.pushButton_show_buffer, 0, 0, 1, 1)
+        self.tabWidget.addTab(self.tab, "")
         self.gridLayout_11.addWidget(self.tabWidget, 0, 0, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_11, 0, 11, 13, 1)
         self.verticalLayout_cmd = QtWidgets.QVBoxLayout()
@@ -699,7 +710,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(6)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -712,7 +723,7 @@ class Ui_MainWindow(object):
         self.pushButton_check.setText(_translate("MainWindow", "Check"))
         self.pushButton_homing.setText(_translate("MainWindow", "Homing"))
         self.checkBox_feed_override.setText(_translate("MainWindow", "Feed override"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_simulation), _translate("MainWindow", "Simulation"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_simulation), _translate("MainWindow", "Sim"))
         self.argumentsGroupBox.setTitle(_translate("MainWindow", "Arguments"))
         self.rLabel.setText(_translate("MainWindow", "radius"))
         self.syLabel.setText(_translate("MainWindow", "sy/k"))
@@ -737,9 +748,11 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_preprocessor), _translate("MainWindow", "Preprocessor"))
         self.label_8.setText(_translate("MainWindow", "Use CS:"))
         self.pushButton_current_cs_setzero.setText(_translate("MainWindow", "Set to Zero"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_coordinates), _translate("MainWindow", "Coordinates"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_coordinates), _translate("MainWindow", "CS"))
         self.label_7.setText(_translate("MainWindow", "<html><head/><body><p>Empty field below: Click and drag mouse to move X and Y axis from the current coordinates.</p><p>Use the scroll wheel to modify Z axis. </p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_jog), _translate("MainWindow", "Jog"))
+        self.pushButton_show_buffer.setText(_translate("MainWindow", "Show Buffer"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Job"))
         self.pushButton_clearz.setText(_translate("MainWindow", "Clear Z"))
         self.pushButton_zplus.setText(_translate("MainWindow", "Z↑"))
         self.pushButton_g0xyorigin.setText(_translate("MainWindow", "G0 X0 Y0"))

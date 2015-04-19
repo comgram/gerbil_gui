@@ -240,7 +240,7 @@
          </font>
         </property>
         <property name="styleSheet">
-         <string notr="true">color: brown</string>
+         <string notr="true">color: green</string>
         </property>
         <property name="digitCount">
          <number>4</number>
@@ -291,14 +291,14 @@
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>6</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
         </property>
         <widget class="QWidget" name="tab_simulation">
          <attribute name="title">
-          <string>Simulation</string>
+          <string>Sim</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="0" column="0">
@@ -615,7 +615,7 @@
         </widget>
         <widget class="QWidget" name="tab_coordinates">
          <attribute name="title">
-          <string>Coordinates</string>
+          <string>CS</string>
          </attribute>
          <widget class="QComboBox" name="comboBox_coordinate_systems">
           <property name="geometry">
@@ -672,6 +672,23 @@
             </property>
             <property name="text">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Empty field below: Click and drag mouse to move X and Y axis from the current coordinates.&lt;/p&gt;&lt;p&gt;Use the scroll wheel to modify Z axis. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>Job</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="1" column="0">
+           <widget class="QPlainTextEdit" name="plainTextEdit_job"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="pushButton_show_buffer">
+            <property name="text">
+             <string>Show Buffer</string>
             </property>
            </widget>
           </item>

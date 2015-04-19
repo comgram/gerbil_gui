@@ -220,6 +220,8 @@ class GRBL:
         
         
     def settings_from_file(self, filename):
+        # Needs testing
+        return
         if self.cmode == "Idle":
             self.callback("on_log", "{}: Stopping polling.".format(self.name))
             self.poll_stop()
@@ -276,32 +278,47 @@ class GRBL:
         
         
     def send_immediately(self, line):
-        self._iface.write(line + "\n")
+        """
+        Strings passed to this function will bypass buffer management and preprocessing and will be sent to Grbl (and executed) immediately. Use this function with caution: Only send when you are sure Grbl's receive buffer can handle the data volume and when it doesn't interfere with currently running streams. Only send single commands at a time. Applications: manual jogging, coordinate settings.
+        """
+        self._iface.write(line.strip() + "\n")
         
         
-    def send(self, source):
-        print("XXXXXXXXXXXXXXXX SENDING", source)
-        self.load_string(source)
-        #self.stream_start()
-        self._set_streaming_src_end_reached(False)
-        self._set_streaming_complete(False)
+    def send_with_queue(self, source):
+        """
+        Strings passed to this function will be sent to Grbl (and executed) but WITH buffer management. If there is a currently running stream, data will be appended to the buffer, else the buffer will be reset and will only contain the data.
+        """
+        self._gcodefilename = None
         
-        self._stream() 
-        self._set_job_finished(False)
+        if self._job_finished == True:
+            del self._buffer[:]
+            self._buffer_size = 0
+            self._current_line_nr = 0
+            
+        self._load_lines_into_buffer(source)
+        self.stream_start()
+        #self._set_streaming_src_end_reached(False)
+        #self._set_streaming_complete(False)
+        
+        #self._stream() 
+        #self._set_job_finished(False)
         
         
     def write(self, string):
         """
-        The Compiler class requires a method "write" to be present. This just adds lines into the buffer. `stream_start()` must be called separately.
+        The Compiler class requires a method "write" to be present. This just appends lines to _buffer. `stream_start()` must be called separately.
         """
+        self._gcodefilename = None
         lines = string.split("\n")
         for line in lines:
-            self._buffer.append(line.strip())
-            self._buffer_size += 1
+            tidy_line = self._preprocessor.tidy(line)
+            if tidy_line != "":
+                self._buffer.append(tidy_line)
+                self._buffer_size += 1
                 
         self.callback("on_loaded", "string", self._buffer_size)
         
-        
+
     def load_file(self, filename):
         """
         _buffer will be erased and filled with all file contents. Line numbers will become the file's line numbers.
@@ -311,41 +328,21 @@ class GRBL:
             return
         
         self._gcodefilename = filename # remember filename
+        
         del self._buffer[:]
         self._buffer_size = 0
         self._current_line_nr = 0
         
         with open(filename) as f:
             for line in f:
-                #self._buffer.append("N{:06d} {}".format(self._buffer_size, line.strip()))
-                self._buffer.append(line.strip())
+                tidy_line = self._preprocessor.tidy(line)
+                self._buffer.append(tidy_line)
                 self._buffer_size += 1
                 
         self.callback("on_loaded", "file", self._buffer_size, self._gcodefilename)
-                
-                
-    def load_string(self, string):
-        """
-        Send single lines or several lines. If sending several lines, lines must be \n terminated. Do not send more than a few single lines at once -- prefer concatenating them with \n and send them in one go.
-        """
-        self._gcodefilename = None
-        
-        if self._job_finished == True:
-            del self._buffer[:]
-            self._buffer_size = 0
-            self._current_line_nr = 0
-        
-        lines = string.split("\n")
-        for line in lines:
-            #self._buffer.append("N{:06d} {}".format(self._buffer_size, line.strip()))
-            self._buffer.append(line.strip())
-            self._buffer_size += 1
-                
-        self.callback("on_loaded", "string", self._buffer_size)
-                
         
     
-    def stream_start(self, line=1):
+    def stream_start(self, line=0):
         """
         Start stream from specific line
         """
@@ -385,7 +382,8 @@ class GRBL:
     def set_target(self, targetstring):
         self._target = targetstring
         
-
+    def get_buffer(self):
+        return "\n".join(self._buffer)
 
     # ====== 'private' methods ======
         
@@ -478,7 +476,7 @@ class GRBL:
             line = ""
             
         # gcode processing
-        line = self._preprocessor.do(line)
+        line = self._preprocessor.handle_feed(line)
 
         return line
     
@@ -620,6 +618,23 @@ class GRBL:
                 self.send_immediately("$G")
         
         self._last_cmode = self.cmode
+        
+        
+    def _load_lines_into_buffer(self, string):
+        """
+        Send single lines or several lines. If sending several lines, lines must be \n terminated.
+        """
+        self._gcodefilename = None
+        
+        lines = string.split("\n")
+        for line in lines:
+            tidy_line = self._preprocessor.tidy(line)
+            if tidy_line != "":
+                # ignore all empty lines
+                self._buffer.append(self._preprocess(line))
+                self._buffer_size += 1
+                
+        self.callback("on_loaded", "string", self._buffer_size)
         
         
     def is_connected(self):

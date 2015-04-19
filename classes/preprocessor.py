@@ -3,7 +3,7 @@ import logging
 
 class Preprocessor:
     def __init__(self):
-        self.line = ""
+        self.line = "; preprocessor_init"
         self._feed_override = False
         self._requested_feed = None
         self._current_feed = None
@@ -18,8 +18,14 @@ class Preprocessor:
         self._re_feed = re.compile(".*F([.\d]+)")
         self._re_feed_replace = re.compile(r"F[.\d]+")
         
+        
     def cleanup(self):
-        self._current_feed = None
+        """
+        Called after Grbls has booted. Mimics Grbl's state machine. After boot, Grbl's feed is not set.
+        """
+        self._current_feed = 0
+        self.callback("on_feed_change", self._current_feed)
+    
     
     def set_feed_override(self, val):
         self._feed_override = val
@@ -30,22 +36,28 @@ class Preprocessor:
         self._requested_feed = val
         #logging.log(260, "Preprocessor: Feed request set to %s", val)
         
-    
-    def do(self, line):
+        
+    def tidy(self, line):
         self.line = line
         self._strip_comments()
-        self._strip()
         self._strip_unsupported()
-        self._handle_feed()
         self._handle_vars()
+        self._strip()
         return self.line
+        
+        
+    def handle_feed(self, line):
+        self.line = line
+        self._handle_feed()
+        return self.line
+    
     
     def _strip_unsupported(self):
         """
         This silently strips gcode unsupported by Grbl, but ONLY those commands that are safe to strip without making the program deviate from its original purpose. For example it is  safe to strip a tool change. All other encountered unsupported commands should be sent to Grbl nevertheless so that an error is raised. The user then can make an informed decision.
         """
         if "T" in self.line or "M6" in self.line:
-            self.line = "; cnctools_stripped_unsupported {}".format(self.line)
+            self.line = "".format(self.line)
         
         
         
@@ -54,6 +66,8 @@ class Preprocessor:
         strip comments (after semicolon and opening parenthesis)
         """
         self.line = re.match("([^;(]*)", self.line).group(1)
+        self.line += ""
+
 
     def _strip(self):
         """
@@ -72,7 +86,8 @@ class Preprocessor:
             val = float(match.group(2))
             self._vars[key] = val
             self.callback("on_log", "SET VAR #{}={}".format(key, val))
-            self.line = "; cnctools_var_set {}".format(self.line)
+            #self.line = "; cnctools_var_set {}".format(self.line)
+            self.line = ""
             return
         
         match = re.match(self._re_var, self.line)
@@ -102,7 +117,6 @@ class Preprocessor:
             if contains_feed:
                 # strip the original F setting
                 self.line = re.sub(self._re_feed_replace, "", self.line)
-                self.line = "; cnctoolbox_stripped_feed"
                 
             if self._current_feed != self._requested_feed:
                 self.line += "F{:0.1f}".format(self._requested_feed)
