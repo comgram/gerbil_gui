@@ -31,8 +31,24 @@ def main():
     This function does nothing else than parsing command line arguments.
     It delegates to library functions accordingly.
     '''
-    log_format = '%(asctime)s %(levelname)s %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_format)
+    #log_format = '%(asctime)s %(levelname)s %(message)s'
+    #logging.basicConfig(level=logging.INFO, format=log_format)
+    logger = logging.getLogger('cnctoolbox')
+    logger.setLevel(logging.DEBUG)
+    logger_fh = logging.FileHandler('cnctoolbox.log')
+    logger_fh.setLevel(logging.DEBUG)
+    # This is the console logger, it hass a higher level than the
+    # logfile to keep the console clear for errors and splats
+    logger_ch = logging.StreamHandler()
+    logger_ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger_fh.setFormatter(formatter)
+    logger_ch.setFormatter(formatter)
+    # add the handlers to the logger i.e. now we have a console logger, and a file logger at the same time
+    logger.addHandler(logger_fh)
+    logger.addHandler(logger_ch)
+    logger.info("New Session")
     
     parser = argparse.ArgumentParser(description='This program is a box full of useful CNC tools')
     
@@ -63,7 +79,7 @@ def main():
     stipple_parser.add_argument(
         '--weight',
         metavar='WEIGHT_FILE',
-        help='File containing weights for each point. Use modified voronoi_stippler to generate it.'
+        help='File containing weights for ealogger_ch point. Use modified voronoi_stippler to generate it.'
         )
     
     # define arguments for the 'p2l' (pixel2laser) subcommand

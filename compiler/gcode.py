@@ -4,7 +4,9 @@ import pprint
 import copy
 import math
 import inspect
+import logging
 import re
+module_logger = logging.getLogger('cnctoolbox.compiler')
 try:
     unicode = unicode
 except NameError:

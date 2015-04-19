@@ -8,13 +8,14 @@ import os
 from queue import Queue
 from classes.rs232 import RS232
 from classes.preprocessor import Preprocessor
-
+module_logger = logging.getLogger('cnctoolbox.grbl')
 class GRBL:
     def __init__(self, name="mygrbl", ifacepath="/dev/ttyACM0"):
         """
         Set up initial values of all properties.
         """
-        
+        self.logger = logging.getLogger('cnctoolbox.grbl')
+
         # 'public' stuff
         self.name = name
         self._ifacepath = ifacepath
@@ -78,6 +79,7 @@ class GRBL:
         self._preprocessor = Preprocessor()
         
         atexit.register(self.disconnect)
+        self.logger.info("GRBL Class Initialized")
         
         
     # ====== 'public' methods ======

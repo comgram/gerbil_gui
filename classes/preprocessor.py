@@ -1,8 +1,9 @@
 import re
 import logging
-
+module_logger = logging.getLogger('cnctoolbox.preprocessor')
 class Preprocessor:
     def __init__(self):
+        self.logger = logging.getLogger('cnctoolbox.preprocessor')
         self.line = "; preprocessor_init"
         self._feed_override = False
         self._requested_feed = None
@@ -17,6 +18,7 @@ class Preprocessor:
         self._re_var_replace = re.compile(r"#\d")
         self._re_feed = re.compile(".*F([.\d]+)")
         self._re_feed_replace = re.compile(r"F[.\d]+")
+        self.logger.info("Preprocessor Class Initialized")
         
         
     def cleanup(self):
@@ -29,6 +31,7 @@ class Preprocessor:
     
     def set_feed_override(self, val):
         self._feed_override = val
+        self.logger.info("FEED OVERRIDING: {}".format(val))
         #logging.log(260, "Preprocessor: Feed override set to %s", val)
             
         
@@ -38,10 +41,12 @@ class Preprocessor:
         
         
     def tidy(self, line):
+        self.info("Preprocessor.tidy Beginning {}".format(line))
         self.line = line
         self._strip_comments()
         self._strip_unsupported()
         self._handle_vars()
+        self.info("Preprocessor.tidy Returning {}".format(self.line))
         self._strip()
         return self.line
         
