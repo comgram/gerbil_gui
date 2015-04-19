@@ -558,7 +558,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     def _show_buffer(self):
-        self.plainTextEdit_job.setPlainText(self.grbl.get_buffer())
+        self.plainTextEdit_job.setPlainText("\n".join(self.grbl.get_buffer()))
  
 
     def _cs_selected(self, idx):
@@ -625,17 +625,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._cs_names[self._current_cs]
         
 
-    def bbox(self, move_z=False, gcode=None):
-        self._add_to_loginput("<i>BBOX NEEDS REWORK</i>")
-        return
+    def bbox(self, move_z=False):
+        was_incremental = self.checkBox_incremental.isChecked()
+        was_buf = self.grbl.get_buffer()
         
-        if gcode:
-            movements = gcodetools.draw_bbox(gcode, move_z)
-        else:
-            self._add_to_loginput("<i>No file set and no gcode provided.</i>")
-            return
+        movements = gcodetools.draw_bbox(was_buf, move_z)
         
-        self.grbl.send_immediately(movements)
+        self.grbl.stream_clear()
+        
+        self.grbl.set_incremental_streaming(True)
+        self.checkBox_incremental.setChecked(True)
+        
+        self.grbl.send_with_queue(movements)
+        
+        #self.grbl.set_incremental_streaming(was_incremental)
+        #self.checkBox_incremental.setChecked(was_incremental)
+        
+        #self.grbl.stream_clear()
+        #self.grbl.write("\n".join(was_buf))
         
     def _render_logbuffer(self):
         self.label_loginput.setText("<br />".join(self.logbuffer))

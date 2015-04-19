@@ -67,7 +67,9 @@ def get_bbox(gcode):
 
 
 def draw_bbox(gcode, move_z=False):
-    result = "(cnctoolbox_set incremental_send=True)\n"
+    result = "F1000\n"
+    result = "G0X0Y0\n"
+    result += "M0\n"
     
     bbox = get_bbox(gcode)
     xmin = bbox[0][0]
@@ -78,16 +80,25 @@ def draw_bbox(gcode, move_z=False):
     zmax = bbox[2][1]
     
     if move_z:
-        result += "G0 Z{:0.3f}\n".format(zmin)
-        result += "G4 P1\n"
-        result += "!\n"
-        result += "G0 Z{:0.3f}\n".format(zmax)
-        result += "G4 P1\n"
-        result += "!\n"
-    result += "G0 X{:0.3f} Y{:0.3f}\n".format(xmin, ymin)
-    result += "G4 P1\n"
-    result += "!\n"
-    result += "G0 X{:0.3f} Y{:0.3f}\n".format(xmax, ymax)
+        pass
+        
+    result += "G0X{:0.1f}Y{:0.1f}\n".format(xmin, ymin)
+    result += "G4P1\n"
+    result += "M0\n"
+    
+    result += "G0Y{:0.1f}\n".format(ymax)
+    result += "G4P1\n"
+    result += "M0\n"
+    
+    result += "G0X{:0.1f}\n".format(xmax)
+    result += "G4P1\n"
+    result += "M0\n"
+    
+    result += "G0Y{:0.1f}\n".format(ymin)
+    result += "G4P1\n"
+    result += "M0\n"
+    
+    result += "G0X{:0.1f}\n".format(xmin)
     return result
     
     

@@ -386,7 +386,7 @@ class GRBL:
         self._target = targetstring
         
     def get_buffer(self):
-        return "\n".join(self._buffer)
+        return self._buffer
 
     # ====== 'private' methods ======
         
