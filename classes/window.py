@@ -66,12 +66,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
         # UI SETUP
+       
+        self.lcdNumber_feed_current.display("---")
+        self.lcdNumber_feed_current.setStyleSheet("color: red")
         
         ## dynamically add subclassed widgets
         self.glWidget = GLWidget()
         self.gridLayout_glwidget_container.addWidget(self.glWidget)
         
-        self.jogWidget = JogWidget(self, self.grbl.send)
+        self.jogWidget = JogWidget(self, self.grbl.send_with_queue)
         #self.jogWidget.setStyleSheet("background-color: black")
         self.gridLayout_jog_container.addWidget(self.jogWidget)
         
@@ -114,7 +117,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_stream_start.clicked.connect(self.stream_start)
         self.pushButton_stream_stop.clicked.connect(self.stream_stop)
         self.pushButton_stream_clear.clicked.connect(self.grbl.stream_clear)
-        #self.pushButton_file_set.clicked.connect(self._pick_file)
+        
+        self.pushButton_show_buffer.clicked.connect(self._show_buffer)
         
         self.pushButton_hold.clicked.connect(self.grbl.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
@@ -141,9 +145,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.checkBox_incremental.stateChanged.connect(self._incremental_changed)
 
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
-
-        #self.line_edit_devicePath.setText("/dev/ttyACM0")
-
         self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
     
         self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
@@ -367,8 +368,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._progress_percent = data[0]
             
         elif event == "on_feed_change":
-            #self.horizontalSlider_feed_override.setValue(data[0])
-            self.lcdNumber_feed_current.display("{:d}".format(int(data[0])))
+            feed = data[0]
+            if feed == 0:
+                self.lcdNumber_feed_current.display("---")
+                self.lcdNumber_feed_current.setStyleSheet("color: red")
+            else:
+                self.lcdNumber_feed_current.display("{:d}".format(int(feed)))
+                self.lcdNumber_feed_current.setStyleSheet("color: black")
+                
+            
             
         elif event == "on_streaming_complete":
             self.grbl.set_incremental_streaming(True)
@@ -489,7 +497,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 print("Exception in user code:")
                 traceback.print_exc(file=sys.stdout)
         else:
-            self.grbl.send_immediately(cmd)
+            self.grbl.send_with_queue(cmd)
 
         
     # UI SLOTS
@@ -687,6 +695,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         slider.setTickPosition(QSlider.TicksRight)
 
         return slider
+    
+    
+    def _show_buffer(self):
+        self.plainTextEdit_job.setPlainText(self.grbl.get_buffer())
     
     
     ## Coordinate stuff
