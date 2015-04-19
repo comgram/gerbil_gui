@@ -160,7 +160,8 @@ def fast():
     global Settings
     return Settings['max_feed_speed']
 def comment(txt):
-    #log(txt)
+    global module_logger
+    module_logger.info( "Comment: %s" % txt)
     emit(";%s" % txt)
 def push_z():
     global ZStack
@@ -233,6 +234,8 @@ def done():
 def emit(txt=";Nothing Emitted\n"):
     global Settings
     global State
+    global module_logger
+    module_logger.info("Emit received: {}".format(txt))
 
     if txt == "\n":
         return
@@ -240,12 +243,13 @@ def emit(txt=";Nothing Emitted\n"):
         return
     
     if Settings['debug_gcode'] == True or txt[0] != ';':
+        fstr = ''
         for x in range(0,State['white_space']):
-            Settings['port'].write(" ")  
+            fstr += " " 
         #log("Writing Text: %s" % txt)
         if txt and isinstance(txt,basestring) and len(txt) > 2:
-            print("WRITING", txt)
-            Settings['port'].write("%s\n" % txt)
+            module_logger.info("WRITING: %s%s" % (fstr, txt) )
+            Settings['port'].write("%s%s\n" % (fstr,txt))
             
 '''
     USE THESE TO PRETTY UP GCODE!!
@@ -255,9 +259,12 @@ def emit(txt=";Nothing Emitted\n"):
 '''
 def block_start(cmnt="BEGIN"):
     global State
+    global module_logger
     comment(cmnt)
     State['white_space'] = State['white_space'] + 4
 def block_end(cmnt="END"):
+    global State
+    global module_logger
     State['white_space'] = State['white_space'] - 4
     comment(cmnt)
     if State['white_space'] < 0:
