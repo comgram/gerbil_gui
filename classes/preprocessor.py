@@ -1,8 +1,9 @@
 import re
 import logging
-
+module_logger = logging.getLogger('cnctoolbox.preprocessor')
 class Preprocessor:
     def __init__(self):
+        self.logger = logging.getLogger('cnctoolbox.preprocessor')
         self.line = ""
         self._feed_override = False
         self._requested_feed = None
@@ -17,6 +18,7 @@ class Preprocessor:
         self._re_var_replace = re.compile(r"#\d")
         self._re_feed = re.compile(".*F([.\d]+)")
         self._re_feed_replace = re.compile(r"F[.\d]+")
+        self.logger.info("Preprocessor Class Initialized")
         
     def cleanup(self):
         self._current_feed = None

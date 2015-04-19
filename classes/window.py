@@ -22,8 +22,7 @@ from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
 from lib import gcodetools
 from lib import utility
 
-log_format = '%(asctime)s %(levelname)s %(message)s'
-logging.basicConfig(level=100, format=log_format)
+module_logger = logging.getLogger('cnctoolbox.window')
 
 #G91 G0 Y1 G90
 #G10 P0 L20 X0 Y0 Z0
@@ -33,7 +32,7 @@ logging.basicConfig(level=100, format=log_format)
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, path):
         super(MainWindow, self).__init__()
-        
+        self.logger = logging.getLogger('cnctoolbox.window')
         _logbuffer_size = 200
         
         self.setupUi(self)
