@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Sun Apr 19 11:37:07 2015
+# Created: Sun Apr 19 13:51:12 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -161,9 +161,15 @@ class Ui_MainWindow(object):
         self.tab_simulation.setObjectName("tab_simulation")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.tab_simulation)
         self.gridLayout_2.setObjectName("gridLayout_2")
+        self.pushButton_sim_wipe = QtWidgets.QPushButton(self.tab_simulation)
+        self.pushButton_sim_wipe.setObjectName("pushButton_sim_wipe")
+        self.gridLayout_2.addWidget(self.pushButton_sim_wipe, 0, 0, 1, 1)
+        self.checkBox_sim_enable = QtWidgets.QCheckBox(self.tab_simulation)
+        self.checkBox_sim_enable.setObjectName("checkBox_sim_enable")
+        self.gridLayout_2.addWidget(self.checkBox_sim_enable, 0, 1, 1, 1)
         self.gridLayout_glwidget_container = QtWidgets.QGridLayout()
         self.gridLayout_glwidget_container.setObjectName("gridLayout_glwidget_container")
-        self.gridLayout_2.addLayout(self.gridLayout_glwidget_container, 0, 0, 1, 1)
+        self.gridLayout_2.addLayout(self.gridLayout_glwidget_container, 1, 0, 1, 2)
         self.tabWidget.addTab(self.tab_simulation, "")
         self.tab_conversation = QtWidgets.QWidget()
         self.tab_conversation.setObjectName("tab_conversation")
@@ -710,7 +716,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(5)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -723,6 +729,8 @@ class Ui_MainWindow(object):
         self.pushButton_check.setText(_translate("MainWindow", "Check"))
         self.pushButton_homing.setText(_translate("MainWindow", "Homing"))
         self.checkBox_feed_override.setText(_translate("MainWindow", "Feed override"))
+        self.pushButton_sim_wipe.setText(_translate("MainWindow", "Wipe"))
+        self.checkBox_sim_enable.setText(_translate("MainWindow", "Enable"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_simulation), _translate("MainWindow", "Sim"))
         self.argumentsGroupBox.setTitle(_translate("MainWindow", "Arguments"))
         self.rLabel.setText(_translate("MainWindow", "radius"))

@@ -291,7 +291,7 @@
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-         <number>5</number>
+         <number>0</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
@@ -302,6 +302,20 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="0" column="0">
+           <widget class="QPushButton" name="pushButton_sim_wipe">
+            <property name="text">
+             <string>Wipe</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="checkBox_sim_enable">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
            <layout class="QGridLayout" name="gridLayout_glwidget_container"/>
           </item>
          </layout>
