@@ -41,12 +41,12 @@ class Preprocessor:
         
         
     def tidy(self, line):
-        self.logger.info("Preprocessor.tidy Beginning {}".format(line))
+        #self.logger.info("Preprocessor.tidy Beginning {}".format(line))
         self.line = line
         self._strip_comments()
         self._strip_unsupported()
         self._handle_vars()
-        self.logger.info("Preprocessor.tidy Returning {}".format(self.line))
+        #self.logger.info("Preprocessor.tidy Returning {}".format(self.line))
         self._strip()
         return self.line
         

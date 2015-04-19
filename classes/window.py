@@ -199,29 +199,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.saveScriptFileButton.clicked.connect(self.save_script_clicked)
         self.executeScriptButton.clicked.connect(self.execute_script_clicked)
         
-        
-    def execute_script_clicked(self,item):
-        code = self.scriptTextEdit.toPlainText()
-        COMPILER.evaluate(code)
-        
-        
-    def load_script_clicked(self,item):
-        fname = self.filenameLineEdit.text()
-        with open(fname, 'r') as content_file:
-            content = content_file.read()
-        self.scriptTextEdit.setPlainText(content)
-        
-        
-    def save_script_clicked(self,item):
-        fname = self.filenameLineEdit.text()
-        with open(fname, 'w') as content_file:
-            content_file.write(self.scriptTextEdit.toPlainText())
-        self._add_to_loginput("File {} written.".format(fname))
 
-    def homing(self):
-        self.pushButton_clearz.setDisabled(False)
-        self.pushButton_clearxy.setDisabled(False)
-        self.grbl.homing()
+    # CALLBACKS
         
     def on_grbl_event(self, event, *data):
         if event == "on_stateupdate":
@@ -334,12 +313,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
             
-            
-    def _render_logbuffer(self):
-        self.label_loginput.setText("<br />".join(self.logbuffer))
-        self.scrollArea_loginput.verticalScrollBar().setValue(self.scrollArea_loginput.verticalScrollBar().maximum())
-            
-        
+    
     def refresh(self):
         self.label_current_line.setText(str(self._current_line))
         
@@ -397,49 +371,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self._progress_percent_last != self._progress_percent:
             self.progressBar_job.setValue(self._progress_percent)
             self._progress_percent_last = self._progress_percent
-        
-
-    def _add_to_loginput(self, line):
-        self.logbuffer.append(line)
-        self.changed_loginput = True
-        
-    def _add_to_logoutput(self, line):
-        item = QListWidgetItem(line, self.listWidget_logoutput)
-        self.logoutput_items.append(item)
-        self.listWidget_logoutput.setCurrentItem(item)
-        self.listWidget_logoutput.scrollToBottom()
-        self.logoutput_at_end = True
     
-    def _exec_cmd(self, cmd):
-        cmd = cmd.strip()
-        if len(cmd) == 0:
-            return
-        
-        self._add_to_logoutput(cmd)
-        self.lineEdit_cmdline.setText("")
-        
-        if cmd[0] == "=":
-            # dynamically executed python code must begin with an equal sign
-            # "self." is prepended for convenience
-            if cmd[1] == "=":
-                kls = "COMPILER"
-                cmd = cmd[2:]
-            else:
-                kls = "self" 
-                cmd = cmd[1:]
-            cmd = "%s.%s" % (kls,cmd)
-            try:
-                self._add_to_loginput("Executing: %s" % cmd)
-                exec(cmd)
-            except:
-                self._add_to_loginput("Error during dynamic python execution:<br />{}".format(sys.exc_info()))
-                print("Exception in user code:")
-                traceback.print_exc(file=sys.stdout)
-        else:
-            self.grbl.send_with_queue(cmd)
-
-        
-    # UI SLOTS
     
     def _cmd_line_callback(self, data):
         if data == "Enter":
@@ -466,25 +398,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             item = self.logoutput_items[row]
             self.listWidget_logoutput.setCurrentItem(item)
             self.lineEdit_cmdline.setText(item.text())
-            
+    
+    
+    # UI SLOTS
+    
+    def execute_script_clicked(self,item):
+        code = self.scriptTextEdit.toPlainText()
+        COMPILER.evaluate(code)
+        
+        
+    def load_script_clicked(self,item):
+        fname = self.filenameLineEdit.text()
+        with open(fname, 'r') as content_file:
+            content = content_file.read()
+        self.scriptTextEdit.setPlainText(content)
+        
+        
+    def save_script_clicked(self,item):
+        fname = self.filenameLineEdit.text()
+        with open(fname, 'w') as content_file:
+            content_file.write(self.scriptTextEdit.toPlainText())
+        self._add_to_loginput("File {} written.".format(fname))
+    
     
     def _on_logoutput_item_double_clicked(self, item):
         self._exec_cmd(item.text())
         
+        
     def _on_logoutput_item_clicked(self, item):
         self.lineEdit_cmdline.setText(item.text())
+        
         
     def _on_logoutput_current_item_changed(self, item_current, item_previous):
         self.lineEdit_cmdline.setText(item_current.text())
         self.logoutput_at_end = False
         
+        
     def _quit(self):
         self.grbl.disconnect()
         QApplication.quit()
 
+
     def _pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
-        self.grbl.load_file(self.filename)        
+        self.grbl.load_file(filename_tuple[0])
+    
     
     def xminus(self):
         step = - self.doubleSpinBox_jogstep.value()
@@ -533,6 +491,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lcdNumber_feed_override.display(val)
         self.grbl.request_feed(val)
         
+        
     def _feedoverride_changed(self, val):
         val = False if val == 0 else True
         # first write feed to Grbl
@@ -540,34 +499,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # next set the boolean flag
         self.grbl.set_feed_override(val)
         
+        
     def _incremental_changed(self, val):
         val = False if val == 0 else True
         self.grbl.set_incremental_streaming(val)
-                  
+             
+             
     def abort(self):
-        #self.label_loginputline.setText("")
         self.grbl.abort()
        
+       
     def reset(self):
-        #self.label_loginputline.setText("")
         self.grbl.abort()
+        
         
     def stream_start(self):
         line_nr = self.spinBox_start_line.value()
         self.grbl.stream_start(line_nr)
+    
     
     def stream_stop(self):
         self.grbl.stream_stop()
         
     
     def stream_play(self):
-        #self.grbl.set_feed_override(self.checkBox_feedoverride.isChecked())
-        #self.grbl.set_feed(self.horizontalSlider_feed.value())
         self.grbl.stream_start()
         self.label_current_line.setText("0")
-        
-    def stream_pause(self):
-        pass
         
         
     def check(self):
@@ -577,8 +534,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def g0xyorigin(self):
         self.grbl.send_immediately("G0 X0 Y0")
         
+        
     def clearz(self):
         self.grbl.send_immediately("G53 Z-10")
+        
         
     def clearxy(self):
         """
@@ -586,27 +545,86 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.grbl.send_immediately("G53 X-400 Y-600")
         
-    def cnect(self):
-        #self.pushButton_connect.setEnabled(False)
-        self.action_grbl_connect.setEnabled(False)
-        #self.pushButton_disconnect.setEnabled(False)
-        self.grbl.cnect()
         
-        #self.horizontalSlider_feed.setValue(100)
-        #self.checkBox_feedoverride.setChecked(False)
+    def cnect(self):
+        self.action_grbl_connect.setEnabled(False)
+        self.grbl.cnect()
         
         
     def disconnect(self):
-        #self.pushButton_connect.setEnabled(False)
-        #self.pushButton_disconnect.setEnabled(False)
         self.action_grbl_disconnect.setEnabled(False)
         self.grbl.disconnect()
         
-        #self.horizontalSlider_feed.setValue(100)
-        #self.checkBox_feedoverride.setChecked(False)
+        
+
+    def _show_buffer(self):
+        self.plainTextEdit_job.setPlainText(self.grbl.get_buffer())
+ 
+
+    def _cs_selected(self, idx):
+        self._current_cs = idx + 1
+        self.grbl.send_immediately(self._cs_names[self._current_cs])
         
         
-    # call: =bbox(True)
+    def _target_selected(self, idx):
+        pass
+    
+        
+    def _current_cs_setzero(self):
+        self.grbl.send_immediately("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
+
+    
+    def _sim_enabled_changed(self, val):
+        val = False if val == 0 else True
+        self._sim_enabled = val
+        
+        
+    def _sim_wipe(self):
+        self.simulator.wipe()
+        self.simulator.paintGL()
+        
+        
+
+    ## UTILITY FUNCTIONS
+    
+    def _exec_cmd(self, cmd):
+        cmd = cmd.strip()
+        if len(cmd) == 0:
+            return
+        
+        self._add_to_logoutput(cmd)
+        self.lineEdit_cmdline.setText("")
+        
+        if cmd[0] == "=":
+            # dynamically executed python code must begin with an equal sign
+            # "self." is prepended for convenience
+            if cmd[1] == "=":
+                kls = "COMPILER"
+                cmd = cmd[2:]
+            else:
+                kls = "self" 
+                cmd = cmd[1:]
+            cmd = "%s.%s" % (kls,cmd)
+            try:
+                self._add_to_loginput("Executing: %s" % cmd)
+                exec(cmd)
+            except:
+                self._add_to_loginput("Error during dynamic python execution:<br />{}".format(sys.exc_info()))
+                print("Exception in user code:")
+                traceback.print_exc(file=sys.stdout)
+        else:
+            self.grbl.send_with_queue(cmd)
+
+    def set_cs(self, nr):
+        """
+        A convenience function to select CS 1-6 and update the UI at the same time
+        """
+        self._current_cs = nr
+        self.label_current_cs.setText(self._cs_names[self._current_cs])
+        self.comboBox_coordinate_systems.setCurrentIndex(nr - 1)
+        self._cs_names[self._current_cs]
+        
+
     def bbox(self, move_z=False, gcode=None):
         self._add_to_loginput("<i>BBOX NEEDS REWORK</i>")
         return
@@ -619,53 +637,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.grbl.send_immediately(movements)
         
-        
-    def createSlider(self):
-        slider = QSlider(Qt.Vertical)
+    def _render_logbuffer(self):
+        self.label_loginput.setText("<br />".join(self.logbuffer))
+        self.scrollArea_loginput.verticalScrollBar().setValue(self.scrollArea_loginput.verticalScrollBar().maximum())
 
-        slider.setRange(0, 360 * 16)
-        slider.setSingleStep(16)
-        slider.setPageStep(15 * 16)
-        slider.setTickInterval(15 * 16)
-        slider.setTickPosition(QSlider.TicksRight)
-
-        return slider
-    
-    
-    def _show_buffer(self):
-        self.plainTextEdit_job.setPlainText(self.grbl.get_buffer())
-    
-    
-    ## Coordinate stuff
-    def set_cs(self, nr):
-        """
-        A convenience method to select CS 1-6 and update the UI at the same time
-        """
-        self._current_cs = nr
-        self.label_current_cs.setText(self._cs_names[self._current_cs])
-        self.comboBox_coordinate_systems.setCurrentIndex(nr - 1)
-        self._cs_names[self._current_cs]
-
-    def _cs_selected(self, idx):
-        self._current_cs = idx + 1
-        self.grbl.send_immediately(self._cs_names[self._current_cs])
+    def _add_to_loginput(self, line):
+        self.logbuffer.append(line)
+        self.changed_loginput = True
         
-    def _target_selected(self, idx):
-        pass
+    def _add_to_logoutput(self, line):
+        item = QListWidgetItem(line, self.listWidget_logoutput)
+        self.logoutput_items.append(item)
+        self.listWidget_logoutput.setCurrentItem(item)
+        self.listWidget_logoutput.scrollToBottom()
+        self.logoutput_at_end = True
         
-    def _current_cs_setzero(self):
-        self.grbl.send_immediately("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
-
-    def _on_jog_mousemove(self, event):
-        pass
-    
-    def _sim_enabled_changed(self, val):
-        val = False if val == 0 else True
-        self._sim_enabled = val
-        
-    def _sim_wipe(self):
-        self.simulator.wipe()
-        self.simulator.paintGL()
-        
-        
-
+    def homing(self):
+        self.pushButton_clearz.setDisabled(False)
+        self.pushButton_clearxy.setDisabled(False)
+        self.grbl.homing()
