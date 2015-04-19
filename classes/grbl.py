@@ -556,9 +556,6 @@ class GRBL:
             if not (self._wait_empty_buffer and len(self._rx_buffer_fill) > 0):
                 self._wait_empty_buffer = False
                 self._stream()
-                
-        else:
-            logging.log(200, "%s handle_ok(): Streaming is already completed, Grbl is just sending OK's for the commands in its buffer.", self.name)
         
         self._rx_buffer_fill_percent = int(100 - 100 * (self._rx_buffer_size - sum(self._rx_buffer_fill)) / self._rx_buffer_size)
         self.callback("on_rx_buffer_percentage", self._rx_buffer_fill_percent)
@@ -579,7 +576,6 @@ class GRBL:
         Parse Grbl's Gcode parser state report and inform via callback
         """
         m = re.match("\[G(\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) M(\d) M(\d) M(\d) T(\d) F([\d.-]*?) S([\d.-]*?)\]", line)
-        print("XXX", line)
         if m:
             self.gps[0] = m.group(1) # motionmode
             self.gps[1] = m.group(2) # coordinate system
