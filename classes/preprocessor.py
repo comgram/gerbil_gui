@@ -25,6 +25,7 @@ class Preprocessor:
     
     def set_feed_override(self, val):
         self._feed_override = val
+        self.logger.info("FEED OVERRIDING: {}".format(val))
         #logging.log(260, "Preprocessor: Feed override set to %s", val)
             
         
@@ -34,12 +35,14 @@ class Preprocessor:
         
     
     def do(self, line):
+        self.info("Preprocessor.do Beginning {}".format(line))
         self.line = line
         self._strip_comments()
         self._strip()
         self._strip_unsupported()
         self._handle_feed()
         self._handle_vars()
+        self.info("Preprocessor.do Returning {}".format(self.line))
         return self.line
     
     def _strip_unsupported(self):
