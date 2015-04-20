@@ -2,6 +2,7 @@ import logging
 import numpy as np
 import ctypes
 import sys
+import math
 
 from PyQt5.QtCore import pyqtSignal, QPoint, Qt, QSize
 from PyQt5.QtGui import QColor, QMatrix4x4, QVector3D
@@ -44,22 +45,8 @@ class Simulator(QGLWidget):
         self.height = 100
         self.model_rotation = 0
         
-        self._matrix_perspective = QMatrix4x4()
-        
         self.draw_grid()
-        
-        
-        
-        
-       
-    def qt_mat_to_array(self, mat):
-        #arr = [[0 for x in range(4)] for x in range(4)]
-        arr = [0] * 16
-        for i in range(4):
-            for j in range(4):
-                idx = 4 * i + j
-                arr[idx] = mat[j, i]
-        return arr
+
 
     def minimumSizeHint(self):
         return QSize(50, 50)
@@ -149,43 +136,37 @@ class Simulator(QGLWidget):
         
         # MODEL MATRIX BEGIN ==========
         mat_m = QMatrix4x4()
-        mat_m.setToIdentity()
-        mat_m.rotate(self.model_rotation, QVector3D(0, 1, 1))
-        #print(self._matrix_model)
+        mat_m.rotate(self.model_rotation, QVector3D(0, 1, 0))
+        mat_m = self.qt_mat_to_array(mat_m)
+        loc_mat_m = glGetUniformLocation(self.program, "mat_m")
+        glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, mat_m)
         # MODEL MATRIX END ==========
         
-        # PERSPECTIVE MATRIX BEGIN ==========
+        # VIEW MATRIX BEGIN ==========
+        mat_v = QMatrix4x4()
+        mat_v.lookAt(QVector3D(2, 2, 2), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
+        mat_v = self.qt_mat_to_array(mat_v)
+        loc_mat_v = glGetUniformLocation(self.program, "mat_v")
+        glUniformMatrix4fv(loc_mat_v, 1, GL_TRUE, mat_v)
+        # VIEW MATRIX END ==========
+        
+        # PROJECTION MATRIX BEGIN ==========
         aspect = self.width / self.height
         mat_p = QMatrix4x4()
-        mat_p.setToIdentity()
-        
-        mat_p.perspective(120, aspect, 0.01, 1000)
-        print("ASP", aspect, mat_p)
-        # PERSPECTIVE MATRIX END ==========
+        mat_p.perspective(45, aspect, 1, 100)
+        mat_p = self.qt_mat_to_array(mat_p)
+        loc_mat_p = glGetUniformLocation(self.program, "mat_p")
+        glUniformMatrix4fv(loc_mat_p, 1, GL_TRUE, mat_p)
+        # PROJECTION MATRIX END ==========
         
         # MVP MATRIX BEGIN =====
-        mvp_matrix = mat_p * mat_m
-        mvp_matrix = self.qt_mat_to_array(mvp_matrix)
-        #print("MVP", self._matrix_model, mvp_matrix)
+        #mvp_matrix = QMatrix4x4()
+        #mvp_matrix = mat_m
+        #mvp_matrix = self.qt_mat_to_array(mvp_matrix)
         
-        loc_mvp_matrix = glGetUniformLocation(self.program, "mvp_matrix")
-        glUniformMatrix4fv(loc_mvp_matrix, 1, GL_FALSE, mvp_matrix)
+        #loc_mvp_matrix = glGetUniformLocation(self.program, "mvp_matrix")
+        #glUniformMatrix4fv(loc_mvp_matrix, 1, GL_TRUE, mvp_matrix)
         # MVP MATRIX END =====
-        
-
-        #self._view = QMatrix4x4()
-        #QMatrix4x4.lookAt(self._view, QVector3D(1, 1, 1), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
-        #self._view = self.qt_mat_to_array(self._view)
-        #print("VIEW", self._view)
-        #loc_view = glGetUniformLocation(self.program, "view")
-        #glUniformMatrix4fv(loc_view, 1, GL_FALSE, self._view)
-        
-        #self._proj = QMatrix4x4()
-        #QMatrix4x4.perspective(self._proj, 90, 1, 0.1, 10000)
-        #self._proj = self.qt_mat_to_array(self._proj)
-        #print("PROJ", self._proj)
-        #loc_proj = glGetUniformLocation(self.program, "proj")
-        #glUniformMatrix4fv(loc_proj, 1, GL_FALSE, self._proj)
         
 
 
@@ -264,12 +245,22 @@ class Simulator(QGLWidget):
         return angle
     
     def draw_grid(self):
-        #self.add_vertex((1, 3))
+        #self.add_vertex((0, 0))
+        #self.add_vertex((1000, 1000))
         #self.add_vertex((9.9, 9.9))
+        #self.add_vertex((-9.9, -9.9))
         #return
         for i in range(10):
             dir = 1 if (i % 2) == 0 else -1
-            self.add_vertex((i, 10 * dir))
-            self.add_vertex((i+1, 10 * dir))
+            self.add_vertex((i/10, 0.1 * dir))
+            self.add_vertex((0.1 + i/10, 0.1 * dir))
         
+    def qt_mat_to_array(self, mat):
+        #arr = [[0 for x in range(4)] for x in range(4)]
+        arr = [0] * 16
+        for i in range(4):
+            for j in range(4):
+                idx = 4 * i + j
+                arr[idx] = mat[i, j]
+        return arr
         
