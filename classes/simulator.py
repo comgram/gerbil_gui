@@ -139,7 +139,7 @@ class Simulator(QGLWidget):
         
         # MODEL MATRIX BEGIN ==========
         mat_m = QMatrix4x4()
-        mat_m.translate(self._translation_vec)
+        mat_m.translate(self._translation_vec * self._zoom)
         mat_m.rotate(self._rotation_quat)
         
         mat_m = self.qt_mat_to_array(mat_m)
@@ -158,7 +158,7 @@ class Simulator(QGLWidget):
         # PROJECTION MATRIX BEGIN ==========
         aspect = self.width / self.height
         mat_p = QMatrix4x4()
-        mat_p.perspective(90 * self._zoom, aspect, 1, 100)
+        mat_p.perspective(90, aspect, 1, 100)
         mat_p = self.qt_mat_to_array(mat_p)
         loc_mat_p = glGetUniformLocation(self.program, "mat_p")
         glUniformMatrix4fv(loc_mat_p, 1, GL_TRUE, mat_p)
