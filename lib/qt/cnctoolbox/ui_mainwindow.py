@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Sun Apr 19 13:51:12 2015
+# Created: Mon Apr 20 10:23:29 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1176, 667)
+        MainWindow.resize(1212, 668)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -170,6 +170,11 @@ class Ui_MainWindow(object):
         self.gridLayout_glwidget_container = QtWidgets.QGridLayout()
         self.gridLayout_glwidget_container.setObjectName("gridLayout_glwidget_container")
         self.gridLayout_2.addLayout(self.gridLayout_glwidget_container, 1, 0, 1, 2)
+        self.verticalSlider_model_rotate = QtWidgets.QSlider(self.tab_simulation)
+        self.verticalSlider_model_rotate.setMaximum(360)
+        self.verticalSlider_model_rotate.setOrientation(QtCore.Qt.Vertical)
+        self.verticalSlider_model_rotate.setObjectName("verticalSlider_model_rotate")
+        self.gridLayout_2.addWidget(self.verticalSlider_model_rotate, 1, 2, 1, 1)
         self.tabWidget.addTab(self.tab_simulation, "")
         self.tab_conversation = QtWidgets.QWidget()
         self.tab_conversation.setObjectName("tab_conversation")

@@ -12,6 +12,8 @@ Install Python 3
 Install Python 3 modules which are shipped with the Debian Jessie distribution:
 
     apt-get install python3-pip python3-serial python3-pil python3-numpy python3-pyqt5 python3-pyqt5.qtopengl python3-opengl
+    
+    apt-get install python3-cffi
 
 Install Python 3 modules not shipped with the Debian Jessie distribution: 
     
@@ -288,3 +290,10 @@ grbl.cnect()
 grbl.poll_stop()
 
 grbl.send("G0 X10 Y10 Z10")
+
+http://techthat.net/2014/01/29/incremental-plotting-in-gnuplot/
+http://www.oberlin.edu/math/faculty/bosch/making-tspart-page.html
+
+hg clone https://bitbucket.org/duangle/python-glm
+python3 setup.py build
+python3 setup.py install --user

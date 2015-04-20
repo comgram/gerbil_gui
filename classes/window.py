@@ -28,6 +28,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, path):
         super(MainWindow, self).__init__()
         self.logger = logging.getLogger('cnctoolbox.window')
+        
         _logbuffer_size = 200
         
         self.setupUi(self)
@@ -39,6 +40,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowTitle("cnctoolbox")
         self.lcdNumber_feed_current.display("---")
         # GENERIC SETUP END -----
+        
+        ## LOGGING SETUP BEGIN ------
+        # setup ring buffer for logging
+        self.changed_loginput = False
+        self.logoutput_items = []
+        self.logoutput_current_index = -1
+        self.logbuffer = collections.deque(maxlen=_logbuffer_size)
+        
+        for i in range(1, _logbuffer_size):
+            self.logbuffer.append("")
+            
+        self.label_loginput = QLabel()
+        self.label_loginput.setTextFormat(Qt.RichText)
+        self.scrollArea_loginput.setWidget(self.label_loginput)
+        self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
+        self.label_loginput.setStyleSheet("font: 9pt")
+        ## LOGGING SETUP END ------
         
         # GRBL SETUP BEGIN -----
         self.grbl = GRBL("mygrbl", path)
@@ -66,7 +84,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # STATE VARIABLES END -----
         
         ## SIMULATOR SETUP BEGIN -------------
-        self._sim_enabled = False
+        self._sim_enabled = True
         self.simulator = Simulator()
         self.gridLayout_glwidget_container.addWidget(self.simulator)
         ## SIMULATOR SETUP END -------------
@@ -143,22 +161,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ## TIMER SETUP END ----------
         
         
-        ## LOGGING SETUP BEGIN ------
-        # setup ring buffer for logging
-        self.changed_loginput = False
-        self.logoutput_items = []
-        self.logoutput_current_index = -1
-        self.logbuffer = collections.deque(maxlen=_logbuffer_size)
-        
-        for i in range(1, _logbuffer_size):
-            self.logbuffer.append("")
-            
-        self.label_loginput = QLabel()
-        self.label_loginput.setTextFormat(Qt.RichText)
-        self.scrollArea_loginput.setWidget(self.label_loginput)
-        self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
-        self.label_loginput.setStyleSheet("font: 9pt")
-        ## LOGGING SETUP END ------
+
         
 
         ## CS SETUP BEGIN ---------
@@ -176,6 +179,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.comboBox_coordinate_systems.insertItem(key, val)
         self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
         ## CS SETUP END ---------
+        
+        
+        ## TEST BEGIN
+        self.verticalSlider_model_rotate.sliderMoved.connect(self._slider_model_rotate_moved)
+        ## TEST END
         
         
     def modifyUi(self):
@@ -340,7 +348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # simulator update
             if self._sim_enabled == True:
                 self.simulator.mpos = self.mpos
-                self.simulator.add_vertex((wx, wy))
+                #self.simulator.add_vertex((wx, wy))
                 self.simulator.paintGL()
             
 
@@ -663,3 +671,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_clearz.setDisabled(False)
         self.pushButton_clearxy.setDisabled(False)
         self.grbl.homing()
+        
+    def _slider_model_rotate_moved(self, val):
+        self.simulator.model_rotation = val
