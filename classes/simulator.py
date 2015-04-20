@@ -37,8 +37,11 @@ class Simulator(QGLWidget):
         self._rotation_quat_start = self._rotation_quat
         
         # Translation state
-        self._translation_vec = QVector2D()
+        self._translation_vec = QVector3D()
         self._translation_vec_start = self._translation_vec
+        
+        # Zoom state
+        self._zoom = 1
         
         
         
@@ -136,8 +139,9 @@ class Simulator(QGLWidget):
         
         # MODEL MATRIX BEGIN ==========
         mat_m = QMatrix4x4()
-        mat_m.rotate(self._rotation_quat)
         mat_m.translate(self._translation_vec)
+        mat_m.rotate(self._rotation_quat)
+        
         mat_m = self.qt_mat_to_array(mat_m)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
         glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, mat_m)
@@ -154,7 +158,7 @@ class Simulator(QGLWidget):
         # PROJECTION MATRIX BEGIN ==========
         aspect = self.width / self.height
         mat_p = QMatrix4x4()
-        mat_p.perspective(90, aspect, 1, 100)
+        mat_p.perspective(90 * self._zoom, aspect, 1, 100)
         mat_p = self.qt_mat_to_array(mat_p)
         loc_mat_p = glGetUniformLocation(self.program, "mat_p")
         glUniformMatrix4fv(loc_mat_p, 1, GL_TRUE, mat_p)
@@ -192,10 +196,21 @@ class Simulator(QGLWidget):
             self._rotation_quat_start = self._rotation_quat
             
         elif btns & (Qt.LeftButton | Qt.MidButton):
-            self._mouse_translation_start_vec = QVector2D(x, y)
+            self._mouse_translation_vec_current = QVector3D(x, y, 0)
             self._translation_vec_start = self._translation_vec
         
+    def wheelEvent(self, event):
+        delta = event.angleDelta().y()
         
+        if delta < 0:
+            self._zoom = self._zoom * 1.1 if self._zoom < 1 else self._zoom
+        else:
+            self._zoom = self._zoom * 0.9 if self._zoom > 0.1 else self._zoom
+        
+        print(self._zoom)
+        self.draw_asap = True
+            
+            
     def mouseReleaseEvent(self, event):
         pass
 
@@ -219,7 +234,8 @@ class Simulator(QGLWidget):
             self._rotation_quat.normalize()
             
         elif btns & (Qt.LeftButton | Qt.MidButton):
-            self._translation_vec = self._translation_vec_start
+            self._translation_vec = self._translation_vec_start + (QVector3D(x, y, 0) - self._mouse_translation_vec_current) / 50
+            #self._translation_vec
         
         self.draw_asap = True
         
