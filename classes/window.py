@@ -325,7 +325,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def refresh(self):
         self.label_current_line.setText(str(self._current_line))
         
-        self.simulator.updateGL()
+        #self.simulator.updateGL()
         
         if self.changed_state:
             mx = self.mpos[0]
@@ -348,8 +348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # simulator update
             if self._sim_enabled == True:
                 self.simulator.mpos = self.mpos
-                #self.simulator.add_vertex((wx, wy))
-                self.simulator.paintGL()
+                self.simulator.add_vertex((wx, wy))
             
 
             if self.state == "Idle":
@@ -589,7 +588,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def _sim_wipe(self):
         self.simulator.wipe()
-        self.simulator.paintGL()
+        #self.simulator.paintGL()
         
         
 
