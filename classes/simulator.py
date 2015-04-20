@@ -5,7 +5,7 @@ import sys
 import math
 
 from PyQt5.QtCore import pyqtSignal, QPoint, Qt, QSize
-from PyQt5.QtGui import QColor, QMatrix4x4, QVector3D, QQuaternion
+from PyQt5.QtGui import QColor, QMatrix4x4, QVector2D, QVector3D, QQuaternion
 from PyQt5.QtOpenGL import QGLWidget
 
 import OpenGL
@@ -23,14 +23,6 @@ class Simulator(QGLWidget):
         super(Simulator, self).__init__(parent)
         print(glGetString(GL_EXTENSIONS))
         
-        self.xRot = 0
-        self.yRot = 0
-        self.zRot = 0
-        
-        self.xPan = 0
-        self.yPan = 0
-        self.zPan = -10
-        
         self.colors = [ (1,0,0,1) ]
         self.positions = [ (0,0) ]
         self._linecount = len(self.positions)
@@ -39,7 +31,12 @@ class Simulator(QGLWidget):
         self.data['color']    = self.colors
         self.data['position'] = self.positions
         
-        self.lastPos = QPoint()
+        self._mouse_rotation_start_vec = QVector3D()
+        
+        self._rotation_quat = QQuaternion()
+        self._rotation_quat_start = self._rotation_quat
+        
+        self._rotation_axis = QVector3D()
         
         self.width = 100
         self.height = 100
@@ -135,10 +132,10 @@ class Simulator(QGLWidget):
         #glUniform1f(loc, 0.01)
         
         # MODEL MATRIX BEGIN ==========
-        qu_rot = QQuaternion.fromAxisAndAngle(0, 0, 1, self.model_rotation)
+        #qu_rot = QQuaternion.fromAxisAndAngle(self._rotation_axis, self.model_rotation)
         mat_m = QMatrix4x4()
         #mat_m.rotate(self.model_rotation, QVector3D(0, 1, 0))
-        mat_m.rotate(qu_rot)
+        mat_m.rotate(self._rotation_quat)
         mat_m = self.qt_mat_to_array(mat_m)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
         glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, mat_m)
@@ -146,7 +143,7 @@ class Simulator(QGLWidget):
         
         # VIEW MATRIX BEGIN ==========
         mat_v = QMatrix4x4()
-        mat_v.lookAt(QVector3D(2, 2, 2), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
+        mat_v.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
         mat_v = self.qt_mat_to_array(mat_v)
         loc_mat_v = glGetUniformLocation(self.program, "mat_v")
         glUniformMatrix4fv(loc_mat_v, 1, GL_TRUE, mat_v)
@@ -155,20 +152,11 @@ class Simulator(QGLWidget):
         # PROJECTION MATRIX BEGIN ==========
         aspect = self.width / self.height
         mat_p = QMatrix4x4()
-        mat_p.perspective(45, aspect, 1, 100)
+        mat_p.perspective(90, aspect, 1, 100)
         mat_p = self.qt_mat_to_array(mat_p)
         loc_mat_p = glGetUniformLocation(self.program, "mat_p")
         glUniformMatrix4fv(loc_mat_p, 1, GL_TRUE, mat_p)
         # PROJECTION MATRIX END ==========
-        
-        # MVP MATRIX BEGIN =====
-        #mvp_matrix = QMatrix4x4()
-        #mvp_matrix = mat_m
-        #mvp_matrix = self.qt_mat_to_array(mvp_matrix)
-        
-        #loc_mvp_matrix = glGetUniformLocation(self.program, "mvp_matrix")
-        #glUniformMatrix4fv(loc_mvp_matrix, 1, GL_TRUE, mvp_matrix)
-        # MVP MATRIX END =====
         
 
 
@@ -186,65 +174,37 @@ class Simulator(QGLWidget):
         self.height = height
         
         glViewport(0, 0, width, height)
-        
-       
-        
-        
-    def setXRotation(self, angle):
-        angle = self.normalizeAngle(angle)
-        if angle != self.xRot:
-            self.xRot = angle
-            self.xRotationChanged.emit(angle)
-            #self.updateGL()
 
-    def setYRotation(self, angle):
-        angle = self.normalizeAngle(angle)
-        if angle != self.yRot:
-            self.yRot = angle
-            self.yRotationChanged.emit(angle)
-            #self.updateGL()
-
-    def setZRotation(self, angle):
-        angle = self.normalizeAngle(angle)
-        if angle != self.zRot:
-            self.zRot = angle
-            self.zRotationChanged.emit(angle)
-            #self.updateGL()
-            
-    def setXPan(self, val):
-        if val != self.xPan:
-            self.xPan = val / 1000.0
-            
-    def setYPan(self, val):
-        if val != self.yPan:
-            self.yPan = val / 1000.0
-            
-    def setZPan(self, val):
-        if val != self.zPan:
-            self.zPan = val / 1000.0
 
     def mousePressEvent(self, event):
-        self.lastPos = event.pos()
+        x = event.localPos().x()
+        y = event.localPos().y()
+        self._mouse_rotation_start_vec = self._find_ball_vector(x, y)
+        #print("START VEC", self._mouse_rotation_start_vec)
+        self._rotation_quat_start = self._rotation_quat
+        #print("START QUAT", self._rotation_quat_start)
+        
+        
+    def mouseReleaseEvent(self, event):
+        pass
+
 
     def mouseMoveEvent(self, event):
-        dx = event.x() - self.lastPos.x()
-        dy = event.y() - self.lastPos.y()
-
-        if event.buttons() & Qt.LeftButton:
-            self.setXRotation(self.xRot + 8 * dy)
-            self.setYRotation(self.yRot + 8 * dx)
-        elif event.buttons() & Qt.RightButton:
-            self.setXRotation(self.xRot + 8 * dy)
-            self.setZRotation(self.zRot + 8 * dx)
-
-        self.lastPos = event.pos()
+        x = event.localPos().x()
+        y = event.localPos().y()
+        mouse_rotation_current_vec = self._find_ball_vector(x, y)
+        #print("MOVE VEC", mouse_rotation_current_vec)
+        angle = 10 * math.fmod( 4 * self.angle_between(self._mouse_rotation_start_vec, mouse_rotation_current_vec), 2 * math.pi)
+        print("ANGLE", angle)
         
-    def normalizeAngle(self, angle):
-        while angle < 0:
-            angle += 360 * 16
-        while angle > 360 * 16:
-            angle -= 360 * 16
-        return angle
+        delta = QQuaternion.fromAxisAndAngle(QVector3D.crossProduct(self._mouse_rotation_start_vec, mouse_rotation_current_vec), angle)
+        
+        delta.normalize()
+        print("DELTA", delta, self._rotation_quat_start)
+        
+        self._rotation_quat = delta * self._rotation_quat_start
+        #self._rotation_quat.normalize()
+
     
     def draw_grid(self):
         #self.add_vertex((0, 0))
@@ -254,8 +214,8 @@ class Simulator(QGLWidget):
         #return
         for i in range(10):
             dir = 1 if (i % 2) == 0 else -1
-            self.add_vertex((i/10, 0.1 * dir))
-            self.add_vertex((0.1 + i/10, 0.1 * dir))
+            self.add_vertex((i, 10 * dir))
+            self.add_vertex((i + 1, 10 * dir))
         
     def qt_mat_to_array(self, mat):
         #arr = [[0 for x in range(4)] for x in range(4)]
@@ -265,4 +225,44 @@ class Simulator(QGLWidget):
                 idx = 4 * i + j
                 arr[idx] = mat[i, j]
         return arr
+    
+    def _project_to_sphere(self, x, y):
+        r = 0.8
+        d = math.sqrt(x*x + y*y)
+        if d < r * 0.70710678118654752440:
+            # inside sphere
+            z = math.sqrt(r*r - d*d)
+        else:
+            # hyperbola
+            t = r / 1.41421356237309504880
+            z = t*t / d
+            
+        vec = QVector3D(x, y, z)
+        #vec.normalize()
+        return vec
+    
+    
+    def _find_ball_vector(self, px, py):
+        x = px / (self.width / 2) - 1
+        y = 1 - py / (self.height / 2)
         
+        if self.width < self.height:
+            x *= self.width / self.height
+        else:
+            y *= self.height / self.width
+        
+        z2 = 1 - x * x - y * y
+        if z2 > 0:
+            z = math.sqrt(z2)
+        else:
+            # clamp to zero
+            z = 0
+            
+        vec = QVector3D(x, y, z)
+        vec.normalize()
+        #print("HERE", x, y, z, vec)
+        return vec
+                
+
+    def angle_between(self, v1, v2):
+        return math.acos(QVector3D.dotProduct(v1, v2) / (v1.length() * v2.length()))
