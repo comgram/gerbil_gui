@@ -137,6 +137,7 @@ class Simulator(QGLWidget):
         # MODEL MATRIX BEGIN ==========
         mat_m = QMatrix4x4()
         mat_m.rotate(self._rotation_quat)
+        mat_m.translate(self._translation_vec)
         mat_m = self.qt_mat_to_array(mat_m)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
         glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, mat_m)
