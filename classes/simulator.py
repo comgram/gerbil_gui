@@ -5,7 +5,7 @@ import sys
 import math
 
 from PyQt5.QtCore import pyqtSignal, QPoint, Qt, QSize
-from PyQt5.QtGui import QColor, QMatrix4x4, QVector3D
+from PyQt5.QtGui import QColor, QMatrix4x4, QVector3D, QQuaternion
 from PyQt5.QtOpenGL import QGLWidget
 
 import OpenGL
@@ -135,8 +135,10 @@ class Simulator(QGLWidget):
         #glUniform1f(loc, 0.01)
         
         # MODEL MATRIX BEGIN ==========
+        qu_rot = QQuaternion.fromAxisAndAngle(0, 0, 1, self.model_rotation)
         mat_m = QMatrix4x4()
-        mat_m.rotate(self.model_rotation, QVector3D(0, 1, 0))
+        #mat_m.rotate(self.model_rotation, QVector3D(0, 1, 0))
+        mat_m.rotate(qu_rot)
         mat_m = self.qt_mat_to_array(mat_m)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
         glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, mat_m)
