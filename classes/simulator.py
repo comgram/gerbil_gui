@@ -9,8 +9,8 @@ from PyQt5.QtGui import QColor, QMatrix4x4, QVector2D, QVector3D, QQuaternion
 from PyQt5.QtOpenGL import QGLWidget
 
 import OpenGL
-OpenGL.ERROR_CHECKING = True
-OpenGL.FULL_LOGGING = True
+OpenGL.ERROR_CHECKING = False
+OpenGL.FULL_LOGGING = False
 from OpenGL.GL import *
 
 
@@ -23,11 +23,11 @@ class Simulator(QGLWidget):
         super(Simulator, self).__init__(parent)
         print(glGetString(GL_EXTENSIONS))
         
-        self.colors = [ (1,0,0,1) ]
-        self.positions = [ (0,0) ]
+        self.colors = [ (1, 0, 0, 1) ]
+        self.positions = [ (0, 0, 0) ]
         self._linecount = len(self.positions)
         
-        self.data = np.zeros(self._linecount, [("position", np.float32, 2), ("color",    np.float32, 4)])
+        self.data = np.zeros(self._linecount, [("position", np.float32, 3), ("color",    np.float32, 4)])
         self.data['color']    = self.colors
         self.data['position'] = self.positions
         
@@ -41,7 +41,7 @@ class Simulator(QGLWidget):
         self._translation_vec_start = self._translation_vec
         
         # Zoom state
-        self._zoom = 1
+        self._zoom = 0.05
         
         
         
@@ -134,13 +134,14 @@ class Simulator(QGLWidget):
         
         
     def _load_mvc_matrices(self):
-        #loc = glGetUniformLocation(self.program, "scale")
-        #glUniform1f(loc, 0.01)
+        loc = glGetUniformLocation(self.program, "zoom")
+        glUniform1f(loc, self._zoom)
         
         # MODEL MATRIX BEGIN ==========
         mat_m = QMatrix4x4()
-        mat_m.translate(self._translation_vec * self._zoom)
+        
         mat_m.rotate(self._rotation_quat)
+        mat_m.translate(self._translation_vec)
         
         mat_m = self.qt_mat_to_array(mat_m)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
@@ -149,7 +150,7 @@ class Simulator(QGLWidget):
         
         # VIEW MATRIX BEGIN ==========
         mat_v = QMatrix4x4()
-        mat_v.lookAt(QVector3D(0, 10, -10), QVector3D(0, 0, 0), QVector3D(0, 0, -1))
+        mat_v.lookAt(QVector3D(1, -10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
         mat_v = self.qt_mat_to_array(mat_v)
         loc_mat_v = glGetUniformLocation(self.program, "mat_v")
         glUniformMatrix4fv(loc_mat_v, 1, GL_TRUE, mat_v)
@@ -158,12 +159,11 @@ class Simulator(QGLWidget):
         # PROJECTION MATRIX BEGIN ==========
         aspect = self.width / self.height
         mat_p = QMatrix4x4()
-        mat_p.perspective(90, aspect, 1, 100)
+        mat_p.perspective(90, aspect, 0.1, 1000)
         mat_p = self.qt_mat_to_array(mat_p)
         loc_mat_p = glGetUniformLocation(self.program, "mat_p")
         glUniformMatrix4fv(loc_mat_p, 1, GL_TRUE, mat_p)
         # PROJECTION MATRIX END ==========
-        
 
 
     def paintGL(self):
@@ -196,18 +196,23 @@ class Simulator(QGLWidget):
             self._rotation_quat_start = self._rotation_quat
             
         elif btns & (Qt.LeftButton | Qt.MidButton):
-            self._mouse_translation_vec_current = QVector3D(x, y, 0)
+            self._mouse_translation_vec_current = QVector3D(x, -y, 0)
             self._translation_vec_start = self._translation_vec
         
     def wheelEvent(self, event):
         delta = event.angleDelta().y()
         
-        if delta < 0:
-            self._zoom = self._zoom * 1.1 if self._zoom < 1 else self._zoom
+        if delta > 0:
+            self._zoom = self._zoom * 1.1 if self._zoom < 20 else self._zoom
         else:
-            self._zoom = self._zoom * 0.9 if self._zoom > 0.1 else self._zoom
+            self._zoom = self._zoom * 0.9 if self._zoom > 0.01 else self._zoom
         
         print(self._zoom)
+        self._translation_vec = QVector3D(
+            self._translation_vec[0],
+            self._translation_vec[1],
+            self._translation_vec[2] + delta / 10
+            )
         self.draw_asap = True
             
             
@@ -234,7 +239,7 @@ class Simulator(QGLWidget):
             self._rotation_quat.normalize()
             
         elif btns & (Qt.LeftButton | Qt.MidButton):
-            self._translation_vec = self._translation_vec_start + (QVector3D(x, y, 0) - self._mouse_translation_vec_current) / 50
+            self._translation_vec = self._translation_vec_start + (QVector3D(x, -y, 0) - self._mouse_translation_vec_current) / 10
             #self._translation_vec
         
         self.draw_asap = True
@@ -259,28 +264,36 @@ class Simulator(QGLWidget):
         self.load_geometry_asap = True
         
         
-    def add_vertex(self, tuple):
+    def add_vertex(self, tuple, color=(1, 1, 1, 1)):
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, None, GL_DYNAMIC_DRAW) #https://www.opengl.org/wiki/Buffer_Object_Streaming#Buffer_update
         
-        tuple = (tuple[0], tuple[1])
+        tuple = (tuple[0], tuple[1], tuple[2])
         self.positions.append(tuple)
-        self.colors.append((1, 1, 1, 1))
+        self.colors.append(color)
         self._linecount = len(self.positions)
         
-        self.data = np.zeros(self._linecount, [("position", np.float32, 2), ("color",    np.float32, 4)])
+        self.data = np.zeros(self._linecount, [("position", np.float32, 3), ("color",    np.float32, 4)])
         self.data['color']    = self.colors
         self.data['position'] = self.positions
         
         self.load_geometry_asap = True
     
     def draw_grid(self):
+        pass
         #self.add_vertex((0, 0))
         #self.add_vertex((100, 100))
         #return
-        for i in range(-10,10):
-            dir = 1 if (i % 2) == 0 else -1
-            self.add_vertex((i, 10 * dir))
-            self.add_vertex((i + 1, 10 * dir))
+        self.add_vertex((10, 0, 0), (1, 0, 0, 1))
+        self.add_vertex((0, 0, 0),   (1, 0, 0, 1))
+        self.add_vertex((0, 10, 0), (0, 1, 0, 1))
+        self.add_vertex((0, 0, 0),   (0, 1, 0, 1))
+        self.add_vertex((0, 0, 10), (0, 0, 1, 1))
+        self.add_vertex((0, 0, 0),   (0, 0, 1, 1))
+        
+        for i in range(-100, 100, 10):
+            dir = 1 if (i % 20) == 0 else -1
+            self.add_vertex((5+i, 100 * dir + 5, 0), (0.4, 0.4, 0.4, 1))
+            self.add_vertex((5+i + 10, 100 * dir + 5, 0), (0.4, 0.4, 0.4, 1))
             
         
         
@@ -310,8 +323,8 @@ class Simulator(QGLWidget):
     
     
     def _find_ball_vector(self, px, py):
-        x = 1- px / (self.width / 2)
-        y = 1 - py / (self.height / 2)
+        x = px / (self.width / 2) - 1
+        y = 1-py / (self.height / 2)
         
         #if self.width < self.height:
             #x *= self.width / self.height

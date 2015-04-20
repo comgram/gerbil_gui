@@ -348,7 +348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # simulator update
             if self._sim_enabled == True:
                 self.simulator.mpos = self.mpos
-                self.simulator.add_vertex((wx, wy))
+                self.simulator.add_vertex((wx, wy, wz))
             
 
             if self.state == "Idle":
