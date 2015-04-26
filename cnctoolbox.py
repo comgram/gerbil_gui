@@ -8,9 +8,11 @@ import logging
 import sys
 import time
 
+sys.path.append("..")
+
 from classes.session import Session
 from classes.svg import SVG
-from classes.grbl import GRBL
+from gerbil.gerbil import Gerbil
 import compiler.gcode as COMPILE
 
 from lib import stipple
@@ -218,7 +220,7 @@ def main():
         p2l.do(args.in_file, args.out_file)
         
     elif subcmd == "stream":
-        grbl = GRBL("grbl1", args.dev_node)
+        grbl = Gerbil("grbl1", args.dev_node)
         grbl.cnect()
         time.sleep(1)
         src = "out.ngc"

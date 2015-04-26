@@ -7,7 +7,7 @@ import collections
 import time
 
 from classes.highlighter import Highlighter
-from classes.grbl import GRBL
+from gerbil.gerbil import Gerbil
 from classes.simulator import Simulator
 from classes.jogwidget import JogWidget
 from classes.commandlineedit import CommandLineEdit
@@ -59,7 +59,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ## LOGGING SETUP END ------
         
         # GRBL SETUP BEGIN -----
-        self.grbl = GRBL("mygrbl", path)
+        self.grbl = Gerbil("mygrbl", path)
         self.grbl.poll_interval = 0.1
         self.grbl.set_callback(self.on_grbl_event)
         self.grbl.set_target("serialport")
