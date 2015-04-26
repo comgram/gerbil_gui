@@ -59,8 +59,10 @@ class Simulator(QGLWidget):
         ## TIMER SETUP BEGIN ----------
         self.timer = QTimer()
         self.timer.timeout.connect(self._timer_timeout)
-        self.timer.start(10)
+        
         ## TIMER SETUP END ----------
+        
+        self.program = None
 
 
     def minimumSizeHint(self):
@@ -111,6 +113,7 @@ class Simulator(QGLWidget):
         glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
         glLineWidth (1)
         
+        self.timer.start(10)
         
 
         

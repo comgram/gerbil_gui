@@ -69,6 +69,7 @@ def get_bbox(gcode):
 def draw_bbox(gcode, move_z=False):
     result = "F1000\n"
     result = "G0X0Y0\n"
+    result += "G4P1\n"
     result += "M0\n"
     
     bbox = get_bbox(gcode)
@@ -87,15 +88,15 @@ def draw_bbox(gcode, move_z=False):
     result += "M0\n"
     
     result += "G0Y{:0.1f}\n".format(ymax)
-    result += "G4P1\n"
+    #result += "G4P1\n"
     result += "M0\n"
     
     result += "G0X{:0.1f}\n".format(xmax)
-    result += "G4P1\n"
+    #result += "G4P1\n"
     result += "M0\n"
     
     result += "G0Y{:0.1f}\n".format(ymin)
-    result += "G4P1\n"
+    #result += "G4P1\n"
     result += "M0\n"
     
     result += "G0X{:0.1f}\n".format(xmin)

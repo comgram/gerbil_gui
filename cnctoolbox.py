@@ -8,12 +8,12 @@ import logging
 import sys
 import time
 
-sys.path.append("..")
-
 from classes.session import Session
 from classes.svg import SVG
-from gerbil.gerbil import Gerbil
 import compiler.gcode as COMPILE
+
+sys.path.append("gerbil")
+from gerbil.gerbil import Gerbil
 
 from lib import stipple
 from lib import pixel2laser as p2l
@@ -36,7 +36,8 @@ def main():
     #log_format = '%(asctime)s %(levelname)s %(message)s'
     #logging.basicConfig(level=logging.INFO, format=log_format)
     logger = logging.getLogger('cnctoolbox')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(5)
+    
     logger_fh = logging.FileHandler('cnctoolbox.log')
     logger_fh.setLevel(logging.DEBUG)
     # This is the console logger, it hass a higher level than the

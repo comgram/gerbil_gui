@@ -22,7 +22,7 @@ from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
 from lib import gcodetools
 from lib import utility
 
-module_logger = logging.getLogger('cnctoolbox.window')
+#module_logger = logging.getLogger('cnctoolbox.window')
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, path):
@@ -76,18 +76,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         # STATE VARIABLES BEGIN -----
         self.changed_state = False
-        self._current_line = 0
+        self._current_grbl_line_number = 0
         self._rx_buffer_fill = 0
         self._rx_buffer_fill_last = 0
         self._progress_percent = 0
         self._progress_percent_last = 0
         # STATE VARIABLES END -----
-        
-        ## SIMULATOR SETUP BEGIN -------------
-        self._sim_enabled = True
-        self.simulator = Simulator()
-        self.gridLayout_glwidget_container.addWidget(self.simulator)
-        ## SIMULATOR SETUP END -------------
         
         
         ## JOG WIDGET SETUP BEGIN -------------
@@ -151,6 +145,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget_logoutput.currentItemChanged.connect(self._on_logoutput_current_item_changed)
         self.checkBox_sim_enable.stateChanged.connect(self._sim_enabled_changed)
         self.pushButton_sim_wipe.clicked.connect(self._sim_wipe)
+        self.spinBox_start_line.valueChanged.connect(self._current_grbl_line_number_changed)
         ## SIGNALS AND SLOTS END-------
         
         
@@ -180,6 +175,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
         ## CS SETUP END ---------
         
+        
+        ## SIMULATOR SETUP BEGIN -------------
+        self._sim_enabled = True
+        self.simulator = Simulator()
+        self.gridLayout_glwidget_container.addWidget(self.simulator)
+        ## SIMULATOR SETUP END -------------
+        
+        self._add_to_logoutput("G0 X0 Y0")
+        self._add_to_logoutput("=bbox()")
         
         ## TEST BEGIN
         self.verticalSlider_model_rotate.sliderMoved.connect(self._slider_model_rotate_moved)
@@ -258,10 +262,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_processed_command":
             self._add_to_loginput("<span style='color: green'>Line {}: {}</span>".format(data[0], data[1]))
-            self._current_line = int(data[0])
+            self._current_grbl_line_number = int(data[0]) + 1
             
         elif event == "on_line_number_change":
-            self._current_line = int(data[0])
+            self._current_grbl_line_number = int(data[0]) + 1
             
         elif event == "on_error":
             self._add_to_loginput("<span style='color: red'><b>{}</b></span>".format(data[0]))
@@ -277,13 +281,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<i>" + data[0] + "</i>")
             
         elif event == "on_loaded":
-            what = data[0]
-            if what == "string":
-                msg = "{:d} Lines in buffer".format(data[1])
-            else:
-                msg = "{:d} Lines from {}".format(data[1], os.path.basename(data[2]))
-                
-            self.label_sourceinfo.setText(msg)
+            #what = data[0]
+            msg = "{:d} Lines".format(data[1])
+            
+            self._current_grbl_buffer_size = int(data[1])
+            self.label_bufsize.setText(msg)
+            
+            #enabled = self._current_grbl_buffer_size == 0
+            #self.lineEdit_cmdline.setEnabled(enabled)
+            #self.listWidget_logoutput.setEnabled(enabled)
             
         elif event == "on_rx_buffer_percentage":
             self._rx_buffer_fill = data[0]
@@ -304,6 +310,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_boot":
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
+            self.grbl.poll_start()
             
         elif event == "on_disconnected":
             self.action_grbl_disconnect.setEnabled(False)
@@ -323,9 +330,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
     
     def refresh(self):
-        self.label_current_line.setText(str(self._current_line))
-        
-        #self.simulator.updateGL()
+        self.label_current_line_number.setText(str(self._current_grbl_line_number))
         
         if self.changed_state:
             mx = self.mpos[0]
@@ -354,12 +359,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.state == "Idle":
                 color = "green"
                 self.jogWidget.onIdle()
+                self.spinBox_start_line.setEnabled(True)
+                self.spinBox_start_line.setValue(self._current_grbl_line_number)
+                
+                # Get GCODE Parser state exc_info
+                #self.grbl.send_immediately("$G")
+                
             elif self.state == "Run":
                 color = "blue"
+                self.spinBox_start_line.setEnabled(False)
+                
             elif self.state == "Check":
                 color = "orange"
+                
             elif self.state == "Hold":
                 color = "yellow"
+                
             elif self.state == "Alarm":
                 color = "red"
                 
@@ -408,6 +423,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     
     # UI SLOTS
+    
+    def _current_grbl_line_number_changed(self, nr):
+        self.grbl.set_current_line_number(int(nr) - 1)
     
     def execute_script_clicked(self,item):
         code = self.scriptTextEdit.toPlainText()
@@ -522,7 +540,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def stream_start(self):
         line_nr = self.spinBox_start_line.value()
-        self.grbl.stream_start(line_nr)
+        self.grbl.stream_start(line_nr - 1)
     
     
     def stream_stop(self):
@@ -531,7 +549,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def stream_play(self):
         self.grbl.stream_start()
-        self.label_current_line.setText("0")
         
         
     def check(self):
@@ -620,7 +637,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 print("Exception in user code:")
                 traceback.print_exc(file=sys.stdout)
         else:
-            self.grbl.send_with_queue(cmd)
+            self.grbl.send_immediately(cmd)
 
     def set_cs(self, nr):
         """
