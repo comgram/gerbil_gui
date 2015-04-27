@@ -56,6 +56,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         self.label_loginput = QLabel()
         self.label_loginput.setTextFormat(Qt.RichText)
+        self.label_loginput.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.scrollArea_loginput.setWidget(self.label_loginput)
         self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
         self.label_loginput.setStyleSheet("font: 9pt")
