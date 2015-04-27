@@ -204,6 +204,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ## JOG WIDGET SETUP END -------------
         
         
+    def closeEvent(self, event):
+        print("GRACEFUL EXIT")
+        self.grbl.disconnect()
+        event.accept()
+        #event.ignore()
+        
     def modifyUi(self):
         self.pushButton_homing.setStyleSheet("background-color: rgb(102,217,239);")
         self.pushButton_resume.setStyleSheet("background-color: rgb(166,226,46);")
