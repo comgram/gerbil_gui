@@ -13,8 +13,12 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    simulatordialog.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    simulatorwindow.h \
+    simulatordialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    simulatordialog.ui

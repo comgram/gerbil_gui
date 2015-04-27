@@ -604,35 +604,11 @@
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-         <number>6</number>
+         <number>1</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
         </property>
-        <widget class="QWidget" name="tab_simulation">
-         <attribute name="title">
-          <string>Sim</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
-           <widget class="QPushButton" name="pushButton_sim_wipe">
-            <property name="text">
-             <string>Wipe</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QCheckBox" name="checkBox_sim_enable">
-            <property name="text">
-             <string>Enable</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="2">
-           <layout class="QGridLayout" name="gridLayout_glwidget_container"/>
-          </item>
-         </layout>
-        </widget>
         <widget class="QWidget" name="tab_conversation">
          <attribute name="title">
           <string>Conversation</string>
@@ -913,7 +889,7 @@
           <item row="0" column="0">
            <widget class="QTableWidget" name="tableWidget_variables">
             <property name="rowCount">
-             <number>2</number>
+             <number>10</number>
             </property>
             <property name="columnCount">
              <number>2</number>
@@ -924,6 +900,14 @@
             <attribute name="verticalHeaderVisible">
              <bool>false</bool>
             </attribute>
+            <row/>
+            <row/>
+            <row/>
+            <row/>
+            <row/>
+            <row/>
+            <row/>
+            <row/>
             <row/>
             <row/>
             <column/>

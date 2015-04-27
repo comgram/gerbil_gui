@@ -9,7 +9,6 @@ import re
 
 from classes.highlighter import Highlighter
 from gerbil.gerbil import Gerbil
-from classes.simulator import Simulator
 from classes.jogwidget import JogWidget
 from classes.commandlineedit import CommandLineEdit
 import compiler.gcode as COMPILER
@@ -17,13 +16,14 @@ import compiler.gcode as COMPILER
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
 from PyQt5.QtGui import QColor,QPalette
-from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction, QTableWidgetItem
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction, QTableWidgetItem, QDialog
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
+from classes.simulatordialog import SimulatorDialog
 from lib import gcodetools
 from lib import utility
 
-#module_logger = logging.getLogger('cnctoolbox.window')
+        
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, path):
@@ -35,7 +35,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl = Gerbil("mygrbl", path)
         
         self.setupUi(self)
-        
         self.modifyUi()
         self.setupScripting()
         
@@ -129,8 +128,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
         self.listWidget_logoutput.itemClicked.connect(self._on_logoutput_item_clicked)
         self.listWidget_logoutput.currentItemChanged.connect(self._on_logoutput_current_item_changed)
-        self.checkBox_sim_enable.stateChanged.connect(self._sim_enabled_changed)
-        self.pushButton_sim_wipe.clicked.connect(self._sim_wipe)
         self.spinBox_start_line.valueChanged.connect(self._current_grbl_line_number_changed)
         self.pushButton_settings_download_grbl.clicked.connect(self.grbl.request_settings)
         self.pushButton_settings_save_file.clicked.connect(self.settings_save_into_file)
@@ -165,12 +162,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
         ## CS SETUP END ---------
         
-        
-        ## SIMULATOR SETUP BEGIN -------------
-        self._sim_enabled = True
-        self.simulator = Simulator()
-        self.gridLayout_glwidget_container.addWidget(self.simulator)
-        ## SIMULATOR SETUP END -------------
+        self.sim_dialog = SimulatorDialog(self)
+        self.sim_dialog.show()
+
         
         self._add_to_logoutput("G0 X0 Y0")
         self._add_to_logoutput("=bbox()")
@@ -205,10 +199,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def closeEvent(self, event):
+        """
+        Overloaded Qt function
+        """
         print("GRACEFUL EXIT")
         self.grbl.disconnect()
         event.accept()
         #event.ignore()
+        
         
     def modifyUi(self):
         self.pushButton_homing.setStyleSheet("background-color: rgb(102,217,239);")
@@ -353,6 +351,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("JOB COMPLETED")
             if self.on_job_completed_callback:
                 self.on_job_completed_callback()
+                
+        elif event == "on_var_set":
+            self.tableWidget_variables
         
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
@@ -380,9 +381,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.jogWidget.wz_current = wz
             
             # simulator update
-            if self._sim_enabled == True:
-                self.simulator.mpos = self.mpos
-                self.simulator.add_vertex((wx, wy, wz))
+            if self.sim_dialog._sim_enabled == True:
+                self.sim_dialog.simulator.mpos = self.mpos
+                self.sim_dialog.simulator.add_vertex((wx, wy, wz))
             
             if self.state == "Idle":
                 color = "green"
@@ -682,14 +683,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send_immediately("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
 
     
-    def _sim_enabled_changed(self, val):
-        val = False if val == 0 else True
-        self._sim_enabled = val
-        
-        
-    def _sim_wipe(self):
-        self.simulator.wipe()
-        #self.simulator.paintGL()
+
         
         
 
@@ -795,6 +789,3 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_clearz.setDisabled(False)
         self.pushButton_clearxy.setDisabled(False)
         self.grbl.homing()
-        
-    def _slider_model_rotate_moved(self, val):
-        self.simulator.model_rotation = val
