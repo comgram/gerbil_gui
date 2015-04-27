@@ -5,6 +5,7 @@ import numpy
 import logging
 import collections
 import time
+import re
 
 from classes.highlighter import Highlighter
 from gerbil.gerbil import Gerbil
@@ -16,7 +17,7 @@ import compiler.gcode as COMPILER
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
 from PyQt5.QtGui import QColor,QPalette
-from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction, QTableWidgetItem
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
 from lib import gcodetools
@@ -30,6 +31,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.logger = logging.getLogger('cnctoolbox.window')
         
         _logbuffer_size = 200
+        
+        self.grbl = Gerbil("mygrbl", path)
         
         self.setupUi(self)
         
@@ -56,23 +59,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.scrollArea_loginput.setWidget(self.label_loginput)
         self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
         self.label_loginput.setStyleSheet("font: 9pt")
-        ## LOGGING SETUP END ------
+        ## LOGGING SETUP END ------       
         
-        # GRBL SETUP BEGIN -----
-        self.grbl = Gerbil("mygrbl", path)
-        self.grbl.poll_interval = 0.1
-        self.grbl.set_callback(self.on_grbl_event)
-        self.grbl.set_target("serialport")
-        self.comboBox_target.insertItem(0, "serialport")
-        self.comboBox_target.insertItem(1, "simulator")
-        self.comboBox_target.insertItem(2, "file")
-        # GRBL SETUP END -----
-        
-        
-        # COMPILER SETUP BEGIN -----
-        COMPILER.receiver(self.grbl)
-        COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
-        # COMPILER SETUP END -----
         
         # STATE VARIABLES BEGIN -----
         self.changed_state = False
@@ -84,10 +72,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # STATE VARIABLES END -----
         
         
-        ## JOG WIDGET SETUP BEGIN -------------
-        self.jogWidget = JogWidget(self, self.grbl.send_with_queue)
-        self.gridLayout_jog_container.addWidget(self.jogWidget)
-        ## JOG WIDGET SETUP END -------------
+
 
 
         ## MENU BAR SETUP BEGIN ----------
@@ -146,6 +131,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.checkBox_sim_enable.stateChanged.connect(self._sim_enabled_changed)
         self.pushButton_sim_wipe.clicked.connect(self._sim_wipe)
         self.spinBox_start_line.valueChanged.connect(self._current_grbl_line_number_changed)
+        self.pushButton_settings_download_grbl.clicked.connect(self.grbl.request_settings)
+        self.pushButton_settings_save_file.clicked.connect(self.settings_save_into_file)
+        self.pushButton_settings_load_file.clicked.connect(self.settings_load_from_file)
+        self.pushButton_settings_upload_grbl.clicked.connect(self.settings_upload_to_grbl)
         ## SIGNALS AND SLOTS END-------
         
         
@@ -185,9 +174,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._add_to_logoutput("G0 X0 Y0")
         self._add_to_logoutput("=bbox()")
         
-        ## TEST BEGIN
-        self.verticalSlider_model_rotate.sliderMoved.connect(self._slider_model_rotate_moved)
-        ## TEST END
+        self.on_job_completed_callback = None
+        
+        # GRBL SETUP BEGIN -----
+        self.grbl.poll_interval = 0.1
+        self.grbl.set_callback(self.on_grbl_event)
+        self.grbl.set_target("serialport")
+        self.grbl.cnect()
+        self.comboBox_target.insertItem(0, "serialport")
+        self.comboBox_target.insertItem(1, "simulator")
+        self.comboBox_target.insertItem(2, "file")
+        # GRBL SETUP END -----
+        
+        # COMPILER SETUP BEGIN -----
+        COMPILER.receiver(self.grbl)
+        COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
+        # COMPILER SETUP END -----
+        
+        self.tableWidget_settings.setColumnWidth(2, 300)
+        for row in range(0, 32):
+            self.tableWidget_settings.setRowHeight(row, 15)
+            
+        
+        
+        ## JOG WIDGET SETUP BEGIN -------------
+        self.jogWidget = JogWidget(self, self.grbl.send_with_queue)
+        self.gridLayout_jog_container.addWidget(self.jogWidget)
+        ## JOG WIDGET SETUP END -------------
         
         
     def modifyUi(self):
@@ -280,7 +293,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_log":
             self._add_to_loginput("<i>" + data[0] + "</i>")
             
-        elif event == "on_loaded":
+        elif event == "on_bufsize_change":
             #what = data[0]
             msg = "{:d} Lines".format(data[1])
             
@@ -324,6 +337,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.label_state.setText("disconnected")
             self._add_to_loginput("<i>Successfully disconnected!</i>")
             self._add_to_loginput("")
+            
+        elif event == "on_settings_downloaded":
+            settings = self.grbl.get_settings()
+            self.dict_into_settings_table(settings)
+        
+        elif event == "on_job_completed":
+            self._add_to_loginput("JOB COMPLETED")
+            if self.on_job_completed_callback:
+                self.on_job_completed_callback()
         
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
@@ -359,7 +381,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 color = "green"
                 self.jogWidget.onIdle()
                 self.grbl.request_gcode_parser_state()
-                print("FILL", self._rx_buffer_fill)
                 if self._rx_buffer_fill == 0:
                     self.listWidget_logoutput.setEnabled(True)
                     self.lineEdit_cmdline.setEnabled(True)
@@ -427,6 +448,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     
     # UI SLOTS
+    
+    def settings_save_into_file(self):
+        filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "")
+        filepath = filename_tuple[0]
+       
+        settings_string = self.settings_table_to_str()
+        with open(filepath, 'w') as f:
+            f.write(settings_string)
+            
+            
+    def settings_load_from_file(self):
+        filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "")
+        filepath = filename_tuple[0]
+        
+        settings = {}
+        with open(filepath, 'r') as f:
+            for line in f:
+                m = re.match("\$(.*)=(.*) \((.*)\)", line)
+                if m:
+                    key = int(m.group(1))
+                    val = m.group(2)
+                    comment = m.group(3)
+                    settings[key] = {
+                        "val" : val,
+                        "cmt" : comment
+                        }
+                    
+        self.dict_into_settings_table(settings)
+            
+        
+
+    
+    def settings_upload_to_grbl(self):
+        settings_string = self.settings_table_to_str()
+        was_incremental = self.checkBox_incremental.isChecked()
+        
+        self._add_to_loginput("<i>Stashing current buffer</i>")
+        self.grbl.buffer_stash()
+        self.grbl.set_incremental_streaming(True) # need this faster
+        self.checkBox_incremental.setChecked(True)
+        
+        def settings_upload_complete():
+            self.checkBox_incremental.setChecked(was_incremental)
+            self._add_to_loginput("<i>Successfully uploaded settings!</i>")
+            self.on_job_completed_callback = None
+            self._add_to_loginput("<i>Unstashing previous buffer</i>")
+            self.grbl.buffer_unstash()
+        
+        self.on_job_completed_callback = settings_upload_complete
+        self._add_to_loginput("<i>Sending settings...</i>")
+        self.grbl.send_with_queue(settings_string)
+        
     
     def _current_grbl_line_number_changed(self, nr):
         self.grbl.set_current_line_number(int(nr) - 1)
@@ -614,6 +687,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     ## UTILITY FUNCTIONS
+    
+    def dict_into_settings_table(self, d):
+        self.tableWidget_settings.clear()
+        row = 0
+        for key, val in sorted(d.items()):
+            cell_a = QTableWidgetItem("$" + str(key))
+            cell_b = QTableWidgetItem(val["val"])
+            cell_c = QTableWidgetItem(val["cmt"])
+            self.tableWidget_settings.setItem(row, 0, cell_a)
+            self.tableWidget_settings.setItem(row, 1, cell_b)
+            self.tableWidget_settings.setItem(row, 2, cell_c)
+            self.tableWidget_settings.setRowHeight(row, 15)
+            row += 1
+    
+    def settings_table_to_str(self):
+        row_count = self.tableWidget_settings.rowCount()
+        settings_string = ""
+        for row in range(0, row_count):
+            key = self.tableWidget_settings.item(row, 0).text()
+            key = "$" + key.replace("$", "").strip()
+            val = self.tableWidget_settings.item(row, 1).text().strip()
+            cmt = self.tableWidget_settings.item(row, 2).text().strip()
+            settings_string += key + "=" + val + " (" + cmt + ")\n"
+        return settings_string
     
     def _exec_cmd(self, cmd):
         cmd = cmd.strip()
