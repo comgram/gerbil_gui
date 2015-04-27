@@ -355,19 +355,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.simulator.mpos = self.mpos
                 self.simulator.add_vertex((wx, wy, wz))
             
-
             if self.state == "Idle":
                 color = "green"
                 self.jogWidget.onIdle()
-                self.spinBox_start_line.setEnabled(True)
-                self.spinBox_start_line.setValue(self._current_grbl_line_number)
-                
-                # Get GCODE Parser state exc_info
-                #self.grbl.send_immediately("$G")
+                self.grbl.request_gcode_parser_state()
+                print("FILL", self._rx_buffer_fill)
+                if self._rx_buffer_fill == 0:
+                    self.listWidget_logoutput.setEnabled(True)
+                    self.lineEdit_cmdline.setEnabled(True)
+                    self.spinBox_start_line.setValue(self._current_grbl_line_number)
+                    self.spinBox_start_line.setEnabled(True)
                 
             elif self.state == "Run":
                 color = "blue"
                 self.spinBox_start_line.setEnabled(False)
+                self.lineEdit_cmdline.setEnabled(False)
+                self.listWidget_logoutput.setEnabled(False)
                 
             elif self.state == "Check":
                 color = "orange"
@@ -389,6 +392,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self._rx_buffer_fill_last != self._rx_buffer_fill:
             self.progressBar_buffer.setValue(self._rx_buffer_fill)
             self._rx_buffer_fill_last = self._rx_buffer_fill
+            
             
         if self._progress_percent_last != self._progress_percent:
             self.progressBar_job.setValue(self._progress_percent)
@@ -646,7 +650,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._current_cs = nr
         self.label_current_cs.setText(self._cs_names[self._current_cs])
         self.comboBox_coordinate_systems.setCurrentIndex(nr - 1)
-        self._cs_names[self._current_cs]
+        #self._cs_names[self._current_cs]
         
 
     def bbox(self, move_z=False):
