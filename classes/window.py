@@ -133,6 +133,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_settings_save_file.clicked.connect(self.settings_save_into_file)
         self.pushButton_settings_load_file.clicked.connect(self.settings_load_from_file)
         self.pushButton_settings_upload_grbl.clicked.connect(self.settings_upload_to_grbl)
+        self.tableWidget_variables.cellChanged.connect(self._variables_edited)
         ## SIGNALS AND SLOTS END-------
         
         
@@ -204,8 +205,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         print("GRACEFUL EXIT")
         self.grbl.disconnect()
-        event.accept()
+        self.sim_dialog.close()
         #event.ignore()
+        event.accept()
         
         
     def modifyUi(self):
@@ -315,7 +317,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_progress_percent":
             self._progress_percent = data[0]
             
-        elif event == "on_feed_change":
+        elif event == "on_preprocessor_feed_change":
             feed = data[0]
             if feed == 0:
                 self.lcdNumber_feed_current.display("---")
@@ -352,8 +354,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.on_job_completed_callback:
                 self.on_job_completed_callback()
                 
-        elif event == "on_var_set":
-            self.tableWidget_variables
+        elif event == "on_vars_change":
+            keys = data[0]
+            self.var_keys_into_var_table(keys)
         
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
@@ -552,6 +555,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.grbl.load_file(filename_tuple[0])
+        
     
     
     def xminus(self):
@@ -682,12 +686,52 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _current_cs_setzero(self):
         self.grbl.send_immediately("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
 
-    
+    def _variables_edited(self, row, col):
+        
+        #self.tableWidget_variables
+        d = self._var_table_to_dict()
+        print("vars edited", d)
+        self.grbl.preprocessor.set_vars(d)
 
         
         
 
     ## UTILITY FUNCTIONS
+    
+    def _var_table_to_dict(self):
+        row_count = self.tableWidget_variables.rowCount()
+        vars = {}
+        for row in range(0, row_count):
+            cell_a = self.tableWidget_variables.item(row, 0)
+            
+            if cell_a == None:
+                continue 
+            
+            key = cell_a.text().strip()
+            key = key.replace("#", "")
+            
+            cell_b = self.tableWidget_variables.item(row, 1)
+            if cell_b:
+                val = cell_b.text().strip()
+                if val == "":
+                    val = None
+            else:
+                val = None
+                
+            vars[key] = val
+            
+        return vars
+        
+        
+    
+    def var_keys_into_var_table(self, keys):
+        self.tableWidget_variables.clear()
+        row = 0
+        for key in sorted(keys):
+            cell_a = QTableWidgetItem("#" + key)
+            self.tableWidget_variables.setItem(row, 0, cell_a)
+            row += 1
+    
     
     def dict_into_settings_table(self, d):
         self.tableWidget_settings.clear()
