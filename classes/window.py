@@ -101,9 +101,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_target.currentIndexChanged.connect(self._target_selected)
         self.pushButton_homing.clicked.connect(self.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
-        self.pushButton_stream_start.clicked.connect(self.stream_start)
-        self.pushButton_stream_stop.clicked.connect(self.stream_stop)
-        self.pushButton_stream_clear.clicked.connect(self.grbl.stream_clear)
+        self.pushButton_job_run.clicked.connect(self.job_run)
+        self.pushButton_job_halt.clicked.connect(self.job_halt)
+        self.pushButton_job_new.clicked.connect(self.grbl.job_new)
         self.pushButton_show_buffer.clicked.connect(self._show_buffer)
         self.pushButton_hold.clicked.connect(self.grbl.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
@@ -623,17 +623,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.abort()
         
         
-    def stream_start(self):
+    def job_run(self):
         line_nr = self.spinBox_start_line.value()
-        self.grbl.stream_start(line_nr - 1)
+        self.grbl.job_run(line_nr - 1)
     
     
-    def stream_stop(self):
-        self.grbl.stream_stop()
+    def job_halt(self):
+        self.grbl.job_halt()
         
     
     def stream_play(self):
-        self.grbl.stream_start()
+        self.grbl.job_run()
         
         
     def check(self):
@@ -757,7 +757,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         movements = gcodetools.draw_bbox(was_buf, move_z)
         
-        self.grbl.stream_clear()
+        self.grbl.job_new()
         
         self.grbl.set_incremental_streaming(True)
         self.checkBox_incremental.setChecked(True)
@@ -767,7 +767,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.grbl.set_incremental_streaming(was_incremental)
         #self.checkBox_incremental.setChecked(was_incremental)
         
-        #self.grbl.stream_clear()
+        #self.grbl.job_new()
         #self.grbl.write("\n".join(was_buf))
         
     def _render_logbuffer(self):
