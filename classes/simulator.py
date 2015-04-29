@@ -23,13 +23,21 @@ class Simulator(QGLWidget):
         super(Simulator, self).__init__(parent)
         print(glGetString(GL_EXTENSIONS))
         
-        self.colors = [ (1, 0, 0, 1) ]
-        self.positions = [ (0, 0, 0) ]
-        self._linecount = len(self.positions)
+        self.colors1 = [ (1, 0, 0, 1), (0, 1, 0, 1) ]
+        self.positions1 = [ (0, 0, 0), (10, 0, 0) ]
         
-        self.data = np.zeros(self._linecount, [("position", np.float32, 3), ("color",    np.float32, 4)])
-        self.data['color']    = self.colors
-        self.data['position'] = self.positions
+        self.colors2 = [ (0, 0, 1, 1), (0, 1, 1, 1) ]
+        self.positions2 = [ (5, 5, 5), (30, 30, 30) ]
+        #self._linecount = len(self.positions)
+        
+        
+        self.obj1 = np.zeros(2, [("position", np.float32, 3), ("color",    np.float32, 4)])
+        self.obj1['color']    = self.colors1
+        self.obj1['position'] = self.positions1
+        
+        self.obj2 = np.zeros(2, [("position", np.float32, 3), ("color",    np.float32, 4)])
+        self.obj2['color']    = self.colors2
+        self.obj2['position'] = self.positions2
         
         # Rotation state
         self._mouse_rotation_start_vec = QVector3D()
@@ -42,6 +50,8 @@ class Simulator(QGLWidget):
         
         # Zoom state
         self._zoom = 0.05
+        
+        self.buffer_labels = [None] * 2
         
         
         
@@ -103,37 +113,69 @@ class Simulator(QGLWidget):
         glUseProgram(self.program)
         
         # Request a buffer_label slot from GPU
-        self.buffer_label = glGenBuffers(1)
+        self.buffer_label1 = glGenBuffers(1)
+        self.buffer_label2 = glGenBuffers(1)
+        self.vao1 = glGenVertexArrays(1)
+        self.vao2 = glGenVertexArrays(1)
         
-        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
+        
 
-        glEnable (GL_LINE_SMOOTH)
-        glEnable (GL_BLEND)
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
-        glLineWidth (1)
+        #glEnable (GL_LINE_SMOOTH)
+        #glEnable (GL_BLEND)
+        #glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        #glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+        #glLineWidth (1)
+        
+        self._load_geometry1()
+        self._load_geometry2()
         
         self.timer.start(10)
         
+        
 
         
         
-    def _load_geometry(self):
-        glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, self.data, GL_DYNAMIC_DRAW)
+    def _load_geometry1(self):
+        glBindVertexArray(self.vao1)
         
-        stride = self.data.strides[0]
+        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label1)
+        glBufferData(GL_ARRAY_BUFFER, self.obj1.nbytes, self.obj1, GL_DYNAMIC_DRAW)
+        
+        stride = self.obj1.strides[0]
         
         offset = ctypes.c_void_p(0)
         loc = glGetAttribLocation(self.program, "position")
         glEnableVertexAttribArray(loc)
-        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
         glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
 
-        offset = ctypes.c_void_p(self.data.dtype["position"].itemsize)
+        offset = ctypes.c_void_p(self.obj1.dtype["position"].itemsize)
         loc = glGetAttribLocation(self.program, "color")
         glEnableVertexAttribArray(loc)
-        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label)
         glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
+        
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindVertexArray(0)
+        
+    def _load_geometry2(self):
+        glBindVertexArray(self.vao2)
+        
+        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label2)
+        glBufferData(GL_ARRAY_BUFFER, self.obj2.nbytes, self.obj2, GL_DYNAMIC_DRAW)
+        
+        stride = self.obj2.strides[0]
+        
+        offset = ctypes.c_void_p(0)
+        loc = glGetAttribLocation(self.program, "position")
+        glEnableVertexAttribArray(loc)
+        glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
+
+        offset = ctypes.c_void_p(self.obj2.dtype["position"].itemsize)
+        loc = glGetAttribLocation(self.program, "color")
+        glEnableVertexAttribArray(loc)
+        glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
+        
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindVertexArray(0)
         
         
     def _load_mvc_matrices(self):
@@ -173,11 +215,22 @@ class Simulator(QGLWidget):
         """
         Auto-called by updateGL
         """
-        #print("paintGL")
+
+        print("paintGL")
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        #self._load_geometry()
+        
         self._load_mvc_matrices()
-        glDrawArrays(GL_LINE_STRIP, 0, self._linecount)
+        
+        glBindVertexArray(self.vao1)
+        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label1)
+        glDrawArrays(GL_LINE_STRIP, 0, 2)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        
+        glBindVertexArray(self.vao2)
+        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label2)
+        glDrawArrays(GL_LINE_STRIP, 0, 2)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        
         # swapping buffer automatically by Qt
 
 
@@ -252,34 +305,37 @@ class Simulator(QGLWidget):
         """
         called regularly from timer
         """
-        if self.load_geometry_asap:
-            self._load_geometry()
-            self.load_geometry_asap = False
-            self.draw_asap = True
+        #if self.load_geometry_asap:
+            #self._load_geometry()
+            #self.load_geometry_asap = False
+            #self.draw_asap = True
             
         if self.draw_asap:
             self.updateGL()
             self.draw_asap = False
         
     def wipe(self):
-        self.colors = []
-        self.positions = []
+        self.colors = [ (1, 0, 0, 1) ]
+        self.positions = [ (0, 0, 0) ]
+        self.data['color']    = self.colors
+        self.data['position'] = self.positions
         self.load_geometry_asap = True
         
         
     def add_vertex(self, tuple, color=(1, 1, 1, 1)):
-        glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, None, GL_DYNAMIC_DRAW) #https://www.opengl.org/wiki/Buffer_Object_Streaming#Buffer_update
+        pass
+        #glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, None, GL_DYNAMIC_DRAW) #https://www.opengl.org/wiki/Buffer_Object_Streaming#Buffer_update
         
-        tuple = (tuple[0], tuple[1], tuple[2])
-        self.positions.append(tuple)
-        self.colors.append(color)
-        self._linecount = len(self.positions)
+        #tuple = (tuple[0], tuple[1], tuple[2])
+        #self.positions.append(tuple)
+        #self.colors.append(color)
+        #self._linecount = len(self.positions)
         
-        self.data = np.zeros(self._linecount, [("position", np.float32, 3), ("color",    np.float32, 4)])
-        self.data['color']    = self.colors
-        self.data['position'] = self.positions
+        #self.data = np.zeros(self._linecount, [("position", np.float32, 3), ("color",    np.float32, 4)])
+        #self.data['color']    = self.colors
+        #self.data['position'] = self.positions
         
-        self.load_geometry_asap = True
+        #self.load_geometry_asap = True
     
     def draw_grid(self):
         pass

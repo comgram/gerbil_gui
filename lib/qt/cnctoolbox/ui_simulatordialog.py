@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/simulatordialog.ui'
 #
-# Created: Mon Apr 27 22:02:14 2015
+# Created: Tue Apr 28 15:06:11 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -21,6 +21,7 @@ class Ui_SimulatorDialog(object):
         self.pushButton_sim_wipe.setObjectName("pushButton_sim_wipe")
         self.gridLayout.addWidget(self.pushButton_sim_wipe, 0, 0, 1, 1)
         self.checkBox_sim_enable = QtWidgets.QCheckBox(SimulatorDialog)
+        self.checkBox_sim_enable.setChecked(True)
         self.checkBox_sim_enable.setObjectName("checkBox_sim_enable")
         self.gridLayout.addWidget(self.checkBox_sim_enable, 0, 1, 1, 1)
         self.gridLayout_simulator = QtWidgets.QGridLayout()
