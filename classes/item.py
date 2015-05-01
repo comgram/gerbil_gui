@@ -14,14 +14,17 @@ OpenGL.FULL_LOGGING = False
 from OpenGL.GL import *
 
 class Item():
-    def __init__(self, program):
+    def __init__(self, prog, pt=GL_LINES, lw=1):
         self.vbo = glGenBuffers(1)
         self.vao = glGenVertexArrays(1)
-        self.program = program
+        self.program = prog
 
         self.elementcount = 0
         
-        self.matrix_model = self.qt_mat_to_array(QMatrix4x4())
+        self.matrix_model = QMatrix4x4()
+        
+        self.primitive_type = pt
+        self.linewidth = lw
         
         self.positions = []
         self.colors = []
@@ -61,17 +64,27 @@ class Item():
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
         
-    def draw(self, linewidth=1):
+    def scale(self, fac):
+        self.matrix_model.scale(fac)
+        
+    def translate(self, vec):
+        self.matrix_model.translate(vec[0], vec[1], vec[2])
+        
+    def rotate(self, angle, vec):
+        self.matrix_mode.rotate(angle, vec[0], vec[1], vec[2])
+        
+    def draw(self):
+        mat_m = self.qt_mat_to_array(self.matrix_model)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
-        glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, self.matrix_model)
+        glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, mat_m)
         
         # bind VBO and VAO
         glBindVertexArray(self.vao)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         
         # actual draw command
-        glLineWidth(linewidth)
-        glDrawArrays(GL_LINE_STRIP, 0, self.elementcount)
+        glLineWidth(self.linewidth)
+        glDrawArrays(self.primitive_type, 0, self.elementcount)
         
         # unbind VBO and VAO
         glBindBuffer(GL_ARRAY_BUFFER, 0)
@@ -86,3 +99,58 @@ class Item():
                 arr[idx] = mat[i, j]
         return arr
         
+        
+class CoordSystem(Item):
+    def __init__(self,
+                 prog,
+                 scale=1,
+                 trans=(0, 0, 0)
+                 ):
+        
+        super(CoordSystem, self).__init__(prog)
+        
+        self.primitive_type = GL_LINES
+        self.linewidth = 3
+        self.scale(scale)
+        self.translate(trans)
+        
+        self.append((0, 0, 0), (1, 0, 0, 1))
+        self.append((10, 0, 0), (1, 0, 0, 1))
+        self.append((0, 0, 0), (0, 1, 0, 1))
+        self.append((0, 10, 0), (0, 1, 0, 1))
+        self.append((0, 0, 0), (0, 0, 1, 1))
+        self.append((0, 0, 10), (0, 0, 1, 1))
+        self.upload()
+        
+class Grid(Item):
+    def __init__(self,
+                 prog,
+                 ll=(0, 0),
+                 ur=(1000, 1000),
+                 trans=(0, 0, 0),
+                 unit=10
+                 ):
+        
+        super(Grid, self).__init__(prog)
+        
+        self.primitive_type = GL_LINES
+        self.linewidth = 1
+        self.color = (0.5, 0.5, 0.5, 0.5)
+        self.translate(trans)
+        
+        width = ur[0] - ll[0]
+        height = ur[1] - ll[1]
+        width_units = int(width / unit) + 1
+        height_units = int(height / unit) + 1
+        
+        for wu in range(0, width_units):
+            x = unit * wu
+            self.append((x, 0, 0), self.color)
+            self.append((x, height, 0), self.color)
+            
+        for hu in range(0, height_units):
+            y = unit * hu
+            self.append((0, y, 0), self.color)
+            self.append((width, y, 0), self.color)
+
+        self.upload()

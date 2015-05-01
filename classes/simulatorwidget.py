@@ -13,7 +13,7 @@ OpenGL.ERROR_CHECKING = False
 OpenGL.FULL_LOGGING = False
 from OpenGL.GL import *
 
-from .item import Item
+from .item import *
 
 
 class SimulatorWidget(QGLWidget):
@@ -31,7 +31,7 @@ class SimulatorWidget(QGLWidget):
         self._translation_vec_start = self._translation_vec
         
         # Zoom state
-        self._zoom = 0.05
+        self._zoom = 100
         
         self.buffer_labels = [None] * 2
 
@@ -54,21 +54,6 @@ class SimulatorWidget(QGLWidget):
         self.program = None
         
         self.items = {}
-        
-        
-        
-    def maketestobject(self):
-        item = Item(self.program)
-        item.append((0, 0, 0), (1, 0, 0, 1))
-        item.append((10, 0, 0), (0, 1, 0, 1))
-        item.upload()
-        self.items["test1"] = item
-        
-        item = Item(self.program)
-        item.append((0, 0, 0), (0, 0, 1, 1))
-        item.append((0, 10, 0), (1, 1, 0, 1))
-        item.upload()
-        self.items["test2"] = item
 
 
     def minimumSizeHint(self):
@@ -116,9 +101,17 @@ class SimulatorWidget(QGLWidget):
         
         glEnable (GL_LINE_SMOOTH)
         glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+        
+        glClearColor(0, 0, 0, 1.0)
 
-        self.maketestobject()
+        self.create_items()
         self.timer.start(10)
+        
+        
+    def create_items(self):
+        self.items["cs1"] = CoordSystem(self.program, 1, (0, 0, 0))
+        self.items["cs2"] = CoordSystem(self.program, 0.2, (1, 1, 1))
+        self.items["grid1"] = Grid(self.program, (0, 0), (800, 1400), (-800, -1400, 0))
 
 
     def paintGL(self):
@@ -148,8 +141,8 @@ class SimulatorWidget(QGLWidget):
         # PROJECTION MATRIX END ==========
         
         # DRAW ITEMS BEGIN ===============
-        self.items["test1"].draw(2)
-        self.items["test2"].draw(10)
+        for key, obj in self.items.items():
+            obj.draw()
         # DRAW ITEMS END ===============
       
         
@@ -181,14 +174,16 @@ class SimulatorWidget(QGLWidget):
         delta = event.angleDelta().y()
         
         if delta > 0:
-            self._zoom = self._zoom * 1.1 if self._zoom < 20 else self._zoom
+            self._zoom = self._zoom * 1.1 #if self._zoom < 20 else self._zoom
         else:
-            self._zoom = self._zoom * 0.9 if self._zoom > 0.01 else self._zoom
+            self._zoom = self._zoom * 0.9 #if self._zoom > 0.01 else self._zoom
 
+        print(self._zoom)
+        
         self._translation_vec = QVector3D(
             self._translation_vec[0],
             self._translation_vec[1],
-            self._translation_vec[2] + delta / 30
+            self._translation_vec[2] + delta / self._zoom
             )
         
         self.draw_asap = True
@@ -217,7 +212,7 @@ class SimulatorWidget(QGLWidget):
             self._rotation_quat.normalize()
             
         elif btns & (Qt.LeftButton | Qt.MidButton):
-            self._translation_vec = self._translation_vec_start + (QVector3D(x, -y, 0) - self._mouse_translation_vec_current) / 10
+            self._translation_vec = self._translation_vec_start + (QVector3D(x, -y, 0) - self._mouse_translation_vec_current) / self._zoom * 2
             #self._translation_vec
         
         self.draw_asap = True
