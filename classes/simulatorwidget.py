@@ -54,6 +54,14 @@ class SimulatorWidget(QGLWidget):
         self.program = None
         
         self.items = {}
+        self.cs_offsets = {
+            "G54": (0, 0, 0),
+            "G55": (0, 0, 0),
+            "G56": (0, 0, 0),
+            "G57": (0, 0, 0),
+            "G58": (0, 0, 0),
+            "G59": (0, 0, 0)
+            }
 
 
     def minimumSizeHint(self):
@@ -136,7 +144,7 @@ class SimulatorWidget(QGLWidget):
         # PROJECTION MATRIX BEGIN ==========
         aspect = self.width / self.height
         mat_p = QMatrix4x4()
-        mat_p.perspective(90, aspect, 0.1, 1000)
+        mat_p.perspective(90, aspect, 0.1, 10000)
         mat_p = Item.qt_mat_to_array(mat_p)
         loc_mat_p = glGetUniformLocation(self.program, "mat_p")
         glUniformMatrix4fv(loc_mat_p, 1, GL_TRUE, mat_p)
@@ -239,12 +247,18 @@ class SimulatorWidget(QGLWidget):
         
         
     def draw_coordinate_system(self, key, tpl_origin):
+        self.cs_offsets[key] = tpl_origin
         if key in self.items:
             #update
             self.items[key].moveto(tpl_origin)
         else:
             # create
             self.items[key] = CoordSystem(self.program, 6, tpl_origin)
+        self.draw_asap = True
+        
+        
+    def draw_gcode(self, gcode, cwpos, ccs):
+        self.items["gcode"] = GcodePath(self.program, gcode, cwpos, ccs, self.cs_offsets)
         self.draw_asap = True
     
             

@@ -3,6 +3,7 @@ import numpy as np
 import ctypes
 import sys
 import math
+import re
 
 from PyQt5.QtCore import pyqtSignal, QPoint, Qt, QSize, QTimer
 from PyQt5.QtGui import QColor, QMatrix4x4, QVector2D, QVector3D, QQuaternion
@@ -26,29 +27,24 @@ class Item():
         self.primitive_type = pt
         self.linewidth = lw
         
-        self.positions = []
-        self.colors = []
-        self.data = None
+        self.data = np.zeros(10000000, [("position", np.float32, 3), ("color", np.float32, 4)])
         
         
     def append(self, pos, col=(1, 1, 1, 1)):
-        self.positions.append(pos)
-        self.colors.append(col)
+        self.data["position"][self.elementcount] = pos
+        self.data["color"][self.elementcount] = col
         self.elementcount += 1
-        
-        self.data = np.zeros(
-            self.elementcount,
-            [("position", np.float32, 3), ("color", np.float32, 4)]
-            )
-        self.data["color"] = self.colors
-        self.data["position"] = self.positions
         
         
     def upload(self):
+        # chop unneeded bytes
+        self.data = self.data[0:self.elementcount]
+        
         glBindVertexArray(self.vao)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, self.data, GL_DYNAMIC_DRAW)
         
+        print("UPLOADING {} BYTES".format(self.data.nbytes))
         stride = self.data.strides[0]
         
         offset = ctypes.c_void_p(0)
@@ -104,6 +100,7 @@ class Item():
         return arr
         
         
+        
 class CoordSystem(Item):
     def __init__(self,
                  prog,
@@ -126,6 +123,7 @@ class CoordSystem(Item):
         self.append((0, 0, 10), (0, 0, 1, 1))
         self.upload()
         
+
 class Grid(Item):
     def __init__(self,
                  prog,
@@ -158,3 +156,54 @@ class Grid(Item):
             self.append((width, y, 0), self.color)
 
         self.upload()
+        
+        
+class GcodePath(Item):
+    def __init__(self, prog, gcode, cwpos, ccs, cs_offsets):
+        
+        super(GcodePath, self).__init__(prog)
+        
+        self.primitive_type = GL_LINE_STRIP
+        self.linewidth = 1
+        
+        pos = list(cwpos)
+        motion = ""
+        
+        colg0 = (1, 1, 1, 1)
+        colg1 = (0.8, 0.8, 1, 1)
+
+        axes = ["X", "Y", "Z"]
+        contains_regexps = []
+        for i in range(0, 3):
+            axis = axes[i]
+            contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
+        
+        # start of line extra
+        self.append(tuple(pos), colg0)
+        
+        for line in gcode:
+            mm = re.match("G(\d).*", line)
+            if mm:
+                motion = "G" + mm.group(1)
+                
+            if motion == "G0":
+                col = colg0
+            else:
+                col = colg1
+                
+            for i in range(0, 3):
+                axis = axes[i]
+                cr = contains_regexps[i]
+                
+                m = re.match(cr, line)
+                if m:
+                    a = float(m.group(1))
+                    pos[i] = a
+
+            self.append(tuple(pos), col)
+        
+        self.upload()
+        
+        
+        
+        

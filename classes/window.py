@@ -144,7 +144,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ## TIMER SETUP BEGIN ----------
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh)
-        self.timer.start(100)
+        self.timer.start(20)
         ## TIMER SETUP END ----------
         
         
@@ -179,11 +179,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # GRBL SETUP BEGIN -----
         self.grbl.poll_interval = 0.1
         self.grbl.set_callback(self.on_grbl_event)
-        self.grbl.set_target("serialport")
         self.grbl.cnect()
-        self.comboBox_target.insertItem(0, "serialport")
-        self.comboBox_target.insertItem(1, "simulator")
-        self.comboBox_target.insertItem(2, "file")
+        
+        self.targets = ["firmware", "simulator", "file"]
+        self.comboBox_target.insertItem(0, self.targets[0])
+        self.comboBox_target.insertItem(1, self.targets[1])
+        self.comboBox_target.insertItem(2, self.targets[2])
         # GRBL SETUP END -----
         
         # COMPILER SETUP BEGIN -----
@@ -368,6 +369,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_vars_change":
             keys = data[0]
             self.var_keys_into_var_table(keys)
+            
+        elif event == "on_simulation_finished":
+            gcode = data[0]
+            cwpos = self.wpos
+            ccs = self._cs_names[self._current_cs]
+            self.sim_dialog.simulator_widget.draw_gcode(
+                gcode,
+                cwpos,
+                ccs)
         
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
@@ -377,13 +387,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.label_current_line_number.setText(str(self._current_grbl_line_number))
         
         if self.state_hash_dirty == True:
+            print("$# dirty")
             for key, tpl in self.state_hash.items():
-                self._add_to_loginput("drawing coord")
                 if re.match("G5[4-9].*", key):
                     self.sim_dialog.simulator_widget.draw_coordinate_system(key, tpl)
             self.state_hash_dirty = False
         
         if self.changed_state:
+            print("changed_state")
             mx = self.mpos[0]
             my = self.mpos[1]
             mz = self.mpos[2]
@@ -695,14 +706,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _cs_selected(self, idx):
         self._current_cs = idx + 1
         self.grbl.send_immediately(self._cs_names[self._current_cs])
+        self.grbl.send_immediately("$#")
         
         
     def _target_selected(self, idx):
-        pass
+        self.current_target = self.targets[idx]
+        self.grbl.set_target(self.current_target)
     
         
     def _current_cs_setzero(self):
         self.grbl.send_immediately("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
+        self.grbl.send_immediately("$#")
 
     def _variables_edited(self, row, col):
         
