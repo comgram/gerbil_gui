@@ -385,8 +385,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             # simulator update
             if self.sim_dialog._sim_enabled == True:
-                self.sim_dialog.simulator.mpos = self.mpos
-                self.sim_dialog.simulator.add_vertex((wx, wy, wz))
+                self.sim_dialog.simulator_widget.mpos = self.mpos
+                #self.sim_dialog.simulator_widget.add_vertex((wx, wy, wz))
             
             if self.state == "Idle":
                 color = "green"

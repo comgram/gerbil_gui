@@ -1,6 +1,6 @@
 from lib.qt.cnctoolbox.ui_simulatordialog import Ui_SimulatorDialog
 
-from .simulator import Simulator
+from .simulatorwidget import SimulatorWidget
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
@@ -17,9 +17,8 @@ class SimulatorDialog(QWidget, Ui_SimulatorDialog):
         
         ## SIMULATOR SETUP BEGIN -------------
         self._sim_enabled = True
-        self.simulator = Simulator()
-        #self.gridLayout_glwidget_container.addWidget(self.simulator)
-        self.gridLayout_simulator.addWidget(self.simulator)
+        self.simulator_widget = SimulatorWidget()
+        self.gridLayout_simulator.addWidget(self.simulator_widget)
         ## SIMULATOR SETUP END -------------
         
     def _sim_enabled_changed(self, val):
@@ -27,5 +26,4 @@ class SimulatorDialog(QWidget, Ui_SimulatorDialog):
         self._sim_enabled = val
         
     def _sim_wipe(self):
-        self.simulator.wipe()
-        #self.simulator.paintGL()
+        self.simulator_widget.wipe()

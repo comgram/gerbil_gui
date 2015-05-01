@@ -13,31 +13,13 @@ OpenGL.ERROR_CHECKING = False
 OpenGL.FULL_LOGGING = False
 from OpenGL.GL import *
 
+from .item import Item
 
-class Simulator(QGLWidget):
-    xRotationChanged = pyqtSignal(int)
-    yRotationChanged = pyqtSignal(int)
-    zRotationChanged = pyqtSignal(int)
 
+class SimulatorWidget(QGLWidget):
     def __init__(self, parent=None):
-        super(Simulator, self).__init__(parent)
+        super(SimulatorWidget, self).__init__(parent)
         print(glGetString(GL_EXTENSIONS))
-        
-        self.colors1 = [ (1, 0, 0, 1), (0, 1, 0, 1) ]
-        self.positions1 = [ (0, 0, 0), (10, 0, 0) ]
-        
-        self.colors2 = [ (0, 0, 1, 1), (0, 1, 1, 1) ]
-        self.positions2 = [ (5, 5, 5), (30, 30, 30) ]
-        #self._linecount = len(self.positions)
-        
-        
-        self.obj1 = np.zeros(2, [("position", np.float32, 3), ("color",    np.float32, 4)])
-        self.obj1['color']    = self.colors1
-        self.obj1['position'] = self.positions1
-        
-        self.obj2 = np.zeros(2, [("position", np.float32, 3), ("color",    np.float32, 4)])
-        self.obj2['color']    = self.colors2
-        self.obj2['position'] = self.positions2
         
         # Rotation state
         self._mouse_rotation_start_vec = QVector3D()
@@ -52,16 +34,14 @@ class Simulator(QGLWidget):
         self._zoom = 0.05
         
         self.buffer_labels = [None] * 2
-        
-        
-        
+
         self._rotation_axis = QVector3D()
         
         self.width = 100
         self.height = 100
         self.model_rotation = 0
         
-        self.draw_grid()
+        #self.draw_grid()
         
         self.draw_asap = True
         self.load_geometry_asap = True
@@ -69,17 +49,35 @@ class Simulator(QGLWidget):
         ## TIMER SETUP BEGIN ----------
         self.timer = QTimer()
         self.timer.timeout.connect(self._timer_timeout)
-        
         ## TIMER SETUP END ----------
-        
+
         self.program = None
+        
+        self.items = {}
+        
+        
+        
+    def maketestobject(self):
+        item = Item(self.program)
+        item.append((0, 0, 0), (1, 0, 0, 1))
+        item.append((10, 0, 0), (0, 1, 0, 1))
+        item.upload()
+        self.items["test1"] = item
+        
+        item = Item(self.program)
+        item.append((0, 0, 0), (0, 0, 1, 1))
+        item.append((0, 10, 0), (1, 1, 0, 1))
+        item.upload()
+        self.items["test2"] = item
 
 
     def minimumSizeHint(self):
         return QSize(50, 50)
+    
 
     def sizeHint(self):
         return QSize(400, 400)
+    
 
     def initializeGL(self):
         
@@ -112,91 +110,30 @@ class Simulator(QGLWidget):
         
         glUseProgram(self.program)
         
-        # Request a buffer_label slot from GPU
-        self.buffer_label1 = glGenBuffers(1)
-        self.buffer_label2 = glGenBuffers(1)
-        self.vao1 = glGenVertexArrays(1)
-        self.vao2 = glGenVertexArrays(1)
+        glEnable(GL_DEPTH_TEST)
+        glEnable (GL_BLEND)
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         
-        
+        glEnable (GL_LINE_SMOOTH)
+        glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
 
-        #glEnable (GL_LINE_SMOOTH)
-        #glEnable (GL_BLEND)
-        #glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        #glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
-        #glLineWidth (1)
-        
-        self._load_geometry1()
-        self._load_geometry2()
-        
+        self.maketestobject()
         self.timer.start(10)
-        
-        
 
-        
-        
-    def _load_geometry1(self):
-        glBindVertexArray(self.vao1)
-        
-        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label1)
-        glBufferData(GL_ARRAY_BUFFER, self.obj1.nbytes, self.obj1, GL_DYNAMIC_DRAW)
-        
-        stride = self.obj1.strides[0]
-        
-        offset = ctypes.c_void_p(0)
-        loc = glGetAttribLocation(self.program, "position")
-        glEnableVertexAttribArray(loc)
-        glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
 
-        offset = ctypes.c_void_p(self.obj1.dtype["position"].itemsize)
-        loc = glGetAttribLocation(self.program, "color")
-        glEnableVertexAttribArray(loc)
-        glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
+    def paintGL(self):
+        """
+        Auto-called by updateGL
+        """
+        print("paintGL")
         
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glBindVertexArray(0)
-        
-    def _load_geometry2(self):
-        glBindVertexArray(self.vao2)
-        
-        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label2)
-        glBufferData(GL_ARRAY_BUFFER, self.obj2.nbytes, self.obj2, GL_DYNAMIC_DRAW)
-        
-        stride = self.obj2.strides[0]
-        
-        offset = ctypes.c_void_p(0)
-        loc = glGetAttribLocation(self.program, "position")
-        glEnableVertexAttribArray(loc)
-        glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
-
-        offset = ctypes.c_void_p(self.obj2.dtype["position"].itemsize)
-        loc = glGetAttribLocation(self.program, "color")
-        glEnableVertexAttribArray(loc)
-        glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
-        
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glBindVertexArray(0)
-        
-        
-    def _load_mvc_matrices(self):
-        loc = glGetUniformLocation(self.program, "zoom")
-        glUniform1f(loc, self._zoom)
-        
-        # MODEL MATRIX BEGIN ==========
-        mat_m = QMatrix4x4()
-        
-        mat_m.rotate(self._rotation_quat)
-        mat_m.translate(self._translation_vec)
-        
-        mat_m = self.qt_mat_to_array(mat_m)
-        loc_mat_m = glGetUniformLocation(self.program, "mat_m")
-        glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, mat_m)
-        # MODEL MATRIX END ==========
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
         # VIEW MATRIX BEGIN ==========
         mat_v = QMatrix4x4()
-        mat_v.lookAt(QVector3D(1, -10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
-        mat_v = self.qt_mat_to_array(mat_v)
+        mat_v.translate(self._translation_vec)
+        mat_v.rotate(self._rotation_quat)
+        mat_v = Item.qt_mat_to_array(mat_v)
         loc_mat_v = glGetUniformLocation(self.program, "mat_v")
         glUniformMatrix4fv(loc_mat_v, 1, GL_TRUE, mat_v)
         # VIEW MATRIX END ==========
@@ -205,31 +142,16 @@ class Simulator(QGLWidget):
         aspect = self.width / self.height
         mat_p = QMatrix4x4()
         mat_p.perspective(90, aspect, 0.1, 1000)
-        mat_p = self.qt_mat_to_array(mat_p)
+        mat_p = Item.qt_mat_to_array(mat_p)
         loc_mat_p = glGetUniformLocation(self.program, "mat_p")
         glUniformMatrix4fv(loc_mat_p, 1, GL_TRUE, mat_p)
         # PROJECTION MATRIX END ==========
-
-
-    def paintGL(self):
-        """
-        Auto-called by updateGL
-        """
-
-        print("paintGL")
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
-        self._load_mvc_matrices()
-        
-        glBindVertexArray(self.vao1)
-        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label1)
-        glDrawArrays(GL_LINE_STRIP, 0, 2)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        
-        glBindVertexArray(self.vao2)
-        glBindBuffer(GL_ARRAY_BUFFER, self.buffer_label2)
-        glDrawArrays(GL_LINE_STRIP, 0, 2)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        # DRAW ITEMS BEGIN ===============
+        self.items["test1"].draw(2)
+        self.items["test2"].draw(10)
+        # DRAW ITEMS END ===============
+      
         
         # swapping buffer automatically by Qt
 
@@ -262,13 +184,13 @@ class Simulator(QGLWidget):
             self._zoom = self._zoom * 1.1 if self._zoom < 20 else self._zoom
         else:
             self._zoom = self._zoom * 0.9 if self._zoom > 0.01 else self._zoom
-        
-        print(self._zoom)
+
         self._translation_vec = QVector3D(
             self._translation_vec[0],
             self._translation_vec[1],
-            self._translation_vec[2] + delta / 10
+            self._translation_vec[2] + delta / 30
             )
+        
         self.draw_asap = True
             
             
@@ -315,56 +237,9 @@ class Simulator(QGLWidget):
             self.draw_asap = False
         
     def wipe(self):
-        self.colors = [ (1, 0, 0, 1) ]
-        self.positions = [ (0, 0, 0) ]
-        self.data['color']    = self.colors
-        self.data['position'] = self.positions
         self.load_geometry_asap = True
-        
-        
-    def add_vertex(self, tuple, color=(1, 1, 1, 1)):
-        pass
-        #glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, None, GL_DYNAMIC_DRAW) #https://www.opengl.org/wiki/Buffer_Object_Streaming#Buffer_update
-        
-        #tuple = (tuple[0], tuple[1], tuple[2])
-        #self.positions.append(tuple)
-        #self.colors.append(color)
-        #self._linecount = len(self.positions)
-        
-        #self.data = np.zeros(self._linecount, [("position", np.float32, 3), ("color",    np.float32, 4)])
-        #self.data['color']    = self.colors
-        #self.data['position'] = self.positions
-        
-        #self.load_geometry_asap = True
     
-    def draw_grid(self):
-        pass
-        #self.add_vertex((0, 0))
-        #self.add_vertex((100, 100))
-        #return
-        self.add_vertex((10, 0, 0), (1, 0, 0, 1))
-        self.add_vertex((0, 0, 0),   (1, 0, 0, 1))
-        self.add_vertex((0, 10, 0), (0, 1, 0, 1))
-        self.add_vertex((0, 0, 0),   (0, 1, 0, 1))
-        self.add_vertex((0, 0, 10), (0, 0, 1, 1))
-        self.add_vertex((0, 0, 0),   (0, 0, 1, 1))
-        
-        for i in range(-100, 100, 10):
-            dir = 1 if (i % 20) == 0 else -1
-            self.add_vertex((5+i, 100 * dir + 5, 0), (0.4, 0.4, 0.4, 1))
-            self.add_vertex((5+i + 10, 100 * dir + 5, 0), (0.4, 0.4, 0.4, 1))
             
-        
-        
-    def qt_mat_to_array(self, mat):
-        #arr = [[0 for x in range(4)] for x in range(4)]
-        arr = [0] * 16
-        for i in range(4):
-            for j in range(4):
-                idx = 4 * i + j
-                arr[idx] = mat[i, j]
-        return arr
-    
     def _project_to_sphere(self, x, y):
         r = 0.8
         d = math.sqrt(x*x + y*y)
