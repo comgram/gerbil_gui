@@ -166,11 +166,13 @@ class GcodePath(Item):
         self.primitive_type = GL_LINE_STRIP
         self.linewidth = 1
         
-        pos = list(cwpos)
-        motion = ""
+        pos = list(cwpos) # current position
+        cs = ccs # current coordinate system
+        offset = cs_offsets[cs] # current offset tuple
+        motion = "" # current motion mode
         
         colg0 = (1, 1, 1, 1)
-        colg1 = (0.8, 0.8, 1, 1)
+        colg1 = (0.5, 0.5, 1, 1)
 
         axes = ["X", "Y", "Z"]
         contains_regexps = []
@@ -178,18 +180,19 @@ class GcodePath(Item):
             axis = axes[i]
             contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
         
-        # start of line extra
-        self.append(tuple(pos), colg0)
+        # start of line
+        target = np.add(offset, pos)
+        self.append(tuple(target), colg0)
         
         for line in gcode:
             mm = re.match("G(\d).*", line)
-            if mm:
-                motion = "G" + mm.group(1)
+            if mm: motion = "G" + mm.group(1)
+            col = colg0 if motion == "G0" else colg1
                 
-            if motion == "G0":
-                col = colg0
-            else:
-                col = colg1
+            mcs = re.match("G(5[4-9]).*", line)
+            if mcs: 
+                cs = "G" + mcs.group(1)
+                offset = cs_offsets[cs]
                 
             for i in range(0, 3):
                 axis = axes[i]
@@ -200,7 +203,8 @@ class GcodePath(Item):
                     a = float(m.group(1))
                     pos[i] = a
 
-            self.append(tuple(pos), col)
+            target = np.add(offset, pos)
+            self.append(tuple(target), col)
         
         self.upload()
         
