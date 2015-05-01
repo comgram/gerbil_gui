@@ -109,8 +109,10 @@ class SimulatorWidget(QGLWidget):
         
         
     def create_items(self):
-        self.items["cs1"] = CoordSystem(self.program, 1, (0, 0, 0))
-        self.items["cs2"] = CoordSystem(self.program, 0.2, (1, 1, 1))
+        #self.draw_coordinate_system("blah", (1, 1, 1))
+        self.items["csm"] = CoordSystem(self.program, 12, (0, 0, 0))
+        self.items["csm"].linewidth = 6
+        #self.items["cs2"] = CoordSystem(self.program, 0.2, (1, 1, 1))
         self.items["grid1"] = Grid(self.program, (0, 0), (800, 1400), (-800, -1400, 0))
 
 
@@ -231,8 +233,19 @@ class SimulatorWidget(QGLWidget):
             self.updateGL()
             self.draw_asap = False
         
+        
     def wipe(self):
         self.load_geometry_asap = True
+        
+        
+    def draw_coordinate_system(self, key, tpl_origin):
+        if key in self.items:
+            #update
+            self.items[key].moveto(tpl_origin)
+        else:
+            # create
+            self.items[key] = CoordSystem(self.program, 6, tpl_origin)
+        self.draw_asap = True
     
             
     def _project_to_sphere(self, x, y):

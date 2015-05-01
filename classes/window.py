@@ -43,6 +43,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lcdNumber_feed_current.display("---")
         # GENERIC SETUP END -----
         
+        self.state = None
+        self.state_hash = None
+        self.state_hash_dirty = False
+        
         ## LOGGING SETUP BEGIN ------
         # setup ring buffer for logging
         self.changed_loginput = False
@@ -239,8 +243,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.state = data[0]
             self.mpos = data[1]
             self.wpos = data[2]
+            
             if self.grbl.connected:
                 self.changed_state = True
+                
+        elif event == "on_hash_stateupdate":
+            self.state_hash = self.grbl.settings_hash
+            self.state_hash_dirty = True
+            self._add_to_loginput("on_hash_stateupdate")
+          
                 
         elif event == "on_gcode_parser_stateupdate":
             gps = data[0]
@@ -364,6 +375,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def refresh(self):
         self.label_current_line_number.setText(str(self._current_grbl_line_number))
+        
+        if self.state_hash_dirty == True:
+            for key, tpl in self.state_hash.items():
+                self._add_to_loginput("drawing coord")
+                if re.match("G5[4-9].*", key):
+                    self.sim_dialog.simulator_widget.draw_coordinate_system(key, tpl)
+            self.state_hash_dirty = False
         
         if self.changed_state:
             mx = self.mpos[0]

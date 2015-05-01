@@ -73,6 +73,10 @@ class Item():
     def rotate(self, angle, vec):
         self.matrix_mode.rotate(angle, vec[0], vec[1], vec[2])
         
+    def moveto(self, tpl):
+        self.matrix_model.setToIdentity()
+        self.translate(tpl)
+        
     def draw(self):
         mat_m = self.qt_mat_to_array(self.matrix_model)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
