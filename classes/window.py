@@ -413,14 +413,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.jogWidget.wz_current = wz
             
             # simulator update
-            if self.sim_dialog._sim_enabled == True:
-                self.sim_dialog.simulator_widget.mpos = self.mpos
-                #self.sim_dialog.simulator_widget.add_vertex((wx, wy, wz))
+            self.sim_dialog.simulator_widget.draw_tool(self.mpos)
             
             if self.state == "Idle":
                 color = "green"
                 self.jogWidget.onIdle()
-                self.grbl.request_gcode_parser_state()
+                self.grbl.gcode_parser_state_requested = True
+                self.grbl.hash_state_requested = True
                 if self._rx_buffer_fill == 0:
                     self.listWidget_logoutput.setEnabled(True)
                     self.lineEdit_cmdline.setEnabled(True)
@@ -526,7 +525,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self._add_to_loginput("<i>Stashing current buffer</i>")
         self.grbl.buffer_stash()
-        self.grbl.set_incremental_streaming(True) # need this faster
+        self.grbl.incremental_streaming = True
         self.checkBox_incremental.setChecked(True)
         
         def settings_upload_complete():

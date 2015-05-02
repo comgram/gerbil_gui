@@ -27,11 +27,12 @@ class SimulatorWidget(QGLWidget):
         self._rotation_quat_start = self._rotation_quat
         
         # Translation state
-        self._translation_vec = QVector3D()
+        self._translation_vec = QVector3D(300, 200, -350)
+        #self._translation_vec = QVector3D(0, 0, 0)
         self._translation_vec_start = self._translation_vec
         
         # Zoom state
-        self._zoom = 100
+        self._zoom = 3
         
         self.buffer_labels = [None] * 2
 
@@ -41,10 +42,7 @@ class SimulatorWidget(QGLWidget):
         self.height = 100
         self.model_rotation = 0
         
-        #self.draw_grid()
-        
         self.draw_asap = True
-        self.load_geometry_asap = True
         
         ## TIMER SETUP BEGIN ----------
         self.timer = QTimer()
@@ -134,8 +132,10 @@ class SimulatorWidget(QGLWidget):
         
         # VIEW MATRIX BEGIN ==========
         mat_v = QMatrix4x4()
-        mat_v.translate(self._translation_vec)
+        #mat_v.lookAt(QVector3D(1, -10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
         mat_v.rotate(self._rotation_quat)
+        mat_v.translate(self._translation_vec)
+        
         mat_v = Item.qt_mat_to_array(mat_v)
         loc_mat_v = glGetUniformLocation(self.program, "mat_v")
         glUniformMatrix4fv(loc_mat_v, 1, GL_TRUE, mat_v)
@@ -184,10 +184,10 @@ class SimulatorWidget(QGLWidget):
         delta = event.angleDelta().y()
         
         if delta > 0:
-            self._zoom = self._zoom * 1.1 #if self._zoom < 20 else self._zoom
+            self._zoom = self._zoom * 1.1
         else:
-            self._zoom = self._zoom * 0.9 #if self._zoom > 0.01 else self._zoom
-
+            self._zoom = self._zoom * 0.9
+            
         print(self._zoom)
         
         self._translation_vec = QVector3D(
@@ -195,6 +195,8 @@ class SimulatorWidget(QGLWidget):
             self._translation_vec[1],
             self._translation_vec[2] + delta / self._zoom
             )
+        
+        #print("XXX", self._translation_vec)
         
         self.draw_asap = True
             
@@ -222,7 +224,7 @@ class SimulatorWidget(QGLWidget):
             self._rotation_quat.normalize()
             
         elif btns & (Qt.LeftButton | Qt.MidButton):
-            self._translation_vec = self._translation_vec_start + (QVector3D(x, -y, 0) - self._mouse_translation_vec_current) / self._zoom * 2
+            self._translation_vec = self._translation_vec_start + (QVector3D(x, -y, 0) - self._mouse_translation_vec_current) / self._zoom * 10
             #self._translation_vec
         
         self.draw_asap = True
@@ -232,11 +234,6 @@ class SimulatorWidget(QGLWidget):
         """
         called regularly from timer
         """
-        #if self.load_geometry_asap:
-            #self._load_geometry()
-            #self.load_geometry_asap = False
-            #self.draw_asap = True
-            
         if self.draw_asap:
             self.updateGL()
             self.draw_asap = False
@@ -250,15 +247,27 @@ class SimulatorWidget(QGLWidget):
         self.cs_offsets[key] = tpl_origin
         if key in self.items:
             #update
-            self.items[key].moveto(tpl_origin)
+            self.items[key].set_origin(tpl_origin)
         else:
             # create
-            self.items[key] = CoordSystem(self.program, 6, tpl_origin)
+            self.items[key] = CoordSystem(self.program, 3, tpl_origin)
         self.draw_asap = True
         
         
     def draw_gcode(self, gcode, cwpos, ccs):
         self.items["gcode"] = GcodePath(self.program, gcode, cwpos, ccs, self.cs_offsets)
+        self.draw_asap = True
+        
+    def draw_tool(self, cmpos):
+        if "tool" in self.items:
+            self.items["tool"].set_origin(cmpos)
+        else:
+            i = Item(self.program, 2, GL_LINES, 6)
+            i.append((0, 0, 0), (1, 1, 0, 1))
+            i.append((0, 0, 200), (1, 1, 0, 1))
+            i.upload()
+            i.set_origin(cmpos)
+            self.items["tool"] = i
         self.draw_asap = True
     
             
@@ -280,7 +289,7 @@ class SimulatorWidget(QGLWidget):
     
     def _find_ball_vector(self, px, py):
         x = px / (self.width / 2) - 1
-        y = 1-py / (self.height / 2)
+        y = 1 - py / (self.height / 2)
         
         #if self.width < self.height:
             #x *= self.width / self.height

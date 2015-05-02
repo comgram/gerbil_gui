@@ -15,19 +15,23 @@ OpenGL.FULL_LOGGING = False
 from OpenGL.GL import *
 
 class Item():
-    def __init__(self, prog, pt=GL_LINES, lw=1):
+    def __init__(self, prog, size, pt=GL_LINES, lw=1):
         self.vbo = glGenBuffers(1)
         self.vao = glGenVertexArrays(1)
         self.program = prog
 
         self.elementcount = 0
         
-        self.matrix_model = QMatrix4x4()
+        #self.matrix_model = QMatrix4x4()
         
         self.primitive_type = pt
         self.linewidth = lw
         
-        self.data = np.zeros(10000000, [("position", np.float32, 3), ("color", np.float32, 4)])
+        self.scale = 1
+        self.origin = QVector3D(0, 0, 0)
+        
+        self.size = size
+        self.data = np.zeros(self.size, [("position", np.float32, 3), ("color", np.float32, 4)])
         
         
     def append(self, pos, col=(1, 1, 1, 1)):
@@ -60,21 +64,22 @@ class Item():
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
         
-    def scale(self, fac):
-        self.matrix_model.scale(fac)
         
-    def translate(self, vec):
-        self.matrix_model.translate(vec[0], vec[1], vec[2])
+    def set_scale(self, fac):
+        self.scale = fac
         
-    def rotate(self, angle, vec):
-        self.matrix_mode.rotate(angle, vec[0], vec[1], vec[2])
         
-    def moveto(self, tpl):
-        self.matrix_model.setToIdentity()
-        self.translate(tpl)
+    def set_origin(self, tpl):
+        self.origin = QVector3D(tpl[0], tpl[1], tpl[2])
+
         
     def draw(self):
-        mat_m = self.qt_mat_to_array(self.matrix_model)
+        # upload Model Matrix
+        mat_m = QMatrix4x4()
+        mat_m.translate(self.origin)
+        mat_m.scale(self.scale)
+        
+        mat_m = self.qt_mat_to_array(mat_m)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
         glUniformMatrix4fv(loc_mat_m, 1, GL_TRUE, mat_m)
         
@@ -105,15 +110,16 @@ class CoordSystem(Item):
     def __init__(self,
                  prog,
                  scale=1,
-                 trans=(0, 0, 0)
+                 origin=(0, 0, 0)
                  ):
         
-        super(CoordSystem, self).__init__(prog)
+        size = 6
+        super(CoordSystem, self).__init__(prog, size)
         
         self.primitive_type = GL_LINES
         self.linewidth = 3
-        self.scale(scale)
-        self.translate(trans)
+        self.set_scale(scale)
+        self.set_origin(origin)
         
         self.append((0, 0, 0), (1, 0, 0, 1))
         self.append((10, 0, 0), (1, 0, 0, 1))
@@ -133,17 +139,19 @@ class Grid(Item):
                  unit=10
                  ):
         
-        super(Grid, self).__init__(prog)
-        
-        self.primitive_type = GL_LINES
-        self.linewidth = 1
-        self.color = (0.5, 0.5, 0.5, 0.5)
-        self.translate(trans)
-        
         width = ur[0] - ll[0]
         height = ur[1] - ll[1]
         width_units = int(width / unit) + 1
         height_units = int(height / unit) + 1
+        
+        size = 2 * width_units + 2 * height_units
+        
+        super(Grid, self).__init__(prog, size)
+        
+        self.primitive_type = GL_LINES
+        self.linewidth = 1
+        self.color = (1, 1, 1, 0.2)
+        self.set_origin(trans)
         
         for wu in range(0, width_units):
             x = unit * wu
@@ -161,14 +169,17 @@ class Grid(Item):
 class GcodePath(Item):
     def __init__(self, prog, gcode, cwpos, ccs, cs_offsets):
         
-        super(GcodePath, self).__init__(prog)
+        size = len(gcode)
+        super(GcodePath, self).__init__(prog, size)
         
         self.primitive_type = GL_LINE_STRIP
         self.linewidth = 1
         
+        # TODO: Arcs, move in machine coordinates
+        
         pos = list(cwpos) # current position
         cs = ccs # current coordinate system
-        offset = cs_offsets[cs] # current offset tuple
+        offset = cs_offsets[cs] # current cs offset tuple
         motion = "" # current motion mode
         
         colg0 = (1, 1, 1, 1)
@@ -185,19 +196,21 @@ class GcodePath(Item):
         self.append(tuple(target), colg0)
         
         for line in gcode:
+            # get current motion mode G0, G1, G2, G3
             mm = re.match("G(\d).*", line)
             if mm: motion = "G" + mm.group(1)
             col = colg0 if motion == "G0" else colg1
-                
+            
+            # get current coordinate system G54-G59
             mcs = re.match("G(5[4-9]).*", line)
             if mcs: 
                 cs = "G" + mcs.group(1)
                 offset = cs_offsets[cs]
                 
+            # parse X, Y and Z axis values
             for i in range(0, 3):
                 axis = axes[i]
                 cr = contains_regexps[i]
-                
                 m = re.match(cr, line)
                 if m:
                     a = float(m.group(1))
@@ -207,7 +220,3 @@ class GcodePath(Item):
             self.append(tuple(target), col)
         
         self.upload()
-        
-        
-        
-        
