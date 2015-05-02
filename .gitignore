@@ -11,7 +11,13 @@
 *.txt
 *.pyc
 
+*.png
+*.jpg
+*.svg
 
+*.sol
+*.wgt
+*.crd
 
 data
 log
