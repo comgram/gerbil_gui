@@ -30,6 +30,8 @@ class Item():
         self.scale = 1
         self.origin = QVector3D(0, 0, 0)
         
+        self.dirty = True
+        
         self.size = size
         self.data = np.zeros(self.size, [("position", np.float32, 3), ("color", np.float32, 4)])
         
@@ -94,6 +96,8 @@ class Item():
         # unbind VBO and VAO
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
+        
+        self.dirty = False
     
     @staticmethod
     def qt_mat_to_array(mat):
@@ -169,21 +173,58 @@ class Grid(Item):
 class GcodePath(Item):
     def __init__(self, prog, gcode, cwpos, ccs, cs_offsets):
         
-        size = len(gcode)
-        super(GcodePath, self).__init__(prog, size)
+        self.line_count = len(gcode) + 10
+        print("XXX", self.line_count)
+        super(GcodePath, self).__init__(prog, self.line_count)
         
         self.primitive_type = GL_LINE_STRIP
         self.linewidth = 1
         
+        self.gcode = gcode
+        self.cwpos = list(cwpos)
+        self.ccs = ccs
+        self.cs_offsets = cs_offsets
+        
+        self.render()
+        self.upload()
+        
+        self.highlight_lines_queue = []
+        
+        
+    def highlight_line(self, line_number):
+        self.highlight_lines_queue.append(line_number)
+        
+    def draw(self):
+        for line_number in self.highlight_lines_queue:
+            print("highlighting line", line_number)
+            stride = self.data.strides[0]
+            position_size = self.data.dtype["position"].itemsize
+            color_size = self.data.dtype["color"].itemsize
+            
+            offset = line_number * stride + position_size
+            
+            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+            
+            col = np.array([0.8, 0.8, 1, 1], dtype=np.float32)
+            print("highlighting line", line_number, offset, color_size)
+            glBufferSubData(GL_ARRAY_BUFFER, offset, color_size, col)
+            #glBindBuffer(GL_ARRAY_BUFFER, 0)
+            #self.draw()
+        del self.highlight_lines_queue[:]
+        
+        super(GcodePath, self).draw()
+        
+        
+    def render(self):
         # TODO: Arcs, move in machine coordinates
         
-        pos = list(cwpos) # current position
-        cs = ccs # current coordinate system
-        offset = cs_offsets[cs] # current cs offset tuple
+        pos = self.cwpos # current position
+        cs = self.ccs # current coordinate system
+        offset = self.cs_offsets[cs] # current cs offset tuple
         motion = "" # current motion mode
         
-        colg0 = (1, 1, 1, 1)
-        colg1 = (0.5, 0.5, 1, 1)
+        colg0 = (0.8, 1, 0.8, 1)
+        colg1 = (0.3, 0.3, 1, 1)
 
         axes = ["X", "Y", "Z"]
         contains_regexps = []
@@ -195,7 +236,7 @@ class GcodePath(Item):
         target = np.add(offset, pos)
         self.append(tuple(target), colg0)
         
-        for line in gcode:
+        for line in self.gcode:
             # get current motion mode G0, G1, G2, G3
             mm = re.match("G(\d).*", line)
             if mm: motion = "G" + mm.group(1)
@@ -218,5 +259,3 @@ class GcodePath(Item):
 
             target = np.add(offset, pos)
             self.append(tuple(target), col)
-        
-        self.upload()

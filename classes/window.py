@@ -378,6 +378,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 gcode,
                 cwpos,
                 ccs)
+            
+        elif event == "on_line_sent":
+            line_number = data[0]
+            line_str = data[1]
+            self.sim_dialog.simulator_widget.highlight_gcode_line(line_number)
         
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
@@ -387,14 +392,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.label_current_line_number.setText(str(self._current_grbl_line_number))
         
         if self.state_hash_dirty == True:
-            print("$# dirty")
+            #print("$# dirty")
             for key, tpl in self.state_hash.items():
                 if re.match("G5[4-9].*", key):
                     self.sim_dialog.simulator_widget.draw_coordinate_system(key, tpl)
             self.state_hash_dirty = False
         
         if self.changed_state:
-            print("changed_state")
             mx = self.mpos[0]
             my = self.mpos[1]
             mz = self.mpos[2]

@@ -126,7 +126,7 @@ class SimulatorWidget(QGLWidget):
         """
         Auto-called by updateGL
         """
-        print("paintGL")
+        #print("paintGL")
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
@@ -257,6 +257,9 @@ class SimulatorWidget(QGLWidget):
     def draw_gcode(self, gcode, cwpos, ccs):
         self.items["gcode"] = GcodePath(self.program, gcode, cwpos, ccs, self.cs_offsets)
         self.draw_asap = True
+        
+    def highlight_gcode_line(self, line_number):
+        self.items["gcode"].highlight_line(line_number)
         
     def draw_tool(self, cmpos):
         if "tool" in self.items:
