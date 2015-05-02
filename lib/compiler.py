@@ -7,6 +7,8 @@ import inspect
 import logging
 import re
 
+import ..lib.gcodetools
+
 try:
     unicode = unicode
 except NameError:

@@ -11,7 +11,7 @@ from classes.highlighter import Highlighter
 from gerbil.gerbil import Gerbil
 from classes.jogwidget import JogWidget
 from classes.commandlineedit import CommandLineEdit
-import compiler.gcode as COMPILER
+import compiler.gcode as Compiler
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
@@ -187,10 +187,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_target.insertItem(2, self.targets[2])
         # GRBL SETUP END -----
         
-        # COMPILER SETUP BEGIN -----
-        COMPILER.receiver(self.grbl)
-        COMPILER.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
-        # COMPILER SETUP END -----
+        # Compiler SETUP BEGIN -----
+        Compiler.receiver(self.grbl)
+        Compiler.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
+        # Compiler SETUP END -----
         
         self.tableWidget_settings.setColumnWidth(2, 300)
         for row in range(0, 32):
@@ -549,7 +549,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def execute_script_clicked(self,item):
         code = self.scriptTextEdit.toPlainText()
-        COMPILER.evaluate(code)
+        Compiler.evaluate(code)
         
         
     def load_script_clicked(self,item):
@@ -804,7 +804,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # dynamically executed python code must begin with an equal sign
             # "self." is prepended for convenience
             if cmd[1] == "=":
-                kls = "COMPILER"
+                kls = "Compiler"
                 cmd = cmd[2:]
             else:
                 kls = "self" 

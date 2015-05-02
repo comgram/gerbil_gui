@@ -120,6 +120,7 @@ class SimulatorWidget(QGLWidget):
         self.items["csm"].linewidth = 6
         #self.items["cs2"] = CoordSystem(self.program, 0.2, (1, 1, 1))
         self.items["grid1"] = Grid(self.program, (0, 0), (800, 1400), (-800, -1400, 0))
+        #self.items["buffer_marker"] = StarMarker(self.program)
 
 
     def paintGL(self):
@@ -258,8 +259,10 @@ class SimulatorWidget(QGLWidget):
         self.items["gcode"] = GcodePath(self.program, gcode, cwpos, ccs, self.cs_offsets)
         self.draw_asap = True
         
+        
     def highlight_gcode_line(self, line_number):
         self.items["gcode"].highlight_line(line_number)
+        
         
     def draw_tool(self, cmpos):
         if "tool" in self.items:

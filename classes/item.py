@@ -110,6 +110,33 @@ class Item():
         
         
         
+class StarMarker(Item):
+    def __init__(self,
+                 prog,
+                 scale=1,
+                 origin=(0, 0, 0)
+                 ):
+        
+        size = 6
+        super(CoordSystem, self).__init__(prog, size)
+        
+        self.primitive_type = GL_LINES
+        self.linewidth = 2
+        self.set_scale(scale)
+        self.set_origin(origin)
+        
+        col = (1, 1, 1, 1)
+        
+        self.append((-1, 0, 0), col)
+        self.append((1, 0, 0), col)
+        self.append((0, -1, 0), col)
+        self.append((0, 1, 0), col)
+        self.append((0, 0, -1), col)
+        self.append((0, 0, 1), col)
+        
+        self.upload()
+        
+        
 class CoordSystem(Item):
     def __init__(self,
                  prog,
