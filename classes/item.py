@@ -200,7 +200,7 @@ class Grid(Item):
 class GcodePath(Item):
     def __init__(self, prog, gcode, cwpos, ccs, cs_offsets):
         
-        self.line_count = len(gcode) + 1
+        self.line_count = 2 * (len(gcode) + 1)
         
         super(GcodePath, self).__init__(prog, self.line_count)
         
@@ -209,13 +209,25 @@ class GcodePath(Item):
         
         self.gcode = gcode
         self.cwpos = list(cwpos)
+        self.spindle_speed = None
         self.ccs = ccs
         self.cs_offsets = cs_offsets
         
-        self.render()
-        self.upload()
+      
         
         self.highlight_lines_queue = []
+        
+        self.axes = ["X", "Y", "Z"]
+        
+        self.contains_regexps = []
+        for i in range(0, 3):
+            axis = self.axes[i]
+            self.contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
+            
+        self.contains_spindle_regexp = re.compile(".*S(\d+)")
+            
+        self.render()
+        self.upload()
         
         
     def highlight_line(self, line_number):
@@ -223,17 +235,17 @@ class GcodePath(Item):
         
     def draw(self):
         for line_number in self.highlight_lines_queue:
-            print("highlighting line", line_number)
+            #print("highlighting line", line_number)
             stride = self.data.strides[0]
             position_size = self.data.dtype["position"].itemsize
             color_size = self.data.dtype["color"].itemsize
             
-            offset = line_number * stride + position_size
+            offset = 2 * line_number * stride + position_size
             
             glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
             
             col = np.array([0.8, 0.8, 1, 1], dtype=np.float32)
-            print("highlighting line", line_number, offset, color_size)
+            #print("highlighting line", line_number, offset, color_size)
             glBufferSubData(GL_ARRAY_BUFFER, offset, color_size, col)
             #glBindBuffer(GL_ARRAY_BUFFER, 0)
             #self.draw()
@@ -253,15 +265,11 @@ class GcodePath(Item):
         colg0 = (0.8, 1, 0.8, 1)
         colg1 = (0.3, 0.3, 1, 1)
 
-        axes = ["X", "Y", "Z"]
-        contains_regexps = []
-        for i in range(0, 3):
-            axis = axes[i]
-            contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
+        diff = [0, 0, 0]
         
-        # start of line
-        target = np.add(offset, pos)
-        self.append(tuple(target), colg0)
+        # start of path
+        end = np.add(offset, pos)
+        self.append(tuple(end), colg0)
         
         for line in self.gcode:
             # get current motion mode G0, G1, G2, G3
@@ -275,14 +283,36 @@ class GcodePath(Item):
                 cs = "G" + mcs.group(1)
                 offset = cs_offsets[cs]
                 
-            # parse X, Y and Z axis values
+            if re.match("G[23]", motion):
+                self.render_arc(line)
+                
+            # parse X, Y, Z axis and S values
             for i in range(0, 3):
-                axis = axes[i]
-                cr = contains_regexps[i]
+                axis = self.axes[i]
+                cr = self.contains_regexps[i]
                 m = re.match(cr, line)
                 if m:
                     a = float(m.group(1))
                     pos[i] = a
+               
+            m = re.match(self.contains_spindle_regexp, line)
+            if m:
+                self.spindle_speed = int(m.group(1))
+                
+            if self.spindle_speed:
+                rgb = self.spindle_speed / 255.0
+                col = (rgb, rgb, rgb, 1)
 
-            target = np.add(offset, pos)
-            self.append(tuple(target), col)
+            start = end
+            end = np.add(offset, pos)
+            diff = np.subtract(end, start)
+            
+            # generate 2 line segments per gcode for sharper color transitions when using spindle speed
+            self.append(start + diff * 0.01, col)
+            self.append(start + diff, col)
+            
+    def render_arc(self, line):
+        if "R" in line:
+            pass
+            # radius mode
+            #dx = pos[0]

@@ -77,6 +77,8 @@ def find_row_ranges(pix, width, height):
 def do(filename_in, filename_out, x_bleed=10):
     logging.info("Opening image %s", filename_in)
     
+    unit_length = 0.08 # 300 dpi in mm
+    
     # read bitmap and convert into grayscale ('L')
     im = Image.open(filename_in).convert('L')
     
@@ -97,8 +99,8 @@ def do(filename_in, filename_out, x_bleed=10):
     last_s = 0
     
     # Gcode preamble
-    f.write("$40=1\r\n") # enable laser mode
-    f.write("G0 X{:d} Y{:d} Z{:d} S{:d}\r\n".format(last_x, last_y, last_z, last_s))
+    # f.write("$40=1\r\n") # enable laser mode
+    f.write("G0 X{:f} Y{:f} Z{:f} S{:d}\r\n".format(last_x * unit_length, last_y * unit_length, last_z * unit_length, last_s))
     f.write("M3 S0\r\n") # enable laser but leave turned off (S = intensity from 0..255)
     f.write("F10000\r\n")
 
@@ -140,9 +142,9 @@ def do(filename_in, filename_out, x_bleed=10):
             
             gcodeline = "G1 "
             # Only write changes to coords, leads to less gcode which is still precise.
-            if last_x != new_x: gcodeline += "X{:g} ".format(new_x)
-            if last_y != new_y: gcodeline += "Y{:g} ".format(new_y)
-            if last_z != new_z: gcodeline += "Z{:g} ".format(new_z)
+            if last_x != new_x: gcodeline += "X{:g} ".format(new_x * unit_length)
+            if last_y != new_y: gcodeline += "Y{:g} ".format(new_y * unit_length)
+            if last_z != new_z: gcodeline += "Z{:g} ".format(new_z * unit_length)
             if last_s != new_s: gcodeline += "S{:g} ".format(new_s)
             gcodeline += "\n"
             f.write(gcodeline)
@@ -198,15 +200,16 @@ def do(filename_in, filename_out, x_bleed=10):
             arc_radius_out = radius_factor * (last_x - x_clear)
             arc_radius_in = radius_factor * (nxs - x_clear)
 
-        f.write("G{:g} X{:g} Y{:g} R{:d} S0\r\n".format(arcmode, x_clear, middle_y, arc_radius_out))
-        f.write("G{:g} X{:g} Y{:g} R{:d} S0\r\n".format(arcmode, nxs + direction, ny, arc_radius_in))
+        f.write("G{:g} X{:g} Y{:g} R{:f} S0\r\n".format(arcmode, x_clear * unit_length, middle_y * unit_length, arc_radius_out * unit_length))
+        f.write("G{:g} X{:g} Y{:g} R{:f} S0\r\n".format(arcmode, (nxs + direction) * unit_length, ny * unit_length, arc_radius_in * unit_length))
         
         last_s = -1 # invalidate last S for next row processing
         last_x = -1 # invalidate last X for next row processing
         
 
     # gcode postamble
-    f.write("G0 X{:d} S0\r\n".format(last_x + (direction * x_bleed))) # last easing out movement
+    out_x = float((last_x + (direction * x_bleed))) * unit_length
+    f.write("G0 X{:f} S0\r\n".format(out_x)) # last easing out movement
     f.write("M5\r\n") # stop spindle
     
     logging.info("Done! Gcode file has been written to %s", filename_out)
