@@ -197,8 +197,6 @@ class SimulatorWidget(QGLWidget):
             self._translation_vec[2] + delta / self._zoom
             )
         
-        #print("XXX", self._translation_vec)
-        
         self.draw_asap = True
             
             

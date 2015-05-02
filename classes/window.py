@@ -8,10 +8,10 @@ import time
 import re
 
 from classes.highlighter import Highlighter
-from gerbil.gerbil import Gerbil
 from classes.jogwidget import JogWidget
 from classes.commandlineedit import CommandLineEdit
-import compiler.gcode as Compiler
+from classes.simulatordialog import SimulatorDialog
+from gerbil.gerbil import Gerbil
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
@@ -19,9 +19,9 @@ from PyQt5.QtGui import QColor,QPalette
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction, QTableWidgetItem, QDialog
 
 from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
-from classes.simulatordialog import SimulatorDialog
 from lib import gcodetools
 from lib import utility
+from lib import compiler
 
         
 
@@ -187,10 +187,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_target.insertItem(2, self.targets[2])
         # GRBL SETUP END -----
         
-        # Compiler SETUP BEGIN -----
-        Compiler.receiver(self.grbl)
-        Compiler.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
-        # Compiler SETUP END -----
+        # compiler SETUP BEGIN -----
+        compiler.receiver(self.grbl)
+        compiler.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
+        # compiler SETUP END -----
         
         self.tableWidget_settings.setColumnWidth(2, 300)
         for row in range(0, 32):
@@ -549,7 +549,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def execute_script_clicked(self,item):
         code = self.scriptTextEdit.toPlainText()
-        Compiler.evaluate(code)
+        compiler.evaluate(code)
         
         
     def load_script_clicked(self,item):
@@ -804,7 +804,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # dynamically executed python code must begin with an equal sign
             # "self." is prepended for convenience
             if cmd[1] == "=":
-                kls = "Compiler"
+                kls = "compiler"
                 cmd = cmd[2:]
             else:
                 kls = "self" 

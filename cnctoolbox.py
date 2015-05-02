@@ -10,7 +10,6 @@ import time
 
 from classes.session import Session
 from classes.svg import SVG
-import compiler.gcode as COMPILE
 
 sys.path.append("gerbil")
 from gerbil.gerbil import Gerbil

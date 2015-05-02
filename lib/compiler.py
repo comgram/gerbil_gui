@@ -7,7 +7,7 @@ import inspect
 import logging
 import re
 
-import ..lib.gcodetools
+from . import gcodetools
 
 try:
     unicode = unicode

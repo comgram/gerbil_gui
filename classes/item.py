@@ -200,8 +200,8 @@ class Grid(Item):
 class GcodePath(Item):
     def __init__(self, prog, gcode, cwpos, ccs, cs_offsets):
         
-        self.line_count = len(gcode) + 10
-        print("XXX", self.line_count)
+        self.line_count = len(gcode) + 1
+        
         super(GcodePath, self).__init__(prog, self.line_count)
         
         self.primitive_type = GL_LINE_STRIP
