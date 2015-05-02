@@ -7,7 +7,7 @@ import inspect
 import logging
 import re
 
-from . import gcodetools
+from . import gcodetools as tools
 
 try:
     unicode = unicode
@@ -137,7 +137,6 @@ def evaluate(txt):
     try:
         exec(txt)
     except:
-        print("Compiler: Exception in user code:")
         log(traceback.format_exc())
 def getv(name):
     if name in State['vars']:
