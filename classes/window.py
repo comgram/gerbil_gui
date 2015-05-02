@@ -374,10 +374,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             gcode = data[0]
             cwpos = self.wpos
             ccs = self._cs_names[self._current_cs]
-            self.sim_dialog.simulator_widget.draw_gcode(
-                gcode,
-                cwpos,
-                ccs)
+            self.sim_dialog.simulator_widget.draw_gcode(gcode, cwpos, ccs)
+            self._current_grbl_line_number = self.grbl._current_line_nr
+            self.spinBox_start_line.setValue(self._current_grbl_line_number)
             
         elif event == "on_line_sent":
             line_number = data[0]
