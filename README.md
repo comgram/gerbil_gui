@@ -16,6 +16,8 @@ Install Python 3 modules which are shipped with the Debian Jessie distribution:
 Install Python 3 modules not shipped with the Debian Jessie distribution: 
     
     python3 -m pip install svgwrite --user
+    
+    python3 -m pip install doxypy --user
 
 
 ### Get source:

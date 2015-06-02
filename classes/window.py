@@ -81,16 +81,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ## MENU BAR SETUP BEGIN ----------
         self.menuBar = QMenuBar(self)
-        self.action_file_set = QAction("Set", self)
+        
+        self.action_script_load = QAction("Open Script...", self)
+        self.action_script_load.triggered.connect(self._pick_script)
+        
+        self.action_script_save = QAction("Save Script!", self)
+        self.action_script_save.triggered.connect(self._save_script)
+        
+        self.action_script_save_as = QAction("Save Script As...", self)
+        self.action_script_save_as.triggered.connect(self._save_script_as)
+        
+        self.action_file_set = QAction("Load G-Code...", self)
         self.action_file_set.triggered.connect(self._pick_file)
-        self.action_file_quit = QAction("Quit", self)
+        
+        self.action_file_quit = QAction("Quit!", self)
         self.action_file_quit.triggered.connect(self._quit)
+        
         self.action_grbl_connect = QAction("Connect", self)
         self.action_grbl_connect.triggered.connect(self.cnect)
         self.action_grbl_disconnect = QAction("Disconnect", self)
         self.action_grbl_disconnect.triggered.connect(self.disconnect)
+        
         self.menu_file = self.menuBar.addMenu("File")
         self.menu_grbl = self.menuBar.addMenu("Grbl")
+        
+        self.menu_file.addAction(self.action_script_load)
+        self.menu_file.addAction(self.action_script_save)
+        self.menu_file.addAction(self.action_script_save_as)
         self.menu_file.addAction(self.action_file_set)
         self.menu_file.addAction(self.action_file_quit)
         self.menu_grbl.addAction(self.action_grbl_connect)
@@ -107,7 +124,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
         self.pushButton_job_run.clicked.connect(self.job_run)
         self.pushButton_job_halt.clicked.connect(self.job_halt)
-        self.pushButton_job_new.clicked.connect(self.grbl.job_new)
+        self.pushButton_job_new.clicked.connect(self.new_job)
         self.pushButton_show_buffer.clicked.connect(self._show_buffer)
         self.pushButton_hold.clicked.connect(self.grbl.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
@@ -177,8 +194,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.on_job_completed_callback = None
         
         # GRBL SETUP BEGIN -----
+        self.grbl.setup_logging()
         self.grbl.poll_interval = 0.1
-        self.grbl.set_callback(self.on_grbl_event)
+        self.grbl.callback = self.on_grbl_event
         self.grbl.cnect()
         
         self.targets = ["firmware", "simulator", "file"]
@@ -189,17 +207,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         # compiler SETUP BEGIN -----
         compiler.receiver(self.grbl)
-        compiler.Settings['log_callback'] = lambda str: self._add_to_loginput(str)
+        compiler.Settings['log_callback'] = lambda msg: self._add_to_loginput("<b>SCRIPT:</b> {}".format(msg))
         # compiler SETUP END -----
         
         self.tableWidget_settings.setColumnWidth(2, 300)
         for row in range(0, 32):
             self.tableWidget_settings.setRowHeight(row, 15)
             
-        
+        with open("examples/scripts/blank.py", 'r') as f: c = f.read()
+        self.plainTextEdit_script.setPlainText(c)
         
         ## JOG WIDGET SETUP BEGIN -------------
-        self.jogWidget = JogWidget(self, self.grbl.send_with_queue)
+        self.jogWidget = JogWidget(self, self.grbl.stream)
         self.gridLayout_jog_container.addWidget(self.jogWidget)
         ## JOG WIDGET SETUP END -------------
         
@@ -214,6 +233,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #event.ignore()
         event.accept()
         
+    def log(self, msg):
+        self._add_to_loginput(msg)
+        
+    #def conosole_log(self, msg):
+        
+        
+    def new_job(self):
+        self.grbl.job_new()
+        self.spinBox_start_line.setValue(1)
+        
         
     def modifyUi(self):
         self.pushButton_homing.setStyleSheet("background-color: rgb(102,217,239);")
@@ -225,16 +254,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def setupScripting(self):
         print("Setting up Scripting Tab")
-        p = self.scriptTextEdit.palette();
+        p = self.plainTextEdit_script.palette();
         
-        self.scriptTextEdit.setStyleSheet("QPlainTextEdit { background-color: rgb(51, 51, 51); color: rgb(255,255,255); }");
-        self.highlighter = Highlighter(self.scriptTextEdit.document())
-        self.filenameLineEdit.setText("./compiler/examples.py")
-        self.filenameLineEdit.setDisabled(False)
-        self.linesToExecute.setDisabled(False)
-        self.loadScriptButton.clicked.connect(self.load_script_clicked)
-        self.saveScriptFileButton.clicked.connect(self.save_script_clicked)
-        self.executeScriptButton.clicked.connect(self.execute_script_clicked)
+        self.plainTextEdit_script.setStyleSheet("QPlainTextEdit { background-color: rgb(51, 51, 51); color: rgb(255,255,255); }");
+        self.highlighter = Highlighter(self.plainTextEdit_script.document())
+
+        self.pushButton_script_run.clicked.connect(self.execute_script_clicked)
         
 
     # CALLBACKS
@@ -249,7 +274,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.changed_state = True
                 
         elif event == "on_hash_stateupdate":
-            self.state_hash = self.grbl.settings_hash
+            self.state_hash = data[0]
             self.state_hash_dirty = True
             self._add_to_loginput("on_hash_stateupdate")
           
@@ -286,12 +311,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             um_string = gps[11]
             self.label_current_rpm.setText(um_string)
             
-        elif event == "on_send_command":
-            pass
-            #logging.log(300, "GRBL event: %s, %s", event, data)
-            #gcodeblock = data[0]
-            #self.logbuffer.append(gcodeblock)
-            
         elif event == "on_processed_command":
             self._add_to_loginput("<span style='color: green'>Line {}: {}</span>".format(data[0], data[1]))
             self._current_grbl_line_number = int(data[0]) + 1
@@ -314,16 +333,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_bufsize_change":
             #what = data[0]
-            msg = "{:d} Lines".format(data[1])
+            msg = "{:d} Lines".format(data[0])
             
-            self._current_grbl_buffer_size = int(data[1])
+            self._current_grbl_buffer_size = int(data[0])
             self.label_bufsize.setText(msg)
             
             #enabled = self._current_grbl_buffer_size == 0
             #self.lineEdit_cmdline.setEnabled(enabled)
             #self.listWidget_logoutput.setEnabled(enabled)
             
-        elif event == "on_rx_buffer_percentage":
+        elif event == "on_rx_buffer_percent":
             self._rx_buffer_fill = data[0]
             
         elif event == "on_progress_percent":
@@ -337,7 +356,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.lcdNumber_feed_current.display("{:d}".format(int(feed)))
                 
         elif event == "on_streaming_complete":
-            self.grbl.set_incremental_streaming(True)
+            self.grbl.incremental_streaming = True
             
         elif event == "on_boot":
             self.action_grbl_disconnect.setEnabled(True)
@@ -358,7 +377,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("")
             
         elif event == "on_settings_downloaded":
-            settings = self.grbl.get_settings()
+            settings = data[0] #self.grbl.get_settings()
             self.dict_into_settings_table(settings)
         
         elif event == "on_job_completed":
@@ -540,30 +559,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.on_job_completed_callback = settings_upload_complete
         self._add_to_loginput("<i>Sending settings...</i>")
-        self.grbl.send_with_queue(settings_string)
+        self.grbl.stream(settings_string)
         
     
     def _current_grbl_line_number_changed(self, nr):
-        self.grbl.set_current_line_number(int(nr) - 1)
+        self.grbl.current_line_number = int(nr) - 1
     
     def execute_script_clicked(self,item):
-        code = self.scriptTextEdit.toPlainText()
-        compiler.evaluate(code)
-        
-        
-    def load_script_clicked(self,item):
-        fname = self.filenameLineEdit.text()
-        with open(fname, 'r') as content_file:
-            content = content_file.read()
-        self.scriptTextEdit.setPlainText(content)
-        
-        
-    def save_script_clicked(self,item):
-        fname = self.filenameLineEdit.text()
-        with open(fname, 'w') as content_file:
-            content_file.write(self.scriptTextEdit.toPlainText())
-        self._add_to_loginput("File {} written.".format(fname))
-    
+        code = self.plainTextEdit_script.toPlainText()
+        try:
+            exec(code)
+        except:
+            self._add_to_loginput(traceback.format_exc())
+        #compiler.evaluate(code)
     
     def _on_logoutput_item_double_clicked(self, item):
         self._exec_cmd(item.text())
@@ -587,7 +595,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
         self.grbl.load_file(filename_tuple[0])
         
-    
+    def _pick_script(self):
+        filename_tuple = QFileDialog.getOpenFileName(self, "Open Script", os.getcwd(), "GCode Files (*.py)")
+        fname = filename_tuple[0]
+        with open(fname, 'r') as content_file: content = content_file.read()
+        self.plainTextEdit_script.setPlainText(content)
+        self.label_script_filename.setText(fname)
+        
+    def _save_script(self):
+        fname = self.label_script_filename.text()
+        if fname == "New file":
+            self._save_script_as()
+            return
+        
+        with open(fname, 'w') as content_file:
+            content_file.write(self.plainTextEdit_script.toPlainText())
+        self._add_to_loginput("File {} written.".format(fname))
+        self.label_script_filename.setText(fname)
+        
+    def _save_script_as(self):
+        filename_tuple = QFileDialog.getSaveFileName(self, "Save Script", os.getcwd())
+        fname = filename_tuple[0]
+        #fname = self.label_script_filename.text()
+        with open(fname, 'w') as content_file:
+            content_file.write(self.plainTextEdit_script.toPlainText())
+        self._add_to_loginput("File {} written.".format(fname))
+        self.label_script_filename.setText(fname)
+        
+
     
     def xminus(self):
         step = - self.doubleSpinBox_jogstep.value()
@@ -647,7 +682,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def _incremental_changed(self, val):
         val = False if val == 0 else True
-        self.grbl.set_incremental_streaming(val)
+        self.grbl.incremental_streaming = val
              
              
     def abort(self):
@@ -713,7 +748,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def _target_selected(self, idx):
         self.current_target = self.targets[idx]
-        self.grbl.set_target(self.current_target)
+        self.grbl.target = self.current_target
     
         
     def _current_cs_setzero(self):
@@ -721,10 +756,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send_immediately("$#")
 
     def _variables_edited(self, row, col):
-        
-        #self.tableWidget_variables
         d = self._var_table_to_dict()
-        print("vars edited", d)
         self.grbl.preprocessor.set_vars(d)
 
         
@@ -833,14 +865,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         was_incremental = self.checkBox_incremental.isChecked()
         was_buf = self.grbl.get_buffer()
         
-        movements = gcodetools.draw_bbox(was_buf, move_z)
+        movements = gcodetools.bbox(was_buf, move_z)
         
         self.grbl.job_new()
         
-        self.grbl.set_incremental_streaming(True)
+        self.grbl.incremental_streaming = True
         self.checkBox_incremental.setChecked(True)
         
-        self.grbl.send_with_queue(movements)
+        self.grbl.stream(movements)
         
         #self.grbl.set_incremental_streaming(was_incremental)
         #self.checkBox_incremental.setChecked(was_incremental)

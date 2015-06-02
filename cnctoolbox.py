@@ -37,21 +37,6 @@ def main():
     logger = logging.getLogger('cnctoolbox')
     logger.setLevel(5)
     
-    logger_fh = logging.FileHandler('cnctoolbox.log')
-    logger_fh.setLevel(logging.DEBUG)
-    # This is the console logger, it hass a higher level than the
-    # logfile to keep the console clear for errors and splats
-    logger_ch = logging.StreamHandler()
-    logger_ch.setLevel(logging.ERROR)
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logger_fh.setFormatter(formatter)
-    logger_ch.setFormatter(formatter)
-    # add the handlers to the logger i.e. now we have a console logger, and a file logger at the same time
-    logger.addHandler(logger_fh)
-    logger.addHandler(logger_ch)
-    logger.info("New Session")
-    
     parser = argparse.ArgumentParser(description='This program is a box full of useful CNC tools')
     
     # Set up sub-commands like git uses them

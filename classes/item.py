@@ -29,6 +29,8 @@ class Item():
         
         self.scale = 1
         self.origin = QVector3D(0, 0, 0)
+        self.rotation_angle = 0
+        self.rotation_vector = QVector3D(0, 0, 0)
         
         self.dirty = True
         
@@ -80,6 +82,7 @@ class Item():
         mat_m = QMatrix4x4()
         mat_m.translate(self.origin)
         mat_m.scale(self.scale)
+        mat_m.rotate(self.rotation_angle, self.rotation_vector)
         
         mat_m = self.qt_mat_to_array(mat_m)
         loc_mat_m = glGetUniformLocation(self.program, "mat_m")
@@ -167,7 +170,8 @@ class Grid(Item):
                  ll=(0, 0),
                  ur=(1000, 1000),
                  trans=(0, 0, 0),
-                 unit=10
+                 unit=10,
+                 color=(1, 1, 1, 0.2)
                  ):
         
         width = ur[0] - ll[0]
@@ -181,7 +185,7 @@ class Grid(Item):
         
         self.primitive_type = GL_LINES
         self.linewidth = 1
-        self.color = (1, 1, 1, 0.2)
+        self.color = color
         self.set_origin(trans)
         
         for wu in range(0, width_units):
@@ -201,6 +205,7 @@ class GcodePath(Item):
     def __init__(self, prog, gcode, cwpos, ccs, cs_offsets):
         
         self.line_count = 2 * (len(gcode) + 1)
+        #self.line_count = 1 * (len(gcode) + 1)
         
         super(GcodePath, self).__init__(prog, self.line_count)
         
@@ -241,6 +246,7 @@ class GcodePath(Item):
             color_size = self.data.dtype["color"].itemsize
             
             offset = 2 * line_number * stride + position_size
+            #offset = 1 * line_number * stride + position_size
             
             glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
             
@@ -249,6 +255,7 @@ class GcodePath(Item):
             glBufferSubData(GL_ARRAY_BUFFER, offset, color_size, col)
             #glBindBuffer(GL_ARRAY_BUFFER, 0)
             #self.draw()
+            
         del self.highlight_lines_queue[:]
         
         super(GcodePath, self).draw()
@@ -302,6 +309,9 @@ class GcodePath(Item):
             if self.spindle_speed:
                 rgb = self.spindle_speed / 255.0
                 col = (rgb, rgb, rgb, 1)
+                
+            #target = np.add(offset, pos)
+            #self.append(tuple(target), col)
 
             start = end
             end = np.add(offset, pos)

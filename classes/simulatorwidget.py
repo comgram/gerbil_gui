@@ -60,6 +60,19 @@ class SimulatorWidget(QGLWidget):
             "G58": (0, 0, 0),
             "G59": (0, 0, 0)
             }
+        
+    def resetView(self):
+        # Rotation state
+        self._mouse_rotation_start_vec = QVector3D()
+        self._rotation_quat = QQuaternion()
+        self._rotation_quat_start = self._rotation_quat
+        
+        # Translation state
+        self._translation_vec = QVector3D(300, 200, -350)
+        self._translation_vec_start = self._translation_vec
+        
+        self._zoom = 3
+        self._rotation_axis = QVector3D()
 
 
     def minimumSizeHint(self):
@@ -119,7 +132,8 @@ class SimulatorWidget(QGLWidget):
         self.items["csm"] = CoordSystem(self.program, 12, (0, 0, 0))
         self.items["csm"].linewidth = 6
         #self.items["cs2"] = CoordSystem(self.program, 0.2, (1, 1, 1))
-        self.items["grid1"] = Grid(self.program, (0, 0), (800, 1400), (-800, -1400, 0))
+        self.items["grid1"] = Grid(self.program, (0, 0), (800, 1400), (-800, -1400, 0), 10)
+        
         #self.items["buffer_marker"] = StarMarker(self.program)
 
 
@@ -145,7 +159,7 @@ class SimulatorWidget(QGLWidget):
         # PROJECTION MATRIX BEGIN ==========
         aspect = self.width / self.height
         mat_p = QMatrix4x4()
-        mat_p.perspective(90, aspect, 0.1, 10000)
+        mat_p.perspective(90, aspect, 0.1, 100000)
         mat_p = Item.qt_mat_to_array(mat_p)
         loc_mat_p = glGetUniformLocation(self.program, "mat_p")
         glUniformMatrix4fv(loc_mat_p, 1, GL_TRUE, mat_p)
@@ -259,7 +273,8 @@ class SimulatorWidget(QGLWidget):
         
         
     def highlight_gcode_line(self, line_number):
-        self.items["gcode"].highlight_line(line_number)
+        if "gcode" in self.items:
+            self.items["gcode"].highlight_line(line_number)
         
         
     def draw_tool(self, cmpos):
@@ -272,6 +287,31 @@ class SimulatorWidget(QGLWidget):
             i.upload()
             i.set_origin(cmpos)
             self.items["tool"] = i
+        self.draw_asap = True
+        
+        
+    def draw_workpiece(self, dim=(100, 100, 10), offset=(0, 0, 0)):
+        off = np.add((-800, -1400, dim[2]), offset)
+        self.items["workpiece_top"] = Grid(self.program,
+                                       (0, 0, 0),
+                                       (dim[0], dim[1], 0),
+                                       off,
+                                       2,
+                                       (0.7, 0.2, 0.1, 0.6)
+                                       )
+        
+        self.items["workpiece_top"].linewidth = 2
+        
+        self.items["workpiece_front"] = Grid(self.program,
+                                       (0, 0, 0),
+                                       (dim[0], dim[2], 0),
+                                       off,
+                                       2,
+                                       (0.7, 0.2, 1, 0.6)
+                                       )
+        self.items["workpiece_front"].rotation_angle = -90
+        self.items["workpiece_front"].rotation_vector = QVector3D(1, 0, 0)
+        
         self.draw_asap = True
     
             

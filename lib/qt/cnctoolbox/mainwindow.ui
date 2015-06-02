@@ -597,278 +597,40 @@
          <enum>QTabWidget::Rounded</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
         </property>
-        <widget class="QWidget" name="tab_conversation">
-         <attribute name="title">
-          <string>Conversation</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_6">
-          <item row="0" column="0" colspan="2">
-           <layout class="QGridLayout" name="gridLayout_9">
-            <item row="1" column="0" colspan="2">
-             <widget class="QGroupBox" name="argumentsGroupBox">
-              <property name="title">
-               <string>Arguments</string>
-              </property>
-              <widget class="QLineEdit" name="dLineEdit">
-               <property name="geometry">
-                <rect>
-                 <x>360</x>
-                 <y>60</y>
-                 <width>51</width>
-                 <height>33</height>
-                </rect>
-               </property>
-              </widget>
-              <widget class="QLineEdit" name="syLineEdit">
-               <property name="geometry">
-                <rect>
-                 <x>80</x>
-                 <y>60</y>
-                 <width>51</width>
-                 <height>33</height>
-                </rect>
-               </property>
-              </widget>
-              <widget class="QLabel" name="rLabel">
-               <property name="geometry">
-                <rect>
-                 <x>290</x>
-                 <y>30</y>
-                 <width>66</width>
-                 <height>21</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>radius</string>
-               </property>
-              </widget>
-              <widget class="QLabel" name="syLabel">
-               <property name="geometry">
-                <rect>
-                 <x>80</x>
-                 <y>30</y>
-                 <width>66</width>
-                 <height>21</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>sy/k</string>
-               </property>
-              </widget>
-              <widget class="QLabel" name="eyLabel">
-               <property name="geometry">
-                <rect>
-                 <x>220</x>
-                 <y>30</y>
-                 <width>66</width>
-                 <height>21</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>ey</string>
-               </property>
-              </widget>
-              <widget class="QLineEdit" name="eyLineEdit">
-               <property name="geometry">
-                <rect>
-                 <x>220</x>
-                 <y>60</y>
-                 <width>51</width>
-                 <height>33</height>
-                </rect>
-               </property>
-              </widget>
-              <widget class="QLineEdit" name="exLineEdit">
-               <property name="geometry">
-                <rect>
-                 <x>150</x>
-                 <y>60</y>
-                 <width>51</width>
-                 <height>33</height>
-                </rect>
-               </property>
-              </widget>
-              <widget class="QLabel" name="dLabel">
-               <property name="geometry">
-                <rect>
-                 <x>360</x>
-                 <y>30</y>
-                 <width>66</width>
-                 <height>21</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>depth</string>
-               </property>
-              </widget>
-              <widget class="QLabel" name="exLabel">
-               <property name="geometry">
-                <rect>
-                 <x>150</x>
-                 <y>30</y>
-                 <width>66</width>
-                 <height>21</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>ex</string>
-               </property>
-              </widget>
-              <widget class="QLabel" name="sxLabel">
-               <property name="geometry">
-                <rect>
-                 <x>10</x>
-                 <y>30</y>
-                 <width>66</width>
-                 <height>21</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>sx/h</string>
-               </property>
-              </widget>
-              <widget class="QLineEdit" name="sxLineEdit">
-               <property name="geometry">
-                <rect>
-                 <x>10</x>
-                 <y>60</y>
-                 <width>51</width>
-                 <height>33</height>
-                </rect>
-               </property>
-              </widget>
-              <widget class="QLineEdit" name="rLineEdit">
-               <property name="geometry">
-                <rect>
-                 <x>290</x>
-                 <y>60</y>
-                 <width>51</width>
-                 <height>33</height>
-                </rect>
-               </property>
-              </widget>
-             </widget>
-            </item>
-            <item row="0" column="0" colspan="2">
-             <widget class="QGroupBox" name="settingsGroupBox">
-              <property name="title">
-               <string>Settings</string>
-              </property>
-              <widget class="QLabel" name="bitDiameterLabel">
-               <property name="geometry">
-                <rect>
-                 <x>10</x>
-                 <y>30</y>
-                 <width>81</width>
-                 <height>21</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>Bit Diameter</string>
-               </property>
-              </widget>
-              <widget class="QLineEdit" name="bitDiameterLineEdit">
-               <property name="geometry">
-                <rect>
-                 <x>10</x>
-                 <y>60</y>
-                 <width>81</width>
-                 <height>33</height>
-                </rect>
-               </property>
-              </widget>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="pocketButton">
-              <property name="text">
-               <string>Pocket</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="pocketButtonLabel">
-              <property name="text">
-               <string>sx,sy,ex,ey,depth</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
         <widget class="QWidget" name="tab_script">
          <attribute name="title">
           <string>Scripting</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="0" column="0" colspan="6">
-           <widget class="QPlainTextEdit" name="scriptTextEdit">
+          <item row="0" column="0" colspan="3">
+           <widget class="QPlainTextEdit" name="plainTextEdit_script">
             <property name="font">
              <font>
-              <family>Linux Libertine Mono O</family>
-              <pointsize>11</pointsize>
+              <family>Monospace</family>
+              <pointsize>10</pointsize>
              </font>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="QLineEdit" name="filenameLineEdit">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="text">
-             <string/>
+            <property name="plainText">
+             <string># my script</string>
             </property>
            </widget>
           </item>
           <item row="1" column="2">
-           <widget class="QLineEdit" name="linesToExecute">
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="5">
-           <widget class="QPushButton" name="executeScriptButton">
+           <widget class="QPushButton" name="pushButton_script_run">
             <property name="text">
              <string>Execute</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="4">
-           <widget class="QPushButton" name="loadScriptButton">
+          <item row="1" column="0" colspan="2">
+           <widget class="QLabel" name="label_script_filename">
             <property name="text">
-             <string>Load</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3">
-           <widget class="QPushButton" name="saveScriptFileButton">
-            <property name="text">
-             <string>Save</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QCheckBox" name="windowScopeCheckbox">
-            <property name="text">
-             <string>Window</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="compilerScopeCheckbox">
-            <property name="text">
-             <string>Compiler</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
+             <string>New file</string>
             </property>
            </widget>
           </item>

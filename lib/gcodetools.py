@@ -1,15 +1,19 @@
 import logging
 import re
 
-def move_to_origin(gcode):
-    bbox = get_bbox(gcode)
+def read(fname):
+    with open(fname, 'r') as f:
+        return f.readlines()
+
+def to_origin(gcode):
+    bbox = _get_bbox(gcode)
     xmin = bbox[0][0]
     ymin = bbox[1][0]
     translated_gcode = translate(gcode, [-xmin, -ymin, 0])
     return translated_gcode
 
 def scale_into(gcode, width, height, depth, scale_zclear=False):
-    bbox = get_bbox(gcode)
+    bbox = _get_bbox(gcode)
     xmin = bbox[0][0]
     xmax = bbox[0][1]
     ymin = bbox[1][0]
@@ -35,44 +39,13 @@ def scale_into(gcode, width, height, depth, scale_zclear=False):
     scaled_gcode = scale_factor(translated_gcode, [fac_x, fac_y, fac_z], scale_zclear)
     return scaled_gcode
     
-
-def get_bbox(gcode):
-    bbox = []
-    
-    axes = ["X", "Y", "Z"]
-    contains_regexps = []
-    
-    for i in range(0, 3):
-        axis = axes[i]
-        contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
-        bbox.append([9999, -9999])
-    
-    for line in gcode:
-        for i in range(0, 3):
-            axis = axes[i]
-            cr = contains_regexps[i]
-            
-            m = re.match(cr, line)
-
-            if m:
-                a = float(m.group(1))
-                min = bbox[i][0]
-                max = bbox[i][1]
-                min = a if a < min else min
-                max = a if a > max else max
-                bbox[i][0] = min
-                bbox[i][1] = max
-
-    return bbox
-
-
-def draw_bbox(gcode, move_z=False):
+def bbox(gcode, move_z=False):
     result = "F1000\n"
-    result = "G0X0Y0\n"
+    #result = "G0X0Y0\n"
     #result += "G4P1\n"
-    result += "M0\n"
+    #result += "M0\n"
     
-    bbox = get_bbox(gcode)
+    bbox = _get_bbox(gcode)
     xmin = bbox[0][0]
     xmax = bbox[0][1]
     ymin = bbox[1][0]
@@ -102,8 +75,6 @@ def draw_bbox(gcode, move_z=False):
     result += "G0X{:0.1f}\n".format(xmin)
     return result
     
-    
-
 
 def translate(lines, offsets=[0, 0, 0]):
     result = []
@@ -162,3 +133,32 @@ def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
 
         result.append(line)
     return result
+
+def _get_bbox(gcode):
+    bbox = []
+    
+    axes = ["X", "Y", "Z"]
+    contains_regexps = []
+    
+    for i in range(0, 3):
+        axis = axes[i]
+        contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
+        bbox.append([9999, -9999])
+    
+    for line in gcode:
+        for i in range(0, 3):
+            axis = axes[i]
+            cr = contains_regexps[i]
+            
+            m = re.match(cr, line)
+
+            if m:
+                a = float(m.group(1))
+                min = bbox[i][0]
+                max = bbox[i][1]
+                min = a if a < min else min
+                max = a if a > max else max
+                bbox[i][0] = min
+                bbox[i][1] = max
+
+    return bbox
