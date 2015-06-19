@@ -22,6 +22,7 @@ from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
 from lib import gcodetools
 from lib import utility
 from lib import compiler
+from lib import pixel2laser
 
         
 
@@ -46,6 +47,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state = None
         self.state_hash = None
         self.state_hash_dirty = False
+        
+        self.wpos = (0, 0, 0)
+        self.mpos = (0, 0, 0)
         
         ## LOGGING SETUP BEGIN ------
         # setup ring buffer for logging
@@ -834,12 +838,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if cmd[0] == "=":
             # dynamically executed python code must begin with an equal sign
             # "self." is prepended for convenience
-            if cmd[1] == "=":
-                kls = "compiler"
-                cmd = cmd[2:]
-            else:
-                kls = "self" 
-                cmd = cmd[1:]
+            kls = "self" 
+            cmd = cmd[1:]
             cmd = "%s.%s" % (kls,cmd)
             try:
                 self._add_to_loginput("Executing: %s" % cmd)
@@ -850,6 +850,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 traceback.print_exc(file=sys.stdout)
         else:
             self.grbl.send_immediately(cmd)
+            self.grbl.gcode_parser_state_requested = True
 
     def set_cs(self, nr):
         """

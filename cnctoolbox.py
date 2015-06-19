@@ -184,7 +184,7 @@ def main():
     # define arguments for the 'gui' subcommand
     gui_parser = subparsers.add_parser("gui", help="Start GUI")
     gui_parser.add_argument(
-        'path',
+        '--path',
         metavar='PATH',
         help='e.g. /dev/ttyACM0'
         )
@@ -202,7 +202,10 @@ def main():
         stipple.do(args.crd_file, args.idx_file, args.weight, args.out_file)
         
     elif subcmd == "pixel2laser":
-        p2l.do(args.in_file, args.out_file)
+        gcode = p2l.do(args.in_file)
+        f = open(args.out_file, 'w')
+        f.write(gcode)
+        f.close()
         
     elif subcmd == "stream":
         grbl = Gerbil("grbl1", args.dev_node)
