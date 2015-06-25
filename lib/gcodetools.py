@@ -4,6 +4,10 @@ import re
 def read(fname):
     with open(fname, 'r') as f:
         return f.readlines()
+    
+def write(fname, contents):
+    with open(fname, 'w') as f:
+        f.write(contents)
 
 def to_origin(gcode):
     bbox = _get_bbox(gcode)

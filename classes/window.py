@@ -51,6 +51,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.wpos = (0, 0, 0)
         self.mpos = (0, 0, 0)
         
+        self.job_run_timestamp = time.time()
+        
         ## LOGGING SETUP BEGIN ------
         # setup ring buffer for logging
         self.changed_loginput = False
@@ -385,7 +387,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dict_into_settings_table(settings)
         
         elif event == "on_job_completed":
-            self._add_to_loginput("JOB COMPLETED")
+            diff = time.time() - self.job_run_timestamp
+            self._add_to_loginput("JOB COMPLETED in {:.2f} sec".format(diff))
             if self.on_job_completed_callback:
                 self.on_job_completed_callback()
                 
@@ -699,6 +702,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def job_run(self):
         line_nr = self.spinBox_start_line.value()
+        self.job_run_timestamp = time.time()
         self.grbl.job_run(line_nr - 1)
     
     

@@ -74,7 +74,7 @@ def find_row_ranges(pix, width, height):
 
 
 
-def do(filename_in, dpmm=10, x_bleed=200):
+def do(filename_in, dpmm=10, x_bleed=200, xcorr=0.1):
     # 300 dpi = 11.8 dpmm
     logging.info("Opening image %s", filename_in)
     
@@ -106,9 +106,9 @@ def do(filename_in, dpmm=10, x_bleed=200):
     last_z = 0
     last_s = 0
 
-    result += "G0 X{:f} Y{:f} Z{:f} S{:d}\r\n".format(last_x * unit_length, last_y * unit_length, last_z * unit_length, last_s)
     result += "M3 S0\r\n" # enable laser but leave turned off (S = intensity from 0..255)
-    result += "F10000\r\n"
+    result += "G0 X{:f} Y{:f} Z{:f} S{:d}\r\n".format(last_x * unit_length, last_y * unit_length, last_z * unit_length, last_s)
+    
 
     result += "G1\r\n"
     for cy in range(height):
@@ -148,9 +148,12 @@ def do(filename_in, dpmm=10, x_bleed=200):
             
             gcodeline = ""
             # Only write changes to coords, leads to less gcode which is still precise.
-            if last_x != new_x: gcodeline += "X{:g} ".format(new_x * unit_length)
-            if last_y != new_y: gcodeline += "Y{:g} ".format(new_y * unit_length)
-            if last_z != new_z: gcodeline += "Z{:g} ".format(new_z * unit_length)
+            x = new_x * unit_length + direction * xcorr
+            y = new_y * unit_length
+            z = new_z * unit_length
+            if last_x != new_x: gcodeline += "X{:g} ".format(x)
+            if last_y != new_y: gcodeline += "Y{:g} ".format(y)
+            if last_z != new_z: gcodeline += "Z{:g} ".format(z)
             if last_s != new_s: gcodeline += "S{:g} ".format(new_s)
             gcodeline += "\n"
             result += gcodeline
