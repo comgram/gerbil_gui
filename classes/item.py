@@ -269,7 +269,7 @@ class GcodePath(Item):
         offset = self.cs_offsets[cs] # current cs offset tuple
         motion = "" # current motion mode
         
-        colg0 = (0.8, 1, 0.8, 1)
+        colg0 = (1, 1, 0.5, 1)
         colg1 = (0.3, 0.3, 1, 1)
 
         diff = [0, 0, 0]

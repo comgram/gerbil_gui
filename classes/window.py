@@ -603,7 +603,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.load_file(filename_tuple[0])
         
     def _pick_script(self):
-        filename_tuple = QFileDialog.getOpenFileName(self, "Open Script", os.getcwd(), "GCode Files (*.py)")
+        filename_tuple = QFileDialog.getOpenFileName(self, "Open Script", os.getcwd() + "/examples/scripts", "Python3 Files (*.py)")
         fname = filename_tuple[0]
         with open(fname, 'r') as content_file: content = content_file.read()
         self.plainTextEdit_script.setPlainText(content)

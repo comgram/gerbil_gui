@@ -7,7 +7,7 @@ grbl = self.grbl
 
 self.new_job()
 
-gcode = p2l.do("tmp/patterntest.png", 5, 50, -0.05)
+gcode = p2l.do("tmp/patterntest3.png", 5, 20, 0.1)
 #gcode = t.read("tmp/lasertest.ngc")
 
 t.write("tmp/patterntest5dpmm.ngc", gcode)
