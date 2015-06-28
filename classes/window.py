@@ -458,8 +458,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif self.state == "Run":
                 color = "blue"
                 self.spinBox_start_line.setEnabled(False)
-                self.lineEdit_cmdline.setEnabled(False)
-                self.listWidget_logoutput.setEnabled(False)
+                #self.lineEdit_cmdline.setEnabled(False) #xxx
+                #self.listWidget_logoutput.setEnabled(False)
                 
             elif self.state == "Check":
                 color = "orange"
