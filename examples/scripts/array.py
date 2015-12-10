@@ -9,7 +9,8 @@ sq = t.read("examples/gcode/square_offset.ngc")
 
 for i in range(0,200,20):
     for j in range(0, 200, 20):
-        grbl.write(t.translate(sq, [i, j, 0]))
+        gcode = t.translate(sq, [i, j, 0])
+        grbl.write("\n".join(gcode))
 
 
 # Send the result straight to the simulator window

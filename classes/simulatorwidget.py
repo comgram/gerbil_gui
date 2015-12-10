@@ -3,6 +3,7 @@ import numpy as np
 import ctypes
 import sys
 import math
+import re
 
 from PyQt5.QtCore import pyqtSignal, QPoint, Qt, QSize, QTimer
 from PyQt5.QtGui import QColor, QMatrix4x4, QVector2D, QVector3D, QQuaternion
@@ -123,19 +124,37 @@ class SimulatorWidget(QGLWidget):
         
         glClearColor(0, 0, 0, 1.0)
 
-        self.create_items()
+        self.draw_stage()
         self.timer.start(10)
         
         
-    def create_items(self):
-        #self.draw_coordinate_system("blah", (1, 1, 1))
+    def draw_stage(self):
+        # this simply draws the main coordinate system and the XY base grid
+        # corresponding to the machine bed
         self.items["csm"] = CoordSystem(self.program, 12, (0, 0, 0))
         self.items["csm"].linewidth = 6
-        #self.items["cs2"] = CoordSystem(self.program, 0.2, (1, 1, 1))
-        self.items["grid1"] = Grid(self.program, (0, 0), (800, 1400), (-800, -1400, 0), 10)
-        
-        #self.items["buffer_marker"] = StarMarker(self.program)
 
+        self.items["grid1"] = Grid(self.program, (0, 0), (800, 1400), (-800, -1400, 0), 10)
+
+
+    def cleanup_stage(self):
+        item_keys = self.items.keys()
+        
+        keys_to_delete = []
+        for key in item_keys:
+            print("LOOKING AT %s" % key)
+            if not (re.match("G5[4-9].*", key) or key == "csm" or key == "grid1"):
+                print("REMOVING %s" % key)
+                keys_to_delete.append(key)
+                
+        for key in keys_to_delete:
+            self.remove_item(key)
+        
+    def remove_item(self, label):
+        self.items[label].remove()
+        del self.items[label]
+        self.draw_asap = True
+        
 
     def paintGL(self):
         """
@@ -213,7 +232,6 @@ class SimulatorWidget(QGLWidget):
         
         self.draw_asap = True
             
-            
     def mouseReleaseEvent(self, event):
         pass
 
@@ -268,6 +286,11 @@ class SimulatorWidget(QGLWidget):
         
         
     def draw_gcode(self, gcode, cwpos, ccs):
+        if "gcode" in self.items:
+            # remove old gcode item
+            self.remove_item("gcode")
+        
+        # create a new one
         self.items["gcode"] = GcodePath(self.program, gcode, cwpos, ccs, self.cs_offsets)
         self.draw_asap = True
         
@@ -279,8 +302,10 @@ class SimulatorWidget(QGLWidget):
         
     def draw_tool(self, cmpos):
         if "tool" in self.items:
+            # if tool was already created, simply move it to cmpos
             self.items["tool"].set_origin(cmpos)
         else:
+            # tool not yet created. create it and move it cmpos
             i = Item(self.program, 2, GL_LINES, 6)
             i.append((0, 0, 0), (1, 1, 0, 1))
             i.append((0, 0, 200), (1, 1, 0, 1))

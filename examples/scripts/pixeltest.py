@@ -21,6 +21,6 @@ for i in range(0,dist * ppmm):
 
 grbl.write(gcode)
 
-grbl.target = "simulator"
+self.set_target("simulator")
 grbl.job_run()
 

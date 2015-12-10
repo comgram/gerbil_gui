@@ -248,6 +248,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def new_job(self):
         self.grbl.job_new()
         self.spinBox_start_line.setValue(1)
+        self.sim_dialog.simulator_widget.cleanup_stage()
         
         
     def modifyUi(self):
@@ -267,6 +268,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.pushButton_script_run.clicked.connect(self.execute_script_clicked)
         
+        
+    def set_target(self, targetname):
+        idx = self.targets.index(targetname)
+        self.comboBox_target.setCurrentIndex(idx)
 
     # CALLBACKS
         

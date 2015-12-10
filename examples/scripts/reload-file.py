@@ -10,6 +10,6 @@ print(gcode)
 
 grbl.write("\n".join(gcode))
 
-grbl.target = "simulator"
+self.set_target("simulator")
 grbl.job_run()
 
