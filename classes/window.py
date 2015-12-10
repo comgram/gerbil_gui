@@ -47,6 +47,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state = None
         self.state_hash = None
         self.state_hash_dirty = False
+        self.state_cs_dirty = False
         
         self.wpos = (0, 0, 0)
         self.mpos = (0, 0, 0)
@@ -163,6 +164,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tableWidget_variables.cellChanged.connect(self._variables_edited)
         ## SIGNALS AND SLOTS END-------
         
+
+        
         
         ## TIMER SETUP BEGIN ----------
         self.timer = QTimer()
@@ -209,6 +212,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_target.insertItem(0, self.targets[0])
         self.comboBox_target.insertItem(1, self.targets[1])
         self.comboBox_target.insertItem(2, self.targets[2])
+        self.set_target("simulator")
         # GRBL SETUP END -----
         
         # compiler SETUP BEGIN -----
@@ -240,7 +244,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event.accept()
         
     def log(self, msg):
-        self._add_to_loginput(msg)
+        self._add_to_loginput("LOG {}".format(msg))
         
     #def conosole_log(self, msg):
         
@@ -251,12 +255,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sim_dialog.simulator_widget.cleanup_stage()
         
         
+    # modify whatever was hardcoded in the Qt Form Editor
     def modifyUi(self):
         self.pushButton_homing.setStyleSheet("background-color: rgb(102,217,239);")
         self.pushButton_resume.setStyleSheet("background-color: rgb(166,226,46);")
-        self.pushButton_killalarm.setStyleSheet("background-color: rgb(198,31,31);color: white;")
+        self.pushButton_killalarm.setStyleSheet("color: black;")
+        self.pushButton_abort.setStyleSheet("background-color: rgb(198,31,31);color: white;")
         self.pushButton_hold.setStyleSheet("background-color: rgb(219,213,50);")
         self.pushButton_check.setStyleSheet("background-color: rgb(235,122,9);")
+        
+        self.pushButton_homing.setText("⌂ Run Homing")
+        self.pushButton_abort.setText("☠ ABORT/RESET")
+        self.pushButton_killalarm.setText("⚐ Kill Alarm")
+        self.pushButton_job_new.setText("✧ New")
+        self.pushButton_job_halt.setText("⌛ Pause")
                
         
     def setupScripting(self):
@@ -268,7 +280,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.pushButton_script_run.clicked.connect(self.execute_script_clicked)
         
-        
+    # to be used by scripting only
     def set_target(self, targetname):
         idx = self.targets.index(targetname)
         self.comboBox_target.setCurrentIndex(idx)
@@ -287,7 +299,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_hash_stateupdate":
             self.state_hash = data[0]
             self.state_hash_dirty = True
-            self._add_to_loginput("on_hash_stateupdate")
           
                 
         elif event == "on_gcode_parser_stateupdate":
@@ -296,6 +307,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             mm_string = "G" + gps[0]
             self.label_motionmode.setText(mm_string)
             
+            # current coordinate system
             cs_string = "G" + gps[1]
             ivd = {v: k for k, v in self._cs_names.items()}
             cs_nr = ivd[cs_string]
@@ -316,14 +328,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pm_string = "M" + gps[6]
             self.label_programmode.setText(pm_string)
             
-            um_string = "M" + gps[7]
-            self.label_spindle_state.setText(um_string)
+            ss_string = "M" + gps[7]
+            self.label_spindle_state.setText(ss_string)
             
-            um_string = gps[11]
-            self.label_current_rpm.setText(um_string)
+            cr_string = gps[11]
+            self.label_current_rpm.setText(cr_string)
             
         elif event == "on_processed_command":
-            self._add_to_loginput("<span style='color: green'>Line {}: {}</span>".format(data[0], data[1]))
+            self._add_to_loginput("<span style='color: green'>✓ Line{}: {}</span>".format(data[0], data[1]))
             self._current_grbl_line_number = int(data[0]) + 1
             
         elif event == "on_line_number_change":
@@ -334,13 +346,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<span style='color: red'><b>Error was in line {}: {}</b></span>".format(data[2], data[1]))
             
         elif event == "on_alarm":
-            self._add_to_loginput("<span style='color: orange'>" + data[0] + "</span>")
+            self._add_to_loginput("<span style='color: orange'>☹ " + data[0] + "</span>")
             
         elif event == "on_read":
-            self._add_to_loginput("<span style='color: blue'>{}</span>".format(data[0]))
+            self._add_to_loginput("<span style='color: blue'>◀ {}</span>".format(data[0]))
+            
+        elif event == "on_write":
+            self._add_to_loginput("<span style='color: #DD00DD'>▶ {}</span>".format(data[0]))
             
         elif event == "on_log":
-            self._add_to_loginput("<i>" + data[0] + "</i>")
+            self._add_to_loginput("<span style='color: #555555'>✎ {}</span>".format(data[0]))
             
         elif event == "on_bufsize_change":
             #what = data[0]
@@ -427,6 +442,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if re.match("G5[4-9].*", key):
                     self.sim_dialog.simulator_widget.draw_coordinate_system(key, tpl)
             self.state_hash_dirty = False
+            
+        if self.state_cs_dirty == True:
+            # highlight opengl CS
+            for idx, val in self._cs_names.items():
+                do_highlight = val == self._cs_names[self._current_cs]
+                cs_item = self.sim_dialog.simulator_widget.items[val]
+                cs_item.highlight(do_highlight)
+            self.sim_dialog.simulator_widget.draw_asap = True
+            self.state_cs_dirty = False
         
         if self.changed_state:
             mx = self.mpos[0]
@@ -758,10 +782,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send_immediately(self._cs_names[self._current_cs])
         self.grbl.send_immediately("$#")
         
-        
+    # callback for the drop-down
     def _target_selected(self, idx):
         self.current_target = self.targets[idx]
         self.grbl.target = self.current_target
+        self.pushButton_job_run.setText("➾ {}".format(self.current_target))
+        if self.current_target == "firmware":
+            self.pushButton_job_run.setText("⚒ RUN MACHINE ⚠")
+            self.pushButton_job_run.setStyleSheet("background-color: rgb(198,31,31); color: white;")
+        else:
+            self.pushButton_job_run.setStyleSheet("background-color: none; color: black;")
+            
     
         
     def _current_cs_setzero(self):
@@ -863,12 +894,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def set_cs(self, nr):
         """
-        A convenience function to select CS 1-6 and update the UI at the same time
+        A convenience function update the UI for CS
         """
         self._current_cs = nr
-        self.label_current_cs.setText(self._cs_names[self._current_cs])
+        current_cs_text = self._cs_names[self._current_cs]
+        self.label_current_cs.setText(current_cs_text)
         self.comboBox_coordinate_systems.setCurrentIndex(nr - 1)
-        #self._cs_names[self._current_cs]
+        
+        self.state_cs_dirty = True
         
 
     def bbox(self, move_z=False):

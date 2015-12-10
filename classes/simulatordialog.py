@@ -12,18 +12,8 @@ class SimulatorDialog(QWidget, Ui_SimulatorDialog):
         super(SimulatorDialog, self).__init__()
         self.setupUi(self)
         
-        self.checkBox_sim_enable.stateChanged.connect(self._sim_enabled_changed)
-        self.pushButton_sim_wipe.clicked.connect(self._sim_wipe)
-        
         ## SIMULATOR SETUP BEGIN -------------
         self._sim_enabled = True
         self.simulator_widget = SimulatorWidget()
         self.gridLayout_simulator.addWidget(self.simulator_widget)
         ## SIMULATOR SETUP END -------------
-        
-    def _sim_enabled_changed(self, val):
-        val = False if val == 0 else True
-        self._sim_enabled = val
-        
-    def _sim_wipe(self):
-        self.simulator_widget.wipe()

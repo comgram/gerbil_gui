@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/simulatordialog.ui'
 #
-# Created: Tue Apr 28 15:06:11 2015
+# Created: Thu Dec 10 13:58:11 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,16 +17,9 @@ class Ui_SimulatorDialog(object):
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
-        self.pushButton_sim_wipe = QtWidgets.QPushButton(SimulatorDialog)
-        self.pushButton_sim_wipe.setObjectName("pushButton_sim_wipe")
-        self.gridLayout.addWidget(self.pushButton_sim_wipe, 0, 0, 1, 1)
-        self.checkBox_sim_enable = QtWidgets.QCheckBox(SimulatorDialog)
-        self.checkBox_sim_enable.setChecked(True)
-        self.checkBox_sim_enable.setObjectName("checkBox_sim_enable")
-        self.gridLayout.addWidget(self.checkBox_sim_enable, 0, 1, 1, 1)
         self.gridLayout_simulator = QtWidgets.QGridLayout()
         self.gridLayout_simulator.setObjectName("gridLayout_simulator")
-        self.gridLayout.addLayout(self.gridLayout_simulator, 1, 0, 1, 2)
+        self.gridLayout.addLayout(self.gridLayout_simulator, 0, 0, 1, 2)
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
 
         self.retranslateUi(SimulatorDialog)
@@ -35,6 +28,4 @@ class Ui_SimulatorDialog(object):
     def retranslateUi(self, SimulatorDialog):
         _translate = QtCore.QCoreApplication.translate
         SimulatorDialog.setWindowTitle(_translate("SimulatorDialog", "Dialog"))
-        self.pushButton_sim_wipe.setText(_translate("SimulatorDialog", "Wipe"))
-        self.checkBox_sim_enable.setText(_translate("SimulatorDialog", "Enable"))
 

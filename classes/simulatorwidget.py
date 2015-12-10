@@ -131,10 +131,10 @@ class SimulatorWidget(QGLWidget):
     def draw_stage(self):
         # this simply draws the main coordinate system and the XY base grid
         # corresponding to the machine bed
-        self.items["csm"] = CoordSystem(self.program, 12, (0, 0, 0))
+        self.items["csm"] = CoordSystem("csm", self.program, 12, (0, 0, 0))
         self.items["csm"].linewidth = 6
 
-        self.items["grid1"] = Grid(self.program, (0, 0), (800, 1400), (-800, -1400, 0), 10)
+        self.items["grid1"] = Grid("grid1", self.program, (0, 0), (800, 1400), (-800, -1400, 0), 10)
 
 
     def cleanup_stage(self):
@@ -142,9 +142,7 @@ class SimulatorWidget(QGLWidget):
         
         keys_to_delete = []
         for key in item_keys:
-            print("LOOKING AT %s" % key)
-            if not (re.match("G5[4-9].*", key) or key == "csm" or key == "grid1"):
-                print("REMOVING %s" % key)
+            if not (re.match("G5[4-9].*", key) or key == "csm" or key == "grid1" or key == "tool"):
                 keys_to_delete.append(key)
                 
         for key in keys_to_delete:
@@ -269,11 +267,6 @@ class SimulatorWidget(QGLWidget):
             self.updateGL()
             self.draw_asap = False
         
-        
-    def wipe(self):
-        self.load_geometry_asap = True
-        
-        
     def draw_coordinate_system(self, key, tpl_origin):
         self.cs_offsets[key] = tpl_origin
         if key in self.items:
@@ -281,7 +274,8 @@ class SimulatorWidget(QGLWidget):
             self.items[key].set_origin(tpl_origin)
         else:
             # create
-            self.items[key] = CoordSystem(self.program, 3, tpl_origin)
+            self.items[key] = CoordSystem(key, self.program, 3, tpl_origin)
+            
         self.draw_asap = True
         
         
@@ -291,7 +285,7 @@ class SimulatorWidget(QGLWidget):
             self.remove_item("gcode")
         
         # create a new one
-        self.items["gcode"] = GcodePath(self.program, gcode, cwpos, ccs, self.cs_offsets)
+        self.items["gcode"] = GcodePath("gcode", self.program, gcode, cwpos, ccs, self.cs_offsets)
         self.draw_asap = True
         
         
@@ -306,7 +300,7 @@ class SimulatorWidget(QGLWidget):
             self.items["tool"].set_origin(cmpos)
         else:
             # tool not yet created. create it and move it cmpos
-            i = Item(self.program, 2, GL_LINES, 6)
+            i = Item("tool", self.program, 2, GL_LINES, 6)
             i.append((0, 0, 0), (1, 1, 0, 1))
             i.append((0, 0, 200), (1, 1, 0, 1))
             i.upload()
@@ -317,7 +311,8 @@ class SimulatorWidget(QGLWidget):
         
     def draw_workpiece(self, dim=(100, 100, 10), offset=(0, 0, 0)):
         off = np.add((-800, -1400, dim[2]), offset)
-        self.items["workpiece_top"] = Grid(self.program,
+        self.items["workpiece_top"] = Grid("workpiece_top",
+                                        self.program,
                                        (0, 0, 0),
                                        (dim[0], dim[1], 0),
                                        off,
@@ -327,7 +322,8 @@ class SimulatorWidget(QGLWidget):
         
         self.items["workpiece_top"].linewidth = 2
         
-        self.items["workpiece_front"] = Grid(self.program,
+        self.items["workpiece_front"] = Grid("workpiece_front",
+                                        self.program,
                                        (0, 0, 0),
                                        (dim[0], dim[2], 0),
                                        off,

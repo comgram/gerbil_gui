@@ -15,10 +15,11 @@ OpenGL.FULL_LOGGING = False
 from OpenGL.GL import *
 
 class Item():
-    def __init__(self, prog, size, pt=GL_LINES, lw=1):
+    def __init__(self, label, prog, size, pt=GL_LINES, lw=1):
         self.vbo = glGenBuffers(1)
         self.vao = glGenVertexArrays(1)
         self.program = prog
+        self.label = label
 
         self.elementcount = 0
         
@@ -86,6 +87,7 @@ class Item():
         
     def draw(self):
         # upload Model Matrix
+        # TODO: only draw if dirty
         mat_m = QMatrix4x4()
         mat_m.translate(self.origin)
         mat_m.scale(self.scale)
@@ -122,13 +124,14 @@ class Item():
         
 class StarMarker(Item):
     def __init__(self,
+                 label,
                  prog,
                  scale=1,
                  origin=(0, 0, 0)
                  ):
         
         size = 6
-        super(CoordSystem, self).__init__(prog, size)
+        super(CoordSystem, self).__init__(label, prog, size)
         
         self.primitive_type = GL_LINES
         self.linewidth = 2
@@ -149,18 +152,21 @@ class StarMarker(Item):
         
 class CoordSystem(Item):
     def __init__(self,
+                 label,
                  prog,
                  scale=1,
-                 origin=(0, 0, 0)
+                 origin=(0, 0, 0),
+                 hilight=False
                  ):
         
         size = 6
-        super(CoordSystem, self).__init__(prog, size)
+        super(CoordSystem, self).__init__(label, prog, size)
         
         self.primitive_type = GL_LINES
         self.linewidth = 3
         self.set_scale(scale)
         self.set_origin(origin)
+        self.hilight = hilight
         
         self.append((0, 0, 0), (1, 0, 0, 1))
         self.append((10, 0, 0), (1, 0, 0, 1))
@@ -171,8 +177,29 @@ class CoordSystem(Item):
         self.upload()
         
 
+    def highlight(self, val):
+        self.hilight = val
+        alpha = 1 if self.hilight == True else 0
+        for x in range(0,3):
+            col = self.data["color"][x * 2 + 1]
+            if self.hilight == True:
+                newcol = (1, 1, 1, 1)
+                self.linewidth = 3
+            else:
+                #newcol = (col[0], col[1], col[2], 0)
+                newcol = (0, 0, 0, 1)
+                self.linewidth = 2
+                
+            self.data["color"][x * 2] = newcol
+
+        self.dirty = True
+        self.upload()
+        
+        
+
 class Grid(Item):
     def __init__(self,
+                 label,
                  prog,
                  ll=(0, 0),
                  ur=(1000, 1000),
@@ -188,7 +215,7 @@ class Grid(Item):
         
         size = 2 * width_units + 2 * height_units
         
-        super(Grid, self).__init__(prog, size)
+        super(Grid, self).__init__(label, prog, size)
         
         self.primitive_type = GL_LINES
         self.linewidth = 1
@@ -209,12 +236,12 @@ class Grid(Item):
         
         
 class GcodePath(Item):
-    def __init__(self, prog, gcode, cwpos, ccs, cs_offsets):
+    def __init__(self, label, prog, gcode, cwpos, ccs, cs_offsets):
         
         self.line_count = 2 * (len(gcode) + 1)
         #self.line_count = 1 * (len(gcode) + 1)
         
-        super(GcodePath, self).__init__(prog, self.line_count)
+        super(GcodePath, self).__init__(label, prog, self.line_count)
         
         self.primitive_type = GL_LINE_STRIP
         self.linewidth = 1
