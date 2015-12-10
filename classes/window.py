@@ -48,6 +48,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state_hash = None
         self.state_hash_dirty = False
         self.state_cs_dirty = False
+        self.state_stage_dirty = False
         
         self.wpos = (0, 0, 0)
         self.mpos = (0, 0, 0)
@@ -342,8 +343,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._current_grbl_line_number = int(data[0]) + 1
             
         elif event == "on_error":
-            self._add_to_loginput("<span style='color: red'><b>{}</b></span>".format(data[0]))
-            self._add_to_loginput("<span style='color: red'><b>Error was in line {}: {}</b></span>".format(data[2], data[1]))
+            self._add_to_loginput("<span style='color: red'><b>◀ {}</b></span>".format(data[0]))
+            if data[2] > -1:
+                self._add_to_loginput("<span style='color: red'><b>✗ Error was in line {}: {}</b></span>".format(data[2], data[1]))
             
         elif event == "on_alarm":
             self._add_to_loginput("<span style='color: orange'>☹ " + data[0] + "</span>")
@@ -388,6 +390,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
             self.grbl.poll_start()
+            self.grbl.request_settings()
             
         elif event == "on_disconnected":
             self.action_grbl_disconnect.setEnabled(False)
@@ -405,6 +408,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_settings_downloaded":
             settings = data[0] #self.grbl.get_settings()
             self.dict_into_settings_table(settings)
+            self.state_stage_dirty = True
         
         elif event == "on_job_completed":
             diff = time.time() - self.job_run_timestamp
@@ -437,22 +441,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.label_current_line_number.setText(str(self._current_grbl_line_number))
         
         if self.state_hash_dirty == True:
-            #print("$# dirty")
+            # used to draw/update origins of coordinate systems (after $# command)
             for key, tpl in self.state_hash.items():
                 if re.match("G5[4-9].*", key):
                     self.sim_dialog.simulator_widget.draw_coordinate_system(key, tpl)
             self.state_hash_dirty = False
             
+        if self.state_stage_dirty == True:
+            # used to draw/update the workarea (stage) (after $$ command)
+            workarea_x = int(float(self.grbl.settings[130]["val"]))
+            workarea_y = int(float(self.grbl.settings[131]["val"]))
+            self.sim_dialog.simulator_widget.draw_stage(workarea_x, workarea_y)
+            self.state_stage_dirty = False
+            
+            
         if self.state_cs_dirty == True:
-            # highlight opengl CS
+            # used to highlight coordinate systems (after $G command)
             for idx, val in self._cs_names.items():
                 do_highlight = val == self._cs_names[self._current_cs]
                 cs_item = self.sim_dialog.simulator_widget.items[val]
                 cs_item.highlight(do_highlight)
+                
+            self.sim_dialog.simulator_widget.cleanup_stage()
+            
             self.sim_dialog.simulator_widget.draw_asap = True
             self.state_cs_dirty = False
         
         if self.changed_state:
+            # used to update the opengl tool, and UI displays
             mx = self.mpos[0]
             my = self.mpos[1]
             mz = self.mpos[2]

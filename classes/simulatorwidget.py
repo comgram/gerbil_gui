@@ -124,17 +124,19 @@ class SimulatorWidget(QGLWidget):
         
         glClearColor(0, 0, 0, 1.0)
 
-        self.draw_stage()
         self.timer.start(10)
         
         
-    def draw_stage(self):
-        # this simply draws the main coordinate system and the XY base grid
-        # corresponding to the machine bed
+    def draw_stage(self, workarea_x, workarea_y):
+        self.cleanup_stage()
+        
+        # this simply draws the machine coordinate system
         self.items["csm"] = CoordSystem("csm", self.program, 12, (0, 0, 0))
         self.items["csm"].linewidth = 6
 
-        self.items["grid1"] = Grid("grid1", self.program, (0, 0), (800, 1400), (-800, -1400, 0), 10)
+        self.items["grid1"] = Grid("grid1", self.program, (0, 0), (workarea_x, workarea_y), (-workarea_x, -workarea_y, 0), 10)
+        
+        self.draw_asap = True
 
 
     def cleanup_stage(self):
@@ -147,6 +149,9 @@ class SimulatorWidget(QGLWidget):
                 
         for key in keys_to_delete:
             self.remove_item(key)
+            
+        self.draw_asap = True
+        
         
     def remove_item(self, label):
         self.items[label].remove()
