@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1212</width>
-    <height>668</height>
+    <width>1216</width>
+    <height>669</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -1119,6 +1119,9 @@
       </property>
      </widget>
     </item>
+    <item row="0" column="13">
+     <widget class="QComboBox" name="comboBox_target"/>
+    </item>
     <item row="3" column="13" rowspan="6" colspan="4">
      <widget class="QScrollArea" name="scrollArea_loginput">
       <property name="sizePolicy">
@@ -1156,14 +1159,11 @@
          <x>0</x>
          <y>0</y>
          <width>285</width>
-         <height>157</height>
+         <height>158</height>
         </rect>
        </property>
       </widget>
      </widget>
-    </item>
-    <item row="0" column="13">
-     <widget class="QComboBox" name="comboBox_target"/>
     </item>
     <item row="1" column="13">
      <widget class="QSpinBox" name="spinBox_start_line">
@@ -1190,6 +1190,13 @@
       </property>
      </widget>
     </item>
+    <item row="2" column="13">
+     <widget class="QPushButton" name="pushButton_job_new">
+      <property name="text">
+       <string>New</string>
+      </property>
+     </widget>
+    </item>
     <item row="1" column="14">
      <widget class="QLabel" name="label_current_line_number">
       <property name="font">
@@ -1201,6 +1208,13 @@
       </property>
       <property name="text">
        <string>0</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="15">
+     <widget class="QPushButton" name="pushButton_job_halt">
+      <property name="text">
+       <string>Halt</string>
       </property>
      </widget>
     </item>
@@ -1216,20 +1230,6 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="13">
-     <widget class="QPushButton" name="pushButton_job_new">
-      <property name="text">
-       <string>New</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="15">
-     <widget class="QPushButton" name="pushButton_job_halt">
-      <property name="text">
-       <string>Halt</string>
-      </property>
-     </widget>
-    </item>
     <item row="2" column="14">
      <widget class="QPushButton" name="pushButton_job_run">
       <property name="sizePolicy">
@@ -1240,6 +1240,13 @@
       </property>
       <property name="text">
        <string>Run</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="14">
+     <widget class="QLabel" name="label_time">
+      <property name="text">
+       <string>00:00:00</string>
       </property>
      </widget>
     </item>

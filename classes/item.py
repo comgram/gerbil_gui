@@ -39,7 +39,7 @@ class Item():
         self.data = np.zeros(self.size, [("position", np.float32, 3), ("color", np.float32, 4)])
         
     def __del__(self):
-        print("DELETING MYSELF")
+        print("DELETING MYSELF: {}".format(self.label))
         
         
     def append(self, pos, col=(1, 1, 1, 1)):
@@ -51,6 +51,7 @@ class Item():
         glDeleteBuffers(1, [self.vbo])
         glDeleteVertexArrays(1, [self.vao])
         self.dirty = True
+        print("REMOVING {}".format(self.label))
         
     def upload(self):
         # chop unneeded bytes

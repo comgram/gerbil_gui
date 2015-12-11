@@ -43,6 +43,7 @@ def scale_into(gcode, width, height, depth, scale_zclear=False):
     scaled_gcode = scale_factor(translated_gcode, [fac_x, fac_y, fac_z], scale_zclear)
     return scaled_gcode
     
+# returns string
 def bbox(gcode, move_z=False):
     result = "F1000\n"
     #result = "G0X0Y0\n"
@@ -80,6 +81,7 @@ def bbox(gcode, move_z=False):
     return result
     
 
+# returns list
 def translate(lines, offsets=[0, 0, 0]):
     result = []
     
@@ -109,6 +111,7 @@ def translate(lines, offsets=[0, 0, 0]):
         result.append(line)
     return result
 
+# returns list
 def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
     result = []
     
@@ -138,6 +141,7 @@ def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
         result.append(line)
     return result
 
+# returns list
 def _get_bbox(gcode):
     bbox = []
     

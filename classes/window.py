@@ -243,7 +243,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sim_dialog.close()
         #event.ignore()
         event.accept()
-        
+       
+    # =log(self.grbl.travel_dist_buffer)
     def log(self, msg):
         self._add_to_loginput("LOG {}".format(msg))
         
@@ -342,6 +343,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_line_number_change":
             self._current_grbl_line_number = int(data[0]) + 1
             
+        elif event == "on_eta_change":
+            secs = int(data[0])
+            hours = math.floor(secs / 3600)
+            secs = secs - hours * 3600
+            
+            mins = math.floor(secs / 60)
+            secs = secs - mins * 60
+            
+            self.label_time.setText("ETA {:02d}:{:02d}:{:02d}".format(hours, mins, secs))
+            
         elif event == "on_error":
             self._add_to_loginput("<span style='color: red'><b>◀ {}</b></span>".format(data[0]))
             if data[2] > -1:
@@ -378,7 +389,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_preprocessor_feed_change":
             feed = data[0]
-            if feed == 0:
+            if feed == None:
                 self.lcdNumber_feed_current.display("---")
             else:
                 self.lcdNumber_feed_current.display("{:d}".format(int(feed)))
@@ -390,7 +401,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
             self.grbl.poll_start()
-            self.grbl.request_settings()
             
         elif event == "on_disconnected":
             self.action_grbl_disconnect.setEnabled(False)
@@ -622,7 +632,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             exec(code)
         except:
-            self._add_to_loginput(traceback.format_exc())
+            txt = traceback.format_exc()
+            txt = re.sub(r"\n", "<br/>", txt)
+            self._add_to_loginput(txt)
         #compiler.evaluate(code)
     
     def _on_logoutput_item_double_clicked(self, item):

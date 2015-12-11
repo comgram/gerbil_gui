@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Thu Dec 10 13:58:13 2015
+# Created: Fri Dec 11 10:11:23 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1212, 668)
+        MainWindow.resize(1216, 669)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -566,6 +566,9 @@ class Ui_MainWindow(object):
         self.pushButton_current_cs_setzero = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_current_cs_setzero.setObjectName("pushButton_current_cs_setzero")
         self.gridLayout.addWidget(self.pushButton_current_cs_setzero, 8, 2, 1, 1)
+        self.comboBox_target = QtWidgets.QComboBox(self.centralWidget)
+        self.comboBox_target.setObjectName("comboBox_target")
+        self.gridLayout.addWidget(self.comboBox_target, 0, 13, 1, 1)
         self.scrollArea_loginput = QtWidgets.QScrollArea(self.centralWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -581,13 +584,10 @@ class Ui_MainWindow(object):
         self.scrollArea_loginput.setWidgetResizable(True)
         self.scrollArea_loginput.setObjectName("scrollArea_loginput")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 157))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 158))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea_loginput.setWidget(self.scrollAreaWidgetContents)
         self.gridLayout.addWidget(self.scrollArea_loginput, 3, 13, 6, 4)
-        self.comboBox_target = QtWidgets.QComboBox(self.centralWidget)
-        self.comboBox_target.setObjectName("comboBox_target")
-        self.gridLayout.addWidget(self.comboBox_target, 0, 13, 1, 1)
         self.spinBox_start_line = QtWidgets.QSpinBox(self.centralWidget)
         self.spinBox_start_line.setMinimum(1)
         self.spinBox_start_line.setMaximum(99999999)
@@ -600,6 +600,9 @@ class Ui_MainWindow(object):
         self.checkBox_incremental.setFont(font)
         self.checkBox_incremental.setObjectName("checkBox_incremental")
         self.gridLayout.addWidget(self.checkBox_incremental, 0, 15, 1, 1)
+        self.pushButton_job_new = QtWidgets.QPushButton(self.centralWidget)
+        self.pushButton_job_new.setObjectName("pushButton_job_new")
+        self.gridLayout.addWidget(self.pushButton_job_new, 2, 13, 1, 1)
         self.label_current_line_number = QtWidgets.QLabel(self.centralWidget)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -608,18 +611,15 @@ class Ui_MainWindow(object):
         self.label_current_line_number.setFont(font)
         self.label_current_line_number.setObjectName("label_current_line_number")
         self.gridLayout.addWidget(self.label_current_line_number, 1, 14, 1, 1)
+        self.pushButton_job_halt = QtWidgets.QPushButton(self.centralWidget)
+        self.pushButton_job_halt.setObjectName("pushButton_job_halt")
+        self.gridLayout.addWidget(self.pushButton_job_halt, 2, 15, 1, 1)
         self.label_bufsize = QtWidgets.QLabel(self.centralWidget)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.label_bufsize.setFont(font)
         self.label_bufsize.setObjectName("label_bufsize")
         self.gridLayout.addWidget(self.label_bufsize, 1, 15, 1, 1)
-        self.pushButton_job_new = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_job_new.setObjectName("pushButton_job_new")
-        self.gridLayout.addWidget(self.pushButton_job_new, 2, 13, 1, 1)
-        self.pushButton_job_halt = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_job_halt.setObjectName("pushButton_job_halt")
-        self.gridLayout.addWidget(self.pushButton_job_halt, 2, 15, 1, 1)
         self.pushButton_job_run = QtWidgets.QPushButton(self.centralWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -628,6 +628,9 @@ class Ui_MainWindow(object):
         self.pushButton_job_run.setSizePolicy(sizePolicy)
         self.pushButton_job_run.setObjectName("pushButton_job_run")
         self.gridLayout.addWidget(self.pushButton_job_run, 2, 14, 1, 1)
+        self.label_time = QtWidgets.QLabel(self.centralWidget)
+        self.label_time.setObjectName("label_time")
+        self.gridLayout.addWidget(self.label_time, 0, 14, 1, 1)
         self.label_grbl = QtWidgets.QLabel(self.centralWidget)
         self.label_grbl.setGeometry(QtCore.QRect(279, 493, 334, 31))
         self.label_grbl.setText("")
@@ -700,9 +703,10 @@ class Ui_MainWindow(object):
         self.label_current_cs.setText(_translate("MainWindow", "Coord System"))
         self.pushButton_current_cs_setzero.setText(_translate("MainWindow", "Set Zero"))
         self.checkBox_incremental.setText(_translate("MainWindow", "Incremental"))
-        self.label_current_line_number.setText(_translate("MainWindow", "0"))
-        self.label_bufsize.setText(_translate("MainWindow", "0"))
         self.pushButton_job_new.setText(_translate("MainWindow", "New"))
+        self.label_current_line_number.setText(_translate("MainWindow", "0"))
         self.pushButton_job_halt.setText(_translate("MainWindow", "Halt"))
+        self.label_bufsize.setText(_translate("MainWindow", "0"))
         self.pushButton_job_run.setText(_translate("MainWindow", "Run"))
+        self.label_time.setText(_translate("MainWindow", "00:00:00"))
 
