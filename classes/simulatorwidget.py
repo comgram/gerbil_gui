@@ -311,6 +311,23 @@ class SimulatorWidget(QGLWidget):
             i.upload()
             i.set_origin(cmpos)
             self.items["tool"] = i
+
+        if "tracer" in self.items:
+            # update existing
+            tr = self.items["tracer"]
+            tr.append(cmpos)
+            vertex_nr = tr.elementcount
+            tr.substitute(vertex_nr, cmpos, (1, 1, 1, 0.6))
+
+        else:
+            # create new
+            tr = Item("tracer", self.program, 1000000, GL_LINE_STRIP, 1)
+            self.items["tracer"] = tr
+            tr.append(cmpos, (1, 1, 1, 0.6))
+            tr.upload()
+            
+            
+
         self.draw_asap = True
         
         

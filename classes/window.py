@@ -200,6 +200,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self._add_to_logoutput("G0 X0 Y0")
         self._add_to_logoutput("=bbox()")
+        self._add_to_logoutput("=remove_tracer()")
         
         self.on_job_completed_callback = None
         
@@ -447,6 +448,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
             
     
+    def remove_tracer(self):
+        self.sim_dialog.simulator_widget.remove_item("tracer")
+        
     def refresh(self):
         self.label_current_line_number.setText(str(self._current_grbl_line_number))
         
@@ -472,7 +476,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 cs_item = self.sim_dialog.simulator_widget.items[val]
                 cs_item.highlight(do_highlight)
                 
-            self.sim_dialog.simulator_widget.cleanup_stage()
+            #self.sim_dialog.simulator_widget.cleanup_stage()
             
             self.sim_dialog.simulator_widget.draw_asap = True
             self.state_cs_dirty = False

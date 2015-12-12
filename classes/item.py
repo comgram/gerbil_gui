@@ -41,12 +41,34 @@ class Item():
     def __del__(self):
         print("DELETING MYSELF: {}".format(self.label))
         
-        
+    
+    # simply appends to numpy data structure but neither uploads nor draws
     def append(self, pos, col=(1, 1, 1, 1)):
         self.data["position"][self.elementcount] = pos
         self.data["color"][self.elementcount] = col
         self.elementcount += 1
+    
+    
+    # for large buffer sizes, to avoid frequently uploading the entire buffer
+    # simply replace the data
+    def substitute(self, vertex_nr, pos, col):
+        stride = self.data.strides[0]
+        position_size = self.data.dtype["position"].itemsize
+        color_size = self.data.dtype["color"].itemsize
         
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        
+        # replace position
+        position = np.array([pos[0], pos[1], pos[2]], dtype=np.float32)
+        offset = vertex_nr * stride
+        glBufferSubData(GL_ARRAY_BUFFER, offset, position_size, position)
+        
+        # replace color
+        color = np.array([col[0], col[1], col[2], col[3]], dtype=np.float32)
+        offset = vertex_nr * stride + position_size
+        glBufferSubData(GL_ARRAY_BUFFER, offset, color_size, color)
+    
+    
     def remove(self):
         glDeleteBuffers(1, [self.vbo])
         glDeleteVertexArrays(1, [self.vao])
@@ -54,9 +76,6 @@ class Item():
         print("REMOVING {}".format(self.label))
         
     def upload(self):
-        # chop unneeded bytes
-        self.data = self.data[0:self.elementcount]
-        
         glBindVertexArray(self.vao)
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, self.data.nbytes, self.data, GL_DYNAMIC_DRAW)
@@ -74,6 +93,7 @@ class Item():
         glEnableVertexAttribArray(loc)
         glVertexAttribPointer(loc, 4, GL_FLOAT, False, stride, offset)
         
+        # unbind
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
         
@@ -280,16 +300,13 @@ class GcodePath(Item):
             position_size = self.data.dtype["position"].itemsize
             color_size = self.data.dtype["color"].itemsize
             
+            # 2 opengl segments for each logical line, see below
             offset = 2 * line_number * stride + position_size
-            #offset = 1 * line_number * stride + position_size
-            
-            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
             
             col = np.array([0.8, 0.8, 1, 1], dtype=np.float32)
-            #print("highlighting line", line_number, offset, color_size)
+            
+            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
             glBufferSubData(GL_ARRAY_BUFFER, offset, color_size, col)
-            #glBindBuffer(GL_ARRAY_BUFFER, 0)
-            #self.draw()
             
         del self.highlight_lines_queue[:]
         
