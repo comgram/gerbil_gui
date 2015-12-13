@@ -298,6 +298,12 @@ class SimulatorWidget(QGLWidget):
     def highlight_gcode_line(self, line_number):
         if "gcode" in self.items:
             self.items["gcode"].highlight_line(line_number)
+            
+        bufferpos = self.items["gcode"].data["position"][2 * line_number]
+        if "buffermarker" in self.items:
+            self.items["buffermarker"].set_origin(tuple(bufferpos))
+        else:
+            self.items["buffermarker"] = StarMarker("buffermarker", self.program, 1,  tuple(bufferpos))
         
         
     def draw_tool(self, cmpos):

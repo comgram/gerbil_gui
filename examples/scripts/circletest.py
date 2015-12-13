@@ -16,7 +16,7 @@ input.append("G2 X30 Y30 I5 J5") # CW circle
 input.append("G18") # circle in XZ plane
 input.append("G2 X30 Z30 I15 K15") # CW circle
 
-input.append("G1 Y40") # line
+input.append("G0 Y40") # line
 
 input.append("G19") # circle in YZ plane
 input.append("G2 Y40 Z30 J15 K15") # CW circle
@@ -45,6 +45,6 @@ grbl.job_run() # draw in simulator
 # and see if the traced path matches whatever has been rendered before
 self.set_target("firmware")
 grbl.job_new()
-grbl.preprocessor.do_fractionize = False # to compare with reality
+grbl.preprocessor.do_fractionize = True # to compare with reality
 grbl.write(input)
-grbl.job_run()
+#grbl.job_run()

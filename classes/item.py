@@ -152,10 +152,10 @@ class StarMarker(Item):
                  ):
         
         size = 6
-        super(CoordSystem, self).__init__(label, prog, size)
+        super(StarMarker, self).__init__(label, prog, size)
         
         self.primitive_type = GL_LINES
-        self.linewidth = 2
+        self.linewidth = 1
         self.set_scale(scale)
         self.set_origin(origin)
         
@@ -189,12 +189,12 @@ class CoordSystem(Item):
         self.set_origin(origin)
         self.hilight = hilight
         
-        self.append((0, 0, 0), (1, 0, 0, 1))
-        self.append((10, 0, 0), (1, 0, 0, 1))
-        self.append((0, 0, 0), (0, 1, 0, 1))
-        self.append((0, 10, 0), (0, 1, 0, 1))
-        self.append((0, 0, 0), (0, 0, 1, 1))
-        self.append((0, 0, 10), (0, 0, 1, 1))
+        self.append((00, 00, 00), (.6, .0, .0, 1.0))
+        self.append((10, 00, 00), (.6, .0, .0, 1.0))
+        self.append((00, 00, 00), (.0, .6, .0, 1.0))
+        self.append((00, 10, 00), (.0, .6, .0, 1.0))
+        self.append((00, 00, 00), (.0, .0, .6, 1.0))
+        self.append((00, 00, 10), (.0, .0, .6, 1.0))
         self.upload()
         
 
@@ -269,22 +269,22 @@ class GcodePath(Item):
         
         self.gcode = gcode
         self.cwpos = list(cwpos)
-        self.spindle_speed = None
         self.ccs = ccs
         self.cs_offsets = cs_offsets
-        
-      
         
         self.highlight_lines_queue = []
         
         self.axes = ["X", "Y", "Z"]
         
-        self.contains_regexps = []
+        self._re_axis_values = []
         for i in range(0, 3):
             axis = self.axes[i]
-            self.contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
+            self._re_axis_values.append(re.compile(".*" + axis + "([-.\d]+)"))
             
-        self.contains_spindle_regexp = re.compile(".*S(\d+)")
+        self._re_contains_spindle = re.compile(".*S(\d+)")
+        self._re_comment_grbl = re.compile(".*;(?:_gerbil)\.(.*)")
+        self._re_allcomments_remove = re.compile(";.*")
+        self._re_motion_mode = re.compile("(G[0123])([^\d]|$)")
             
         self.render()
         self.upload()
@@ -303,7 +303,7 @@ class GcodePath(Item):
             # 2 opengl segments for each logical line, see below
             offset = 2 * line_number * stride + position_size
             
-            col = np.array([0.8, 0.8, 1, 1], dtype=np.float32)
+            col = np.array([1, 1, 1, 0.4], dtype=np.float32)
             
             glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
             glBufferSubData(GL_ARRAY_BUFFER, offset, color_size, col)
@@ -314,67 +314,87 @@ class GcodePath(Item):
         
         
     def render(self):
-        # TODO: Arcs, move in machine coordinates
-        
         pos = self.cwpos # current position
+        col = (0, 0, 0, 0)
         cs = self.ccs # current coordinate system
         offset = self.cs_offsets[cs] # current cs offset tuple
-        motion = "" # current motion mode
+        current_motion_mode = None
+        spindle_speed = None
         
-        colg0 = (1, 1, 0.5, 1)
-        colg1 = (0.6, 0.6, 1, 1)
-
+        in_arc = False # if currently in arc
+        
+        colors = {
+            "G0": (1, 0.7, 1, 1),
+            "G1": (0.7, 0.7, 1, 1),
+            "arc": (0.7, 1, 0.7, 1),
+            }
         diff = [0, 0, 0]
         
         # start of path
         end = np.add(offset, pos)
-        self.append(tuple(end), colg0)
+        self.append(tuple(end), col)
         
         for line in self.gcode:
-            # get current motion mode G0, G1, G2, G3
-            mm = re.match("G(\d).*", line)
-            if mm: motion = "G" + mm.group(1)
-            col = colg0 if motion == "G0" else colg1
             
+            # process special comments
+            m = re.match(self._re_comment_grbl, line)
+            # Detect if we're currently in an arc
+            if m:
+                comment = m.group(1)
+                # these comments are added by gerbil's preprocessor
+                if "arc_begin" in comment:
+                    in_arc = True
+                    col = colors["arc"]
+                elif "arc_end" in comment:
+                    in_arc = False
+            
+            # remove all comments
+            line = re.sub(self._re_allcomments_remove, "", line)
+            
+            if line.strip() == "": continue
+            
+            # get current motion mode G0, G1, G2, G3
+            # and choose color
+            m = re.match(self._re_motion_mode, line)
+            if m:
+                current_motion_mode = m.group(1)
+                if in_arc != True:
+                    # in_arc takes color precedence
+                    col = colors[current_motion_mode]
+                    
+                if current_motion_mode == "G2" or current_motion_mode == "G3":
+                    print("G2 and G3 not supported. Use gerbil's preprocessor to fractionize a circle into small linear segements.")
+                    return
+                    
+            # update spindle speed / laser intensity
+            m = re.match(self._re_contains_spindle, line)
+            if m: spindle_speed = int(m.group(1))
+            
+            # choose color for spindle speed / laser intensity, which always takes precedence
+            if spindle_speed:
+                rgb = spindle_speed / 255.0
+                col = (rgb, rgb, rgb, 1)
+
             # get current coordinate system G54-G59
             mcs = re.match("G(5[4-9]).*", line)
             if mcs: 
                 cs = "G" + mcs.group(1)
                 offset = cs_offsets[cs]
-                
-            if re.match("G[23]", motion):
-                self.render_arc(line)
-                
+
             # parse X, Y, Z axis and S values
             for i in range(0, 3):
                 axis = self.axes[i]
-                cr = self.contains_regexps[i]
+                cr = self._re_axis_values[i]
                 m = re.match(cr, line)
                 if m:
                     a = float(m.group(1))
                     pos[i] = a
-               
-            m = re.match(self.contains_spindle_regexp, line)
-            if m:
-                self.spindle_speed = int(m.group(1))
-                
-            if self.spindle_speed:
-                rgb = self.spindle_speed / 255.0
-                col = (rgb, rgb, rgb, 1)
-                
-            #target = np.add(offset, pos)
-            #self.append(tuple(target), col)
 
             start = end
             end = np.add(offset, pos)
             diff = np.subtract(end, start)
             
             # generate 2 line segments per gcode for sharper color transitions when using spindle speed
+            print("DRAWING", pos, col)
             self.append(start + diff * 0.01, col)
             self.append(start + diff, col)
-            
-    def render_arc(self, line):
-        if "R" in line:
-            pass
-            # radius mode
-            #dx = pos[0]
