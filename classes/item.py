@@ -322,7 +322,7 @@ class GcodePath(Item):
         motion = "" # current motion mode
         
         colg0 = (1, 1, 0.5, 1)
-        colg1 = (0.3, 0.3, 1, 1)
+        colg1 = (0.6, 0.6, 1, 1)
 
         diff = [0, 0, 0]
         

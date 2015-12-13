@@ -154,9 +154,10 @@ class SimulatorWidget(QGLWidget):
         
         
     def remove_item(self, label):
-        self.items[label].remove()
-        del self.items[label]
-        self.draw_asap = True
+        if label in self.items:
+            self.items[label].remove()
+            del self.items[label]
+            self.draw_asap = True
         
 
     def paintGL(self):

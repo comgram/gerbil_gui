@@ -197,10 +197,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sim_dialog = SimulatorDialog(self)
         self.sim_dialog.show()
 
-        
-        self._add_to_logoutput("G0 X0 Y0")
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
+        self._add_to_logoutput("G0 X0 Y0")
         
         self.on_job_completed_callback = None
         
@@ -423,7 +422,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         elif event == "on_job_completed":
             diff = time.time() - self.job_run_timestamp
-            self._add_to_loginput("JOB COMPLETED in {:.2f} sec".format(diff))
+            #self._add_to_loginput("JOB COMPLETED in {:.2f} sec".format(diff))
             if self.on_job_completed_callback:
                 self.on_job_completed_callback()
                 
