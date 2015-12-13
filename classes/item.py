@@ -285,6 +285,7 @@ class GcodePath(Item):
         self._re_comment_grbl = re.compile(".*;(?:_gerbil)\.(.*)")
         self._re_allcomments_remove = re.compile(";.*")
         self._re_motion_mode = re.compile("(G[0123])([^\d]|$)")
+        self._re_distance_mode = re.compile("(G9[01])([^\d]|$)")
             
         self.render()
         self.upload()
@@ -320,6 +321,7 @@ class GcodePath(Item):
         offset = self.cs_offsets[cs] # current cs offset tuple
         current_motion_mode = None
         spindle_speed = None
+        distance_mode = "G90"
         
         in_arc = False # if currently in arc
         
@@ -375,20 +377,28 @@ class GcodePath(Item):
                 rgb = spindle_speed / 255.0
                 col = (rgb, rgb, rgb, 1)
 
+            m = re.match(self._re_distance_mode, line)
+            if m: distance_mode = m.group(1)
+            
             # get current coordinate system G54-G59
             mcs = re.match("G(5[4-9]).*", line)
             if mcs: 
                 cs = "G" + mcs.group(1)
                 offset = cs_offsets[cs]
 
-            # parse X, Y, Z axis and S values
+            # parse X, Y, Z axis
             for i in range(0, 3):
                 axis = self.axes[i]
                 cr = self._re_axis_values[i]
                 m = re.match(cr, line)
                 if m:
-                    a = float(m.group(1))
-                    pos[i] = a
+                    a = float(m.group(1)) # axis value
+                    if distance_mode == "G90":
+                        # absolute
+                        pos[i] = a
+                    else:
+                        # relative
+                        pos[i] += a
 
             start = end
             end = np.add(offset, pos)

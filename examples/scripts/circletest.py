@@ -31,7 +31,12 @@ input.append("G1 X-30") # line
 input.append("G3 X-40Y50 R-8") # circle in radius mode, larger than 180°
 input.append("G3 X-50Y60 R20") # circle in radius mode, smaller than 180°
 
-
+input = []
+input.append("G0 X0 Y0")
+input.append("F1000")
+input.append("G91")
+input.append("G1 X20 Y10")
+input.append("G1 X5 Y5")
 
 # fractionize above G-Codes and render the line segments in the simulator
 self.set_target("simulator")

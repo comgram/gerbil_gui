@@ -136,6 +136,8 @@ class SimulatorWidget(QGLWidget):
 
         self.items["grid1"] = Grid("grid1", self.program, (0, 0), (workarea_x, workarea_y), (-workarea_x, -workarea_y, 0), 10)
         
+        self.items["buffermarker"] = StarMarker("buffermarker", self.program, 1)
+        
         self.draw_asap = True
 
 
@@ -302,8 +304,6 @@ class SimulatorWidget(QGLWidget):
         bufferpos = self.items["gcode"].data["position"][2 * line_number]
         if "buffermarker" in self.items:
             self.items["buffermarker"].set_origin(tuple(bufferpos))
-        else:
-            self.items["buffermarker"] = StarMarker("buffermarker", self.program, 1,  tuple(bufferpos))
         
         
     def draw_tool(self, cmpos):
