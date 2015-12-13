@@ -360,13 +360,14 @@ class GcodePath(Item):
             m = re.match(self._re_motion_mode, line)
             if m:
                 current_motion_mode = m.group(1)
+                if current_motion_mode == "G2" or current_motion_mode == "G3":
+                    print("G2 and G3 not supported. Use gerbil's preprocessor to fractionize a circle into small linear segements.")
+                    return
+                
                 if in_arc != True:
                     # in_arc takes color precedence
                     col = colors[current_motion_mode]
                     
-                if current_motion_mode == "G2" or current_motion_mode == "G3":
-                    print("G2 and G3 not supported. Use gerbil's preprocessor to fractionize a circle into small linear segements.")
-                    return
                     
             # update spindle speed / laser intensity
             m = re.match(self._re_contains_spindle, line)
