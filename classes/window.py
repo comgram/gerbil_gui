@@ -218,7 +218,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         # compiler SETUP BEGIN -----
         compiler.receiver(self.grbl)
-        compiler.Settings['log_callback'] = lambda msg: self._add_to_loginput("<b>SCRIPT:</b> {}".format(msg))
+        compiler.Settings['log_callback'] = lambda msg: print("<b>COMPILER:</b> {}".format(msg))
         # compiler SETUP END -----
         
         self.tableWidget_settings.setColumnWidth(2, 300)
@@ -245,8 +245,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event.accept()
        
     # =log(self.grbl.travel_dist_buffer)
-    def log(self, msg):
-        self._add_to_loginput("LOG {}".format(msg))
+    def log(self, msg, color="black"):
+        self._add_to_loginput(msg, color)
         
     #def conosole_log(self, msg):
         
@@ -337,7 +337,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.label_current_rpm.setText(cr_string)
             
         elif event == "on_processed_command":
-            self._add_to_loginput("<span style='color: green'>✓ Line{}: {}</span>".format(data[0], data[1]))
+            self._add_to_loginput("✓ Line{}: {}".format(data[0], data[1]), "green")
             self._current_grbl_line_number = int(data[0]) + 1
             
         elif event == "on_line_number_change":
@@ -354,21 +354,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.label_time.setText("ETA {:02d}:{:02d}:{:02d}".format(hours, mins, secs))
             
         elif event == "on_error":
-            self._add_to_loginput("<span style='color: red'><b>◀ {}</b></span>".format(data[0]))
+            self._add_to_loginput("<b>◀ {}</b>".format(data[0]), "red")
             if data[2] > -1:
-                self._add_to_loginput("<span style='color: red'><b>✗ Error was in line {}: {}</b></span>".format(data[2], data[1]))
+                self._add_to_loginput("<b>✗ Error was in line {}: {}</b>".format(data[2], data[1]), "red")
             
         elif event == "on_alarm":
-            self._add_to_loginput("<span style='color: orange'>☹ " + data[0] + "</span>")
+            self._add_to_loginput("☹ " + data[0], "orange")
             
         elif event == "on_read":
-            self._add_to_loginput("<span style='color: blue'>◀ {}</span>".format(data[0]))
+            self._add_to_loginput("◀ {}".format(data[0]), "#000099")
             
         elif event == "on_write":
-            self._add_to_loginput("<span style='color: #DD00DD'>▶ {}</span>".format(data[0]))
+            self._add_to_loginput("▶ {}".format(data[0]), "#990099")
             
         elif event == "on_log":
-            self._add_to_loginput("<span style='color: #555555'>✎ {}</span>".format(data[0]))
+            colors = {
+                0: "black", # notset
+                10: "#999999", # debug
+                20: "#555555", # info
+                30: "orange", # warning
+                40: "red", # error
+                50: "red", # critical
+                }
+            lr = data[0] # LogRecord instance
+            message = lr.msg % lr.args
+            level = lr.levelno
+            levelname = lr.levelname
+            filename = lr.filename
+            funcname = lr.funcName
+            lineno = lr.lineno
+            
+            color = colors[level]
+            
+            if level >= 40:
+                txt = "{}: {} ({}:{}:{})".format(levelname, message, filename, funcname, lineno)
+            else:
+                txt = message
+            
+            
+            
+            self._add_to_loginput("✎ " + message, color)
             
         elif event == "on_bufsize_change":
             #what = data[0]
@@ -958,8 +983,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.label_loginput.setText("<br />".join(self.logbuffer))
         self.scrollArea_loginput.verticalScrollBar().setValue(self.scrollArea_loginput.verticalScrollBar().maximum())
 
-    def _add_to_loginput(self, line):
-        self.logbuffer.append(line)
+    def _add_to_loginput(self, msg, color="black"):
+        html = "<span style='color: {}'>{}</span>".format(color, msg)
+        #print(html)
+        self.logbuffer.append(html)
         self.changed_loginput = True
         
     def _add_to_logoutput(self, line):
