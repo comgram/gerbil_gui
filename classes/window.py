@@ -12,6 +12,7 @@ from classes.jogwidget import JogWidget
 from classes.commandlineedit import CommandLineEdit
 from classes.simulatordialog import SimulatorDialog
 from gerbil.gerbil import Gerbil
+from gerbil.callbackloghandler import CallbackLogHandler
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer

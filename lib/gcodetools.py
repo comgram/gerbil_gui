@@ -83,6 +83,8 @@ def bbox(gcode, move_z=False):
 
 # returns list
 def translate(lines, offsets=[0, 0, 0]):
+    logger = logging.getLogger('gerbil')
+    
     result = []
     
     axes = ["X", "Y", "Z"]
@@ -94,6 +96,11 @@ def translate(lines, offsets=[0, 0, 0]):
         replace_regexps.append(re.compile(r"" + axis + "[-.\d]+"))
     
     for line in lines:
+        
+        if "G91" in line:
+            logger.error("gcodetools.translate: It does not make sense to translate movements in G91 distance mode. Aborting at line {}".format(line))
+            return
+        
         for i in range(0, 3):
             axis = axes[i]
             cr = contains_regexps[i]
@@ -115,26 +122,38 @@ def translate(lines, offsets=[0, 0, 0]):
 def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
     result = []
     
-    axes = ["X", "Y", "Z"]
+    logger = logging.getLogger('gerbil')
+    
+    if facts[0] != facts[1] or facts[0] != facts[2] or facts[1] != facts[2]:
+        logger.warning("gcodetools.scale_factor: Circles will stay circles even with inhomogeous scale factor ".format(facts))
+    
+    _re_motion_mode = re.compile("(G[0123])([^\d]|$)")
+    _current_motion_mode = None
+    
+    words = ["X", "Y", "Z", "I", "J", "K", "R"]
     contains_regexps = []
     replace_regexps = []
-    for i in range(0, 3):
-        axis = axes[i]
-        contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
-        replace_regexps.append(re.compile(r"" + axis + "[-.\d]+"))
+    for i in range(0, 7):
+        word = words[i]
+        contains_regexps.append(re.compile(".*" + word + "([-.\d]+)"))
+        replace_regexps.append(re.compile(r"" + word + "[-.\d]+"))
     
     for line in lines:
-        for i in range(0, 3):
-            axis = axes[i]
+        for i in range(0, 7):
+            m = re.match(_re_motion_mode, line)
+            if m:
+                _current_motion_mode = m.group(1)
+            
+            word = words[i]
             cr = contains_regexps[i]
             rr = replace_regexps[i]
-            factor = facts[i]
+            factor = facts[(i % 3)]
             
             m = re.match(cr, line)
-            if m and facts[i] != 0 and not ("_zclear" in line and scale_zclear == False):
-                a = float(m.group(1))
-                a *= factor
-                rep = "{}{:0.3f}".format(axis, a)
+            if m and facts[i % 3] != 0 and not ("_zclear" in line and scale_zclear == False):
+                val = float(m.group(1))
+                val *= factor
+                rep = "{}{:0.3f}".format(word, val)
                 rep = rep.rstrip("0").rstrip(".")
                 line = re.sub(rr, rep, line)
 

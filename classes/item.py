@@ -320,7 +320,6 @@ class GcodePath(Item):
         cs = self.ccs # current coordinate system
         offset = self.cs_offsets[cs] # current cs offset tuple
         current_motion_mode = None
-        spindle_speed = None
         distance_mode = "G90"
         
         in_arc = False # if currently in arc
@@ -346,7 +345,7 @@ class GcodePath(Item):
                 # these comments are added by gerbil's preprocessor
                 if "arc_begin" in comment:
                     in_arc = True
-                    col = colors["arc"]
+                    
                 elif "arc_end" in comment:
                     in_arc = False
             
@@ -370,13 +369,19 @@ class GcodePath(Item):
                     
                     
             # update spindle speed / laser intensity
+            # select colors
+            spindle_speed = None
             m = re.match(self._re_contains_spindle, line)
-            if m: spindle_speed = int(m.group(1))
+            if m:
+                spindle_speed = int(m.group(1))
             
-            # choose color for spindle speed / laser intensity, which always takes precedence
-            if spindle_speed:
+            if spindle_speed and spindle_speed > 0:
                 rgb = spindle_speed / 255.0
                 col = (rgb, rgb, rgb, 1)
+            elif in_arc == True:
+                col = colors["arc"]
+            elif current_motion_mode:
+                col = colors[current_motion_mode]
 
             m = re.match(self._re_distance_mode, line)
             if m: distance_mode = m.group(1)
