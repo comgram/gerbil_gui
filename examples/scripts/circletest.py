@@ -64,7 +64,8 @@ input.append("G90") # reset to absolute distance mode
 # fractionize above G-Codes and render the line segments in the simulator
 self.set_target("simulator")
 grbl.job_new()
-grbl.preprocessor.do_fractionize = True # this is the default
+grbl.preprocessor.do_fractionize_lines = True # this is the default
+grbl.preprocessor.do_fractionize_arcs = True # this is the default
 grbl.write(input)
 grbl.job_run() # draw in simulator
     
@@ -73,7 +74,8 @@ grbl.job_run() # draw in simulator
 # and see if the traced path matches whatever has been rendered before
 self.set_target("firmware")
 grbl.job_new()
-grbl.preprocessor.do_fractionize = False # to compare with reality
+grbl.preprocessor.do_fractionize_lines = True
+grbl.preprocessor.do_fractionize_arcs = True
 grbl.write(input)
 #grbl.job_run()
 

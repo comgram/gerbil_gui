@@ -155,11 +155,11 @@ class StarMarker(Item):
         super(StarMarker, self).__init__(label, prog, size)
         
         self.primitive_type = GL_LINES
-        self.linewidth = 1
+        self.linewidth = 2
         self.set_scale(scale)
         self.set_origin(origin)
         
-        col = (1, 1, 1, 1)
+        col = (1, 1, .5, 1)
         
         self.append((-1, 0, 0), col)
         self.append((1, 0, 0), col)
@@ -265,7 +265,7 @@ class GcodePath(Item):
         super(GcodePath, self).__init__(label, prog, self.line_count)
         
         self.primitive_type = GL_LINE_STRIP
-        self.linewidth = 1
+        self.linewidth = 2
         
         self.gcode = gcode
         self.cwpos = list(cwpos)
@@ -284,7 +284,7 @@ class GcodePath(Item):
         self._re_contains_spindle = re.compile(".*S(\d+)")
         self._re_comment_grbl = re.compile(".*;(?:_gerbil)\.(.*)")
         self._re_allcomments_remove = re.compile(";.*")
-        self._re_motion_mode = re.compile("(G[0123])([^\d]|$)")
+        self._re_motion_mode = re.compile("G([0123])*([^\\d]|$)")
         self._re_distance_mode = re.compile("(G9[01])([^\d]|$)")
             
         self.render()
@@ -292,7 +292,9 @@ class GcodePath(Item):
         
         
     def highlight_line(self, line_number):
-        self.highlight_lines_queue.append(line_number)
+        # deprecated in favor of starMarker
+        #self.highlight_lines_queue.append(line_number)
+        pass
         
     def draw(self):
         for line_number in self.highlight_lines_queue:
@@ -316,17 +318,19 @@ class GcodePath(Item):
         
     def render(self):
         pos = self.cwpos # current position
-        col = (0, 0, 0, 0)
+        col = (1, 1, 1, 1)
         cs = self.ccs # current coordinate system
         offset = self.cs_offsets[cs] # current cs offset tuple
-        current_motion_mode = None
+        current_motion_mode = 0
         distance_mode = "G90"
         
         in_arc = False # if currently in arc
         
         colors = {
-            "G0": (1, 0.7, 1, 1),
-            "G1": (0.7, 0.7, 1, 1),
+            0: (.5, .5, .6, 1),
+            1: (.7, .7, 1, 1),
+            2: (0.7, 1, 0.8, 1),
+            3: (.9, .7, 0.9, 1),
             "arc": (0.7, 1, 0.7, 1),
             }
         diff = [0, 0, 0]
@@ -352,16 +356,15 @@ class GcodePath(Item):
             # remove all comments
             line = re.sub(self._re_allcomments_remove, "", line)
             
-            if line.strip() == "": continue
+            #if line.strip() == "": continue
             
             # get current motion mode G0, G1, G2, G3
             # and choose color
             m = re.match(self._re_motion_mode, line)
             if m:
-                current_motion_mode = m.group(1)
-                if current_motion_mode == "G2" or current_motion_mode == "G3":
+                current_motion_mode = int(m.group(1))
+                if current_motion_mode == 2 or current_motion_mode == 3:
                     print("G2 and G3 not supported. Use gerbil's preprocessor to fractionize a circle into small linear segements.")
-                    return
                 
                 if in_arc != True:
                     # in_arc takes color precedence
@@ -411,6 +414,6 @@ class GcodePath(Item):
             diff = np.subtract(end, start)
             
             # generate 2 line segments per gcode for sharper color transitions when using spindle speed
-            print("DRAWING", pos, col)
-            self.append(start + diff * 0.01, col)
+            self.append(start + diff * 0.01, (col[0], col[1], col[2], 0.3))
             self.append(start + diff, col)
+            

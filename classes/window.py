@@ -71,7 +71,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.label_loginput.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.scrollArea_loginput.setWidget(self.label_loginput)
         self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
-        self.label_loginput.setStyleSheet("font: 9pt")
+        font = QtGui.QFont()
+        font.setFamily("DejaVu Sans Mono")
+        font.setPointSize(8)
+        #self.label_loginput.setStyleSheet("font: 8pt")
+        self.label_loginput.setFont(font)
         ## LOGGING SETUP END ------       
         
         
@@ -158,7 +162,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
         self.listWidget_logoutput.itemClicked.connect(self._on_logoutput_item_clicked)
         self.listWidget_logoutput.currentItemChanged.connect(self._on_logoutput_current_item_changed)
-        self.spinBox_start_line.valueChanged.connect(self._current_grbl_line_number_changed)
+        self.spinBox_start_line.valueChanged.connect(self._start_line_changed)
         self.pushButton_settings_download_grbl.clicked.connect(self.grbl.request_settings)
         self.pushButton_settings_save_file.clicked.connect(self.settings_save_into_file)
         self.pushButton_settings_load_file.clicked.connect(self.settings_load_from_file)
@@ -200,6 +204,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
+        self._add_to_logoutput("=goto_marker()")
         self._add_to_logoutput("G0 X0 Y0")
         
         self.on_job_completed_callback = None
@@ -254,7 +259,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def new_job(self):
         self.grbl.job_new()
-        self.spinBox_start_line.setValue(1)
+        self.spinBox_start_line.setValue(0)
         self.sim_dialog.simulator_widget.cleanup_stage()
         
         
@@ -338,11 +343,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.label_current_rpm.setText(cr_string)
             
         elif event == "on_processed_command":
-            self._add_to_loginput("✓ Line{}: {}".format(data[0], data[1]), "green")
-            self._current_grbl_line_number = int(data[0]) + 1
+            txt = "✓ Line {}: {}".format(data[0], data[1])
+            self._add_to_loginput(txt, "green")
+            self._current_grbl_line_number = int(data[0])
             
         elif event == "on_line_number_change":
-            self._current_grbl_line_number = int(data[0]) + 1
+            self._current_grbl_line_number = int(data[0])
             
         elif event == "on_eta_change":
             secs = int(data[0])
@@ -431,12 +437,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_disconnected":
             self.action_grbl_disconnect.setEnabled(False)
             self.action_grbl_connect.setEnabled(True)
-            self.lcdNumber_mx.display("{:0.2f}".format(8888.88))
-            self.lcdNumber_my.display("{:0.2f}".format(8888.88))
-            self.lcdNumber_mz.display("{:0.2f}".format(8888.88))
-            self.lcdNumber_wx.display("{:0.2f}".format(8888.88))
-            self.lcdNumber_wy.display("{:0.2f}".format(8888.88))
-            self.lcdNumber_wz.display("{:0.2f}".format(8888.88))
+            self.lcdNumber_mx.display("{:0.3f}".format(8888.888))
+            self.lcdNumber_my.display("{:0.3f}".format(8888.888))
+            self.lcdNumber_mz.display("{:0.3f}".format(8888.888))
+            self.lcdNumber_wx.display("{:0.3f}".format(8888.888))
+            self.lcdNumber_wy.display("{:0.3f}".format(8888.888))
+            self.lcdNumber_wz.display("{:0.3f}".format(8888.888))
             self.label_state.setText("disconnected")
             self._add_to_loginput("<i>Successfully disconnected!</i>")
             self._add_to_loginput("")
@@ -468,6 +474,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             line_number = data[0]
             line_str = data[1]
             self.sim_dialog.simulator_widget.highlight_gcode_line(line_number)
+            self.sim_dialog.simulator_widget.put_buffer_marker_at_line(line_number)
         
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
@@ -475,6 +482,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def remove_tracer(self):
         self.sim_dialog.simulator_widget.remove_item("tracer")
+        
+        
+    def goto_marker(self):
+        pos = self.sim_dialog.simulator_widget.get_buffer_marker_pos()
+        self._add_to_logoutput("G1 G53 X{:0.3f} Y{:0.3f} Z{:0.3f}".format(pos[0], pos[1], pos[2]))
+        
         
     def refresh(self):
         self.label_current_line_number.setText(str(self._current_grbl_line_number))
@@ -514,12 +527,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             wx = self.wpos[0]
             wy = self.wpos[1]
             wz = self.wpos[2]
-            self.lcdNumber_mx.display("{:0.2f}".format(mx))
-            self.lcdNumber_my.display("{:0.2f}".format(my))
-            self.lcdNumber_mz.display("{:0.2f}".format(mz))
-            self.lcdNumber_wx.display("{:0.2f}".format(wx))
-            self.lcdNumber_wy.display("{:0.2f}".format(wy))
-            self.lcdNumber_wz.display("{:0.2f}".format(wz))
+            self.lcdNumber_mx.display("{:0.3f}".format(mx))
+            self.lcdNumber_my.display("{:0.3f}".format(my))
+            self.lcdNumber_mz.display("{:0.3f}".format(mz))
+            self.lcdNumber_wx.display("{:0.3f}".format(wx))
+            self.lcdNumber_wy.display("{:0.3f}".format(wy))
+            self.lcdNumber_wz.display("{:0.3f}".format(wz))
             
             self.jogWidget.wx_current = wx
             self.jogWidget.wy_current = wy
@@ -653,8 +666,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.stream(settings_string)
         
     
-    def _current_grbl_line_number_changed(self, nr):
-        self.grbl.current_line_number = int(nr) - 1
+    def _start_line_changed(self, nr):
+        line_number = int(nr)
+        if line_number < self.grbl._buffer_size:
+            self.grbl.current_line_number = line_number
+            self.sim_dialog.simulator_widget.put_buffer_marker_at_line(line_number)
+            self.label_current_gcode.setText(self.grbl._buffer[line_number])
     
     def execute_script_clicked(self,item):
         code = self.plainTextEdit_script.toPlainText()
@@ -760,7 +777,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def _feedoverride_value_changed(self):
-        val = self.horizontalSlider_feed_override.value()
+        val = self.horizontalSlider_feed_override.value() # 0..100
+        val = int(math.exp((val+100)/23)-50) # nice exponential growth between 20 and 6000
         self.lcdNumber_feed_override.display(val)
         self.grbl.request_feed(val)
         
@@ -789,7 +807,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def job_run(self):
         line_nr = self.spinBox_start_line.value()
         self.job_run_timestamp = time.time()
-        self.grbl.job_run(line_nr - 1)
+        self.grbl.job_run(line_nr)
     
     
     def job_halt(self):
@@ -831,7 +849,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     def _show_buffer(self):
-        self.plainTextEdit_job.setPlainText("\n".join(self.grbl.get_buffer()))
+        buf = self.grbl.get_buffer()
+        output = ""
+        for i in range(0, len(buf)):
+            output += "L{:06d} {}\n".format(i, buf[i])
+            
+        self.plainTextEdit_job.setPlainText(output)
  
 
     def _cs_selected(self, idx):
@@ -939,7 +962,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cmd = cmd[1:]
             cmd = "%s.%s" % (kls,cmd)
             try:
-                self._add_to_loginput("Executing: %s" % cmd)
                 exec(cmd)
             except:
                 self._add_to_loginput("Error during dynamic python execution:<br />{}".format(sys.exc_info()))

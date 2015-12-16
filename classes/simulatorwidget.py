@@ -128,15 +128,18 @@ class SimulatorWidget(QGLWidget):
         
         
     def draw_stage(self, workarea_x, workarea_y):
-        self.cleanup_stage()
+        #self.cleanup_stage()
         
         # this simply draws the machine coordinate system
-        self.items["csm"] = CoordSystem("csm", self.program, 12, (0, 0, 0))
-        self.items["csm"].linewidth = 6
+        if not "csm" in self.items:
+            self.items["csm"] = CoordSystem("csm", self.program, 12, (0, 0, 0))
+            self.items["csm"].linewidth = 6
 
-        self.items["grid1"] = Grid("grid1", self.program, (0, 0), (workarea_x, workarea_y), (-workarea_x, -workarea_y, 0), 10)
+        if not "working_area_grid" in self.items:
+            self.items["working_area_grid"] = Grid("working_area_grid", self.program, (0, 0), (workarea_x, workarea_y), (-workarea_x, -workarea_y, 0), 10)
         
-        self.items["buffermarker"] = StarMarker("buffermarker", self.program, 1)
+        if not "buffermarker" in self.items:
+            self.items["buffermarker"] = StarMarker("buffermarker", self.program, 2)
         
         self.draw_asap = True
 
@@ -146,9 +149,10 @@ class SimulatorWidget(QGLWidget):
         
         keys_to_delete = []
         for key in item_keys:
-            if not (re.match("G5[4-9].*", key) or key == "csm" or key == "grid1" or key == "tool"):
+            if not (re.match("G5[4-9].*", key) or key == "csm" or key == "working_area_grid" or key == "tool" or key == "buffermarker"):
                 keys_to_delete.append(key)
-                
+        
+        print("cleanup_stage: removing items {}".format(keys_to_delete))
         for key in keys_to_delete:
             self.remove_item(key)
             
@@ -300,10 +304,21 @@ class SimulatorWidget(QGLWidget):
     def highlight_gcode_line(self, line_number):
         if "gcode" in self.items:
             self.items["gcode"].highlight_line(line_number)
+        self.draw_asap = True
             
-        bufferpos = self.items["gcode"].data["position"][2 * line_number]
-        if "buffermarker" in self.items:
-            self.items["buffermarker"].set_origin(tuple(bufferpos))
+
+    def put_buffer_marker_at_line(self, line_number):
+        if "gcode" in self.items:
+            bufferpos = self.items["gcode"].data["position"][2 * line_number]
+            #print("putting buffermarker at line {} pos {}".format(line_number, bufferpos))
+            if "buffermarker" in self.items:
+                self.items["buffermarker"].set_origin(tuple(bufferpos))
+            
+            self.draw_asap = True
+            
+    
+    def get_buffer_marker_pos(self):
+        return self.items["buffermarker"].origin
         
         
     def draw_tool(self, cmpos):
@@ -312,9 +327,9 @@ class SimulatorWidget(QGLWidget):
             self.items["tool"].set_origin(cmpos)
         else:
             # tool not yet created. create it and move it cmpos
-            i = Item("tool", self.program, 2, GL_LINES, 6)
-            i.append((0, 0, 0), (1, 1, 0, 1))
-            i.append((0, 0, 200), (1, 1, 0, 1))
+            i = Item("tool", self.program, 2, GL_LINES, 7)
+            i.append((0, 0, 0), (1, 1, 1, .5))
+            i.append((0, 0, 200), (1, 1, 1, .2))
             i.upload()
             i.set_origin(cmpos)
             self.items["tool"] = i
@@ -324,16 +339,14 @@ class SimulatorWidget(QGLWidget):
             tr = self.items["tracer"]
             tr.append(cmpos)
             vertex_nr = tr.elementcount
-            tr.substitute(vertex_nr, cmpos, (1, 1, 1, 0.6))
+            tr.substitute(vertex_nr, cmpos, (1, 1, 1, 0.2))
 
         else:
             # create new
             tr = Item("tracer", self.program, 1000000, GL_LINE_STRIP, 1)
             self.items["tracer"] = tr
-            tr.append(cmpos, (1, 1, 1, 0.6))
+            tr.append(cmpos, (1, 1, 1, 0.2))
             tr.upload()
-            
-            
 
         self.draw_asap = True
         
