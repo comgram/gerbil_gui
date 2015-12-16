@@ -10,12 +10,13 @@ grbl = self.grbl
 
 self.new_job()
 
-gcode = p2l.do("tmp/patterntest2.png", 5, 20, 0.1)
+gcode = p2l.do("tmp/patterntest2.png", 5, 20, 0)
 #gcode = t.read("tmp/lasertest.ngc")
 
 t.write("tmp/patterntest5dpmm.ngc", gcode)
 
-grbl.preprocessor.do_fractionize = False
+grbl.preprocessor.do_fractionize_lines = False
+grbl.preprocessor.do_fractionize_arcs = False
 grbl.write(gcode)
 
 self.set_target("simulator")

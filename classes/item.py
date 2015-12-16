@@ -373,7 +373,6 @@ class GcodePath(Item):
                     
             # update spindle speed / laser intensity
             # select colors
-            spindle_speed = None
             m = re.match(self._re_contains_spindle, line)
             if m:
                 spindle_speed = int(m.group(1))
@@ -414,6 +413,6 @@ class GcodePath(Item):
             diff = np.subtract(end, start)
             
             # generate 2 line segments per gcode for sharper color transitions when using spindle speed
-            self.append(start + diff * 0.01, (col[0], col[1], col[2], 0.3))
-            self.append(start + diff, col)
+            self.append(start + diff * 0.001, col)
+            self.append(start + diff, (col[0], col[1], col[2], 0.3))
             

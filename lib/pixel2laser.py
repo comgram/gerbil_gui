@@ -74,7 +74,7 @@ def find_row_ranges(pix, width, height):
 
 
 
-def do(filename_in, dpmm=10, x_bleed=10, xcorr=0.1):
+def do(filename_in, dpmm=1, x_bleed=10, xcorr=0):
     # 300 dpi = 11.8 dpmm
     logging.info("Opening image %s", filename_in)
     
@@ -107,7 +107,7 @@ def do(filename_in, dpmm=10, x_bleed=10, xcorr=0.1):
     result += "S0\n"
     result += "G0 X{:f} Y{:f}\n".format(first_x * unit_length - first_direction * x_bleed, first_y * unit_length)
     result += "G1\n"
-    result += "X{:f}\n".format(first_x * unit_length)
+    result += "X{:f}\n".format(first_x * unit_length + xcorr * first_direction)
     
     last_x = first_x
     last_y = first_y
@@ -174,6 +174,7 @@ def do(filename_in, dpmm=10, x_bleed=10, xcorr=0.1):
         nxs = None # next x_start
         nxe = None # next x_end
         ny = None # next y
+        nd = None # next direction
     
         for j in range(cy + 1, height):
             # find the next non-empty row
@@ -181,6 +182,7 @@ def do(filename_in, dpmm=10, x_bleed=10, xcorr=0.1):
             if nxs is not None and nxe is not None:
                 # found next y!
                 ny = j
+                ndir = dctn
                 break
             
         if nxs is None and nxe is None:
@@ -214,17 +216,20 @@ def do(filename_in, dpmm=10, x_bleed=10, xcorr=0.1):
 
         #result += "G{:g} X{:g} Y{:g} R{:f} S0\n".format(arcmode, x_clear, middle_y * unit_length, arc_radius_out * unit_length)
         #result += "G{:g} X{:g} Y{:g} R{:f} S0\n".format(arcmode, (nxs + direction) * unit_length, ny * unit_length, arc_radius_in * unit_length)
+        result += ";_gerbil bleed begin\n"
         result += "G1 X{:g} Y{:g} S0\n".format(x_clear, middle_y * unit_length)
-        result += "G1 X{:g} Y{:g} S0\n".format((nxs + direction) * unit_length, ny * unit_length)
+        offset = 1 if direction == 1 else 0
+        result += "G1 X{:g} Y{:g} S0\n".format(direction * xcorr + (nxs + offset) * unit_length, ny * unit_length)
+        result += ";_gerbil bleed end\n"
         
-        last_s = -1 # invalidate last S for next row processing
-        last_x = -1 # invalidate last X for next row processing
+        last_s = None # invalidate last S for next row processing
+        last_x = None # invalidate last X for next row processing
         
         result += "G1\n"
         
 
     # gcode postamble
-    out_x = float(unit_length * last_x - direction * x_bleed)
+    out_x = float(unit_length * last_x + direction * x_bleed)
     result += "G1 X{:f} S0\n".format(out_x) # last easing out movement
     result += "G0 X0 Y0\n".format(out_x) # last easing out movement
     
