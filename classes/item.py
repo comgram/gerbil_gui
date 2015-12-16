@@ -323,6 +323,7 @@ class GcodePath(Item):
         offset = self.cs_offsets[cs] # current cs offset tuple
         current_motion_mode = 0
         distance_mode = "G90"
+        spindle_speed = None
         
         in_arc = False # if currently in arc
         
@@ -365,10 +366,6 @@ class GcodePath(Item):
                 current_motion_mode = int(m.group(1))
                 if current_motion_mode == 2 or current_motion_mode == 3:
                     print("G2 and G3 not supported. Use gerbil's preprocessor to fractionize a circle into small linear segements.")
-                
-                if in_arc != True:
-                    # in_arc takes color precedence
-                    col = colors[current_motion_mode]
                     
                     
             # update spindle speed / laser intensity
@@ -376,14 +373,16 @@ class GcodePath(Item):
             m = re.match(self._re_contains_spindle, line)
             if m:
                 spindle_speed = int(m.group(1))
+                print("SPINDLE {} {}".format(spindle_speed, line))
             
-            if spindle_speed and spindle_speed > 0:
-                rgb = spindle_speed / 255.0
-                col = (rgb, rgb, rgb, 1)
+            if spindle_speed != None and spindle_speed > 0:
+                rgb = spindle_speed / 255.0 
+                col = (rgb, rgb, 0, 1)
             elif in_arc == True:
                 col = colors["arc"]
-            elif current_motion_mode:
+            else:
                 col = colors[current_motion_mode]
+                print("COLOR {} {}".format(current_motion_mode, col))
 
             m = re.match(self._re_distance_mode, line)
             if m: distance_mode = m.group(1)

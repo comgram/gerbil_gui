@@ -5,11 +5,11 @@ t = gcodetools
 
 self.new_job()
 
-gcode = t.read("tmp/patterntest2.ngc")
-#gcode = t.read("/mnt/files/output.ngc")
+#gcode = t.read("tmp/patterntest2.ngc")
+gcode = t.read("/mnt/files/output.ngc")
 
 grbl.preprocessor.do_fractionize_lines = False
-grbl.preprocessor.do_fractionize_arcs = False
+grbl.preprocessor.do_fractionize_arcs = True
 grbl.write(gcode)
 
 self.set_target("simulator")
