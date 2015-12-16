@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/cnctoolbox/mainwindow.ui'
 #
-# Created: Wed Dec 16 13:18:44 2015
+# Created: Wed Dec 16 19:46:38 2015
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -632,9 +632,10 @@ class Ui_MainWindow(object):
         self.label_time.setObjectName("label_time")
         self.gridLayout.addWidget(self.label_time, 0, 14, 1, 1)
         self.label_current_gcode = QtWidgets.QLabel(self.centralWidget)
+        self.label_current_gcode.setMaximumSize(QtCore.QSize(290, 16777215))
         font = QtGui.QFont()
         font.setFamily("DejaVu Sans Mono")
-        font.setPointSize(9)
+        font.setPointSize(7)
         font.setBold(True)
         font.setWeight(75)
         self.label_current_gcode.setFont(font)

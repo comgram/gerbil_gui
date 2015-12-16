@@ -1247,10 +1247,16 @@
     </item>
     <item row="2" column="13" colspan="3">
      <widget class="QLabel" name="label_current_gcode">
+      <property name="maximumSize">
+       <size>
+        <width>290</width>
+        <height>16777215</height>
+       </size>
+      </property>
       <property name="font">
        <font>
         <family>DejaVu Sans Mono</family>
-        <pointsize>9</pointsize>
+        <pointsize>7</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>

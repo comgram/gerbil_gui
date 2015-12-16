@@ -76,6 +76,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         font.setPointSize(8)
         #self.label_loginput.setStyleSheet("font: 8pt")
         self.label_loginput.setFont(font)
+        
+        font = QtGui.QFont()
+        font.setFamily("DejaVu Sans Mono")
+        font.setPointSize(6)
+        self.label_current_gcode.setFont(font)
         ## LOGGING SETUP END ------       
         
         
@@ -231,7 +236,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for row in range(0, 32):
             self.tableWidget_settings.setRowHeight(row, 15)
             
-        with open("examples/scripts/blank.py", 'r') as f: c = f.read()
+        with open("examples/scripts/reload-file.py", 'r') as f: c = f.read()
         self.plainTextEdit_script.setPlainText(c)
         
         ## JOG WIDGET SETUP BEGIN -------------
@@ -432,6 +437,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_boot":
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
+            self.horizontalSlider_feed_override.setValue(25) #179
+            self.grbl.send_immediately("F179")
             self.grbl.poll_start()
             
         elif event == "on_disconnected":

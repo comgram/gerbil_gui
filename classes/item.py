@@ -357,8 +357,6 @@ class GcodePath(Item):
             # remove all comments
             line = re.sub(self._re_allcomments_remove, "", line)
             
-            #if line.strip() == "": continue
-            
             # get current motion mode G0, G1, G2, G3
             # and choose color
             m = re.match(self._re_motion_mode, line)
@@ -376,8 +374,11 @@ class GcodePath(Item):
                 print("SPINDLE {} {}".format(spindle_speed, line))
             
             if spindle_speed != None and spindle_speed > 0:
-                rgb = spindle_speed / 255.0 
-                col = (rgb, rgb, 0, 1)
+                rgb = spindle_speed / 255.0
+                if in_arc == True:
+                    col = (rgb * 0.9, rgb, 0, 1) # purple
+                else:
+                    col = (rgb, rgb * 0.9, 0, 1) # yellow
             elif in_arc == True:
                 col = colors["arc"]
             else:
