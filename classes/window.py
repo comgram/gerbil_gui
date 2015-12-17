@@ -79,7 +79,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         font = QtGui.QFont()
         font.setFamily("DejaVu Sans Mono")
-        font.setPointSize(6)
+        font.setPointSize(8)
         self.label_current_gcode.setFont(font)
         ## LOGGING SETUP END ------       
         
@@ -437,6 +437,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_boot":
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
+            self.lcdNumber_feed_current.display("---")
             self.horizontalSlider_feed_override.setValue(25) #179
             self.grbl.send_immediately("F179")
             self.grbl.poll_start()
@@ -984,7 +985,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self._current_cs = nr
         current_cs_text = self._cs_names[self._current_cs]
-        self.label_current_cs.setText(current_cs_text)
+        #self.label_current_cs.setText(current_cs_text)
         self.comboBox_coordinate_systems.setCurrentIndex(nr - 1)
         
         self.state_cs_dirty = True

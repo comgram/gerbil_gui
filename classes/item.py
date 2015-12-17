@@ -293,7 +293,7 @@ class GcodePath(Item):
         
     def highlight_line(self, line_number):
         # deprecated in favor of starMarker
-        #self.highlight_lines_queue.append(line_number)
+        self.highlight_lines_queue.append(line_number)
         pass
         
     def draw(self):
@@ -306,7 +306,7 @@ class GcodePath(Item):
             # 2 opengl segments for each logical line, see below
             offset = 2 * line_number * stride + position_size
             
-            col = np.array([1, 1, 1, 0.4], dtype=np.float32)
+            col = np.array([1, 1, 1, 0.8], dtype=np.float32)
             
             glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
             glBufferSubData(GL_ARRAY_BUFFER, offset, color_size, col)
@@ -358,7 +358,6 @@ class GcodePath(Item):
             line = re.sub(self._re_allcomments_remove, "", line)
             
             # get current motion mode G0, G1, G2, G3
-            # and choose color
             m = re.match(self._re_motion_mode, line)
             if m:
                 current_motion_mode = int(m.group(1))
@@ -376,7 +375,7 @@ class GcodePath(Item):
             if spindle_speed != None and spindle_speed > 0:
                 rgb = spindle_speed / 255.0
                 if in_arc == True:
-                    col = (rgb * 0.9, rgb, 0, 1) # purple
+                    col = (rgb, rgb * 0.5, 0, 1) # yellow/reddish
                 else:
                     col = (rgb, rgb * 0.9, 0, 1) # yellow
             elif in_arc == True:
