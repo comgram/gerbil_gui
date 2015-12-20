@@ -524,7 +524,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
             #self.sim_dialog.simulator_widget.cleanup_stage()
             
-            self.sim_dialog.simulator_widget.draw_asap = True
+            self.sim_dialog.simulator_widget.dirty = True
             self.state_cs_dirty = False
         
         if self.changed_state:

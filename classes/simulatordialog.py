@@ -12,8 +12,5 @@ class SimulatorDialog(QWidget, Ui_SimulatorDialog):
         super(SimulatorDialog, self).__init__()
         self.setupUi(self)
         
-        ## SIMULATOR SETUP BEGIN -------------
-        self._sim_enabled = True
         self.simulator_widget = SimulatorWidget()
         self.gridLayout_simulator.addWidget(self.simulator_widget)
-        ## SIMULATOR SETUP END -------------
