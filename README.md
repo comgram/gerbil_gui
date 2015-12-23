@@ -7,6 +7,7 @@
 For a Debian Jessie system:
 
 Install Python 3
+
     apt-get install python3
     
 Install Python 3 modules which are shipped with the Debian Jessie distribution:
@@ -16,19 +17,15 @@ Install Python 3 modules which are shipped with the Debian Jessie distribution:
 Install Python 3 modules not shipped with the Debian Jessie distribution: 
     
     python3 -m pip install svgwrite --user
-    
     python3 -m pip install doxypy --user
 
 
 ### Get source:
 
-    git clone gitrepos@cinderella.thebigrede.net:~/cnctoolbox.git
+    git clone ...
     cd cnctoolbox
-    
-Clone separate Gerbil repository:
-
-    git clone gitrepos@cinderella.thebigrede.net:~/gerbil.git
-    
+    git clone git@github.com:michaelfranzl/pyglpainter.git
+    git clone git@github.com:michaelfranzl/gerbil.git
     
 Get help on command line options:
 
@@ -36,20 +33,7 @@ Get help on command line options:
     
 To start the GUI:
 
-    ./cnctoolbox gui /dev/ttyACM0
-    
-    
-
-## How to script GRBL
-
-Example for python3 console:
-
-Initialize and connect to Grbl:
-    
-    grbl = GRBL("mygrbl", "/dev/ttyACM0")
-    grbl.cnect()
-
-TODO: Document the API, ideally via PyDoc
+    ./cnctoolbox gui --path=/dev/ttyACM0
 
 
 ## Development

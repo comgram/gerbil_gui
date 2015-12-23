@@ -519,7 +519,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # used to highlight coordinate systems (after $G command)
             for idx, val in self._cs_names.items():
                 do_highlight = val == self._cs_names[self._current_cs]
-                cs_item = self.sim_dialog.simulator_widget.items[val]
+                cs_item = self.sim_dialog.simulator_widget.items["cs" + val]
                 cs_item.highlight(do_highlight)
                 
             #self.sim_dialog.simulator_widget.cleanup_stage()
