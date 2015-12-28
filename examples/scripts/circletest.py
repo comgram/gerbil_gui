@@ -21,10 +21,10 @@ input.append("G90") # use absolute distances
 
 input.append("F2000") # set feed
 input.append("G0 X0 Y0") # return to origin
-input.append("G1 X20 Y20") # draw a line
+input.append("G1 X20 Y20 F100") # draw a line
 
 input.append("G17") # select arcs in XY plane
-input.append("G2 X30 Y30 I5 J5") # draw clockwise circle in Offset mode
+input.append("G2 X30 Y30 I5 J5 F200") # draw clockwise circle in Offset mode
 
 input.append("G18") # select arcs in XZ plane
 input.append("G2 X30 Z30 I15 K15") # draw clockwise circle in Offset mode

@@ -888,8 +888,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send_immediately("$#")
 
     def _variables_edited(self, row, col):
+        print("_variables_edited", row, col)
         d = self._var_table_to_dict()
-        self.grbl.preprocessor.set_vars(d)
+        self.grbl.preprocessor.vars = d
 
         
         
@@ -922,12 +923,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     
-    def var_keys_into_var_table(self, keys):
+    def var_keys_into_var_table(self, d):
         self.tableWidget_variables.clear()
         row = 0
-        for key in sorted(keys):
+        for key, val in d.items():
             cell_a = QTableWidgetItem("#" + key)
+            cell_b = QTableWidgetItem(val)
             self.tableWidget_variables.setItem(row, 0, cell_a)
+            self.tableWidget_variables.setItem(row, 1, cell_b)
             row += 1
     
     

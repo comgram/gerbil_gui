@@ -3,7 +3,7 @@ import re
 
 def read(fname):
     with open(fname, 'r') as f:
-        return f.readlines()
+        return [l.strip() for l in f.readlines()]
     
 def write(fname, contents):
     with open(fname, 'w') as f:

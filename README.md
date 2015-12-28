@@ -49,10 +49,10 @@ G4 P1
 : Dwell 1 second
 
 G10L2 
-: Set Coordinate System
+: Set Coordinate System coordinates relative to machine: G10 L2 P2 X-100 Y-100
 
 G10L20
-: Set Coordinate System: Similar to G10 L2 except that instead of setting the offset/entry to the given value, it is set to a calculated value that makes the current coordinates become the given value.
+: Set Coordinate System coordinates relateive to current working position: G10 L20 P2 X10 Y410
 
 G28
 :Go to Predefined Position

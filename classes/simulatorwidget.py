@@ -94,11 +94,13 @@ class SimulatorWidget(PainterWidget):
             
 
     def put_buffer_marker_at_line(self, line_number):
+        #print("putting buffermarker at line {}".format(line_number))
         if "gcode" in self.items:
-            bufferpos = self.items["gcode"].data["position"][2 * line_number]
-            #print("putting buffermarker at line {} pos {}".format(line_number, bufferpos))
-            if "buffermarker" in self.items:
-                self.items["buffermarker"].set_origin(tuple(bufferpos))
+            if 2 * line_number <= self.items["gcode"].elementcount:
+                bufferpos = self.items["gcode"].data["position"][2 * line_number]
+                
+                if "buffermarker" in self.items:
+                    self.items["buffermarker"].set_origin(tuple(bufferpos))
             
             self.dirty = True
             
@@ -113,7 +115,7 @@ class SimulatorWidget(PainterWidget):
             self.items["tool"].set_origin(cmpos)
         else:
             # tool not yet created. create it and move it cmpos
-            i = self.item_create("Item", "tool", "simple3d", GL_LINES, 7, (0,0,0), 1, 2)
+            i = self.item_create("Item", "tool", "simple3d", GL_LINES, 7, (0,0,0), 1, False, 2)
             i.append_vertices([[(0, 0, 0), (1, 1, 1, .5)]])
             i.append_vertices([[(0, 0, 200), (1, 1, 1, .2)]])
             i.upload()
@@ -127,7 +129,7 @@ class SimulatorWidget(PainterWidget):
             #tr.substitute(vertex_nr, cmpos, )
         else:
             # create new
-            tr = self.item_create("Item", "tracer", "simple3d", GL_LINE_STRIP, 1, (0,0,0), 1, 1000000)
+            tr = self.item_create("Item", "tracer", "simple3d", GL_LINE_STRIP, 1, (0,0,0), 1, False, 1000000)
             tr.append_vertices([[cmpos, (1, 1, 1, 0.2)]])
             tr.upload()
 
