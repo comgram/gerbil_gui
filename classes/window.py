@@ -321,6 +321,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.heightmap_gldata = np.zeros(dimx * dimy, [("position", np.float32, 3), ("color", np.float32, 4)])
         
+        current_cs_offset = self.state_hash[self._cs_names[self._current_cs]]
+        
         steps_x = dimx * 1j
         steps_y = dimy * 1j
         grid = np.mgrid[0:dimx:steps_x, 0:dimy:steps_y]
@@ -348,12 +350,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         print("DRAWING HEIGHTMAP", self.heightmap_probe_points, self.heightmap_probe_values)
         
+        # see http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html
         interpolated_z = griddata(
             self.heightmap_probe_points,
             self.heightmap_probe_values,
             (self.heightmap_ipolgrid_x, self.heightmap_ipolgrid_y),
             method='cubic',
-            fill_value=0)
+            fill_value=-999)
         
         for y in range(0, self.heightmap_dimy):
             for x in range(0, self.heightmap_dimx):
@@ -381,7 +384,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_probe":
             pos = data[0]
-            self.heightmap_probe_points.append([pos[0], pos[1]]) # x and y
+            
+            self.heightmap_probe_points.append([round(self.wpos[0]), round(self.wpos[1])]) # x and y, we are doing integer coordinates only, grbl may report difference of thousands back
+
             self.heightmap_probe_values.append(pos[2]) # z
             
             self.heightmap_probe_points_count += 1
@@ -896,12 +901,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         val = False if val == 0 else True
         self.grbl.incremental_streaming = val
              
-             
     def abort(self):
         self.grbl.abort()
        
        
     def reset(self):
+        self.heightmap_gldata = None
+        self.heightmap_dimx = None
+        self.heightmap_dimy = None
+        self.heightmap_probe_points = None
+        self.heightmap_probe_values = None
+        self.heightmap_ipolgrid_x = None
+        self.heightmap_ipolgrid_y = None
+        self.heightmap_probe_points_count = None
+        
         self.grbl.abort()
         
         
