@@ -206,6 +206,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.sim_dialog = SimulatorDialog(self)
         self.sim_dialog.show()
+        
+        self.sim_dialog.simulator_widget.draw_heightmap()
 
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
@@ -554,6 +556,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.sim_dialog.simulator_widget.draw_tool(self.mpos)
             
             if self.state == "Idle":
+                self.sim_dialog.simulator_widget.draw_heightmap()
                 color = "green"
                 self.jogWidget.onIdle()
                 self.grbl.gcode_parser_state_requested = True
