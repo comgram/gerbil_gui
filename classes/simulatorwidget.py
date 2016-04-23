@@ -25,36 +25,16 @@ class SimulatorWidget(PainterWidget):
             "G59": (0, 0, 0)
             }
         
-    def draw_heightmap(self):
-        grid_x = 100
-        grid_y = 100
         
-        def func(x, y):
-            return x*(1-x)*np.cos(4*np.pi*x) * np.sin(4*np.pi*y**2)**2
-        
-        gx, gy = np.mgrid[0:1:100j, 0:1:100j]
-
-        dat = np.zeros(100 * 100, [("position", np.float32, 3), ("color", np.float32, 4)])
-        
+    def draw_heightmap(self, pos_col):
         if "myheightmap" in self.programs["heightmap"].items:
             i = self.programs["heightmap"].items["myheightmap"]
         else:
             # create
-            i = self.item_create("HeightMap", "myheightmap", "heightmap", 100, 100, dat, False, (0,0,0), 2)
-        
-        points = np.random.rand(200, 2)
-        values = func(points[:,0], points[:,1])
-        gz = griddata(points, values, (gx, gy), method='cubic', fill_value=0)
-        
-        for y in range(0, grid_y):
-            for x in range(0, grid_x):
-                idx = y * grid_x + x
-                dat["position"][idx] = (x, y, gz[x][y])
-                #print(dat["position"][idx])
-                dat["color"][idx] = (1, 1, 1, 1)
-                
-        i.set_data(dat)
-        i.upload()
+            i = self.item_create("HeightMap", "myheightmap", "heightmap", 100, 100, pos_col, False, (0,0,0), 1)
+
+        #i.set_data(pos_col)
+        #i.upload()
         
         
         

@@ -25,7 +25,12 @@ void main()
   else if (x == 6) { r=1;   g=1;    b=1;   } // white
   else             { r=1;   g=1;    b=1;   } // white
   
-  gl_FragColor = vec4(r, g, b, 1);
+  if (height_max == 0 && height_min == 0) {
+    gl_FragColor = vec4(1, 1, 1, 1);
+  } else {
+    //gl_FragColor = vec4(1, 1, 1, 1);
+    gl_FragColor = vec4(r, g, b, 1);
+  }
   
   // simple way of striping the surface
   //if (mod(floor(vertex_id), 10) == 0) {

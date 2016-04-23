@@ -1,11 +1,14 @@
 import sys,traceback
 import os
 import math
-import numpy
+import numpy as np
 import logging
 import collections
 import time
 import re
+
+from scipy.interpolate import griddata
+import random
 
 from classes.highlighter import Highlighter
 from classes.jogwidget import JogWidget
@@ -50,6 +53,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state_hash_dirty = False
         self.state_cs_dirty = False
         self.state_stage_dirty = False
+        self.state_heightmap_dirty = False
         
         self.wpos = (0, 0, 0)
         self.mpos = (0, 0, 0)
@@ -207,10 +211,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sim_dialog = SimulatorDialog(self)
         self.sim_dialog.show()
         
-        self.sim_dialog.simulator_widget.draw_heightmap()
+        self.heightmap_gldata = None
+        self.heightmap_dimx = None
+        self.heightmap_dimy = None
+        self.heightmap_probe_points = None
+        self.heightmap_probe_values = None
+        self.heightmap_ipolgrid_x = None
+        self.heightmap_ipolgrid_y = None
+        self.heightmap_probe_points_count = None
 
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
+        self._add_to_logoutput("=probe_plane(100,100)")
         self._add_to_logoutput("=goto_marker()")
         self._add_to_logoutput("G38.2 Z-10 F50")
         self._add_to_logoutput("G0 X0 Y0")
@@ -300,7 +312,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def set_target(self, targetname):
         idx = self.targets.index(targetname)
         self.comboBox_target.setCurrentIndex(idx)
+        
+        
+    # probe_plane(100, 100) # in mm
+    def probe_plane(self, dimx, dimy):
+        self.heightmap_dimx = dimx
+        self.heightmap_dimy = dimy
+        
+        self.heightmap_gldata = np.zeros(dimx * dimy, [("position", np.float32, 3), ("color", np.float32, 4)])
+        
+        steps_x = dimx * 1j
+        steps_y = dimy * 1j
+        grid = np.mgrid[0:dimx:steps_x, 0:dimy:steps_y]
+        self.heightmap_ipolgrid_x = grid[0]
+        self.heightmap_ipolgrid_y = grid[1]
+        
+        self.heightmap_probe_points = []
+        self.heightmap_probe_values = []
+        
+        self.heightmap_probe_points_count = 0
+        self.heightmap_probe_points_planned = [[0,0],[dimx,0],[dimx,dimy],[0,dimy]]
+        
+        self.do_probe_point(self.heightmap_probe_points_planned[0])
+        
+        
+    def do_probe_point(self, pos):
+        print("do_probe_point", pos)
+        self.grbl.send_immediately("G0 Z10")
+        self.grbl.send_immediately("G0 X{} Y{}".format(pos[0], pos[1]))
+        self.grbl.send_immediately("G38.2 Z-10 F50")
+        
 
+    def draw_heightmap(self):
+        if len(self.heightmap_probe_values) < 4: return # at least 4 for suitable interpol
+        
+        print("DRAWING HEIGHTMAP", self.heightmap_probe_points, self.heightmap_probe_values)
+        
+        interpolated_z = griddata(
+            self.heightmap_probe_points,
+            self.heightmap_probe_values,
+            (self.heightmap_ipolgrid_x, self.heightmap_ipolgrid_y),
+            method='cubic',
+            fill_value=0)
+        
+        for y in range(0, self.heightmap_dimy):
+            for x in range(0, self.heightmap_dimx):
+                idx = y * self.heightmap_dimx + x
+                self.heightmap_gldata["position"][idx] = (x, y, interpolated_z[x][y])
+                self.heightmap_gldata["color"][idx] = (1, 1, 1, 1)
+
+        self.sim_dialog.simulator_widget.draw_heightmap(self.heightmap_gldata)
+        
+        
     # CALLBACKS
         
     def on_grbl_event(self, event, *data):
@@ -317,7 +380,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.state_hash_dirty = True
             
         elif event == "on_probe":
-            print("ON_PROBE", data[0])
+            pos = data[0]
+            self.heightmap_probe_points.append([pos[0], pos[1]]) # x and y
+            self.heightmap_probe_values.append(pos[2]) # z
+            
+            self.heightmap_probe_points_count += 1
+            planned_points = len(self.heightmap_probe_points_planned)
+            if self.heightmap_probe_points_count < planned_points:
+                # next planned point
+                nextpoint = self.heightmap_probe_points_planned[self.heightmap_probe_points_count]
+            else:
+                nextpoint = [random.randint(0, self.heightmap_dimx), random.randint(0, self.heightmap_dimy)]
+                
+            self.state_heightmap_dirty = True
+            print("ON_PROBE", pos)
+            self.do_probe_point(nextpoint)
           
                 
         elif event == "on_gcode_parser_stateupdate":
@@ -520,6 +597,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.sim_dialog.simulator_widget.draw_stage(workarea_x, workarea_y)
             self.state_stage_dirty = False
             
+        if self.state_heightmap_dirty == True:
+            self.draw_heightmap()
+            self.state_heightmap_dirty = False
+            
             
         if self.state_cs_dirty == True:
             # used to highlight coordinate systems (after $G command)
@@ -556,11 +637,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.sim_dialog.simulator_widget.draw_tool(self.mpos)
             
             if self.state == "Idle":
-                self.sim_dialog.simulator_widget.draw_heightmap()
                 color = "green"
                 self.jogWidget.onIdle()
-                self.grbl.gcode_parser_state_requested = True
-                self.grbl.hash_state_requested = True
+                
+                if self.heightmap_probe_points_count == None:
+                    # we are currently not probing
+                    print("on idle: requesting hash ")
+                    self.grbl.gcode_parser_state_requested = True
+                    self.grbl.hash_state_requested = True
+                
                 if self._rx_buffer_fill == 0:
                     self.listWidget_logoutput.setEnabled(True)
                     self.lineEdit_cmdline.setEnabled(True)
