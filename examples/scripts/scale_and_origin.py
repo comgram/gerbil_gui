@@ -22,7 +22,7 @@ grbl.write(t.bbox(scaled_origin_cat))
 self.sim_dialog.simulator_widget.draw_workpiece((110, 120, 10), (350, 650, 0))
 
 
-grbl.preprocessor.set_vars({"1":0})
+grbl.preprocessor.vars = {"1":0}
 self.set_target("simulator")
 grbl.job_run()
 
