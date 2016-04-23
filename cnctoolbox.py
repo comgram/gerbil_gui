@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# copyright Red E Tools Ltd.
+# copyright 2015/2016 Michael Franzl
 # MIT License
 
 import argparse

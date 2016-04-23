@@ -23,6 +23,5 @@ for i in range(0,200,25):
 
 # The job will not be sent to Grbl, it will only be simulated. Be careful with the code below when you're sitting at the machine!
 
-grbl.preprocessor.set_vars({"1":0})
 self.set_target("simulator")
 grbl.job_run()

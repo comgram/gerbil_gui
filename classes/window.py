@@ -210,6 +210,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
         self._add_to_logoutput("=goto_marker()")
+        self._add_to_logoutput("G38.2 Z-10 F50")
         self._add_to_logoutput("G0 X0 Y0")
         
         self.on_job_completed_callback = None
@@ -312,6 +313,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_hash_stateupdate":
             self.state_hash = data[0]
             self.state_hash_dirty = True
+            
+        elif event == "on_probe":
+            print("ON_PROBE", data[0])
           
                 
         elif event == "on_gcode_parser_stateupdate":
@@ -363,7 +367,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             mins = math.floor(secs / 60)
             secs = secs - mins * 60
             
-            self.label_time.setText("ETA {:02d}:{:02d}:{:02d}".format(hours, mins, secs))
+            self.label_time.setText("{:02d}:{:02d}:{:02d}".format(hours, mins, secs))
             
         elif event == "on_error":
             self._add_to_loginput("<b>◀ {}</b>".format(data[0]), "red")
@@ -519,7 +523,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # used to highlight coordinate systems (after $G command)
             for idx, val in self._cs_names.items():
                 do_highlight = val == self._cs_names[self._current_cs]
-                cs_item = self.sim_dialog.simulator_widget.items["cs" + val]
+                cs_item = self.sim_dialog.simulator_widget.programs["simple3d"].items["cs" + val]
                 cs_item.highlight(do_highlight)
                 
             #self.sim_dialog.simulator_widget.cleanup_stage()
@@ -682,6 +686,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.label_current_gcode.setText(self.grbl._buffer[line_number])
     
     def execute_script_clicked(self,item):
+        self.grbl.update_preprocessor_position()
         code = self.plainTextEdit_script.toPlainText()
         try:
             exec(code)

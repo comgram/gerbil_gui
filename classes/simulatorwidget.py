@@ -27,9 +27,22 @@ class SimulatorWidget(PainterWidget):
         super(SimulatorWidget, self).initializeGL()
         
         # ============= CREATE PROGRAMS BEGIN =============
+        
+        opts = {
+        "uniforms": {
+            "mat_m": "Matrix4fv",
+            "mat_v": "Matrix4fv",
+            "mat_p": "Matrix4fv",
+            },
+        "attributes": {
+            "color": "vec4",
+            "position": "vec3",
+            }
+        }
+        
         path = os.path.dirname(os.path.realpath(__file__)) + "/shaders/"
-        self.program_create("simple3d", path + "simple3d-vertex.c", path + "simple3d-fragment.c")
-        self.program_create("simple2d", path + "simple2d-vertex.c", path + "simple2d-fragment.c")
+        self.program_create("simple3d", path + "simple3d-vertex.c", path + "simple3d-fragment.c", opts)
+        self.program_create("simple2d", path + "simple2d-vertex.c", path + "simple2d-fragment.c", opts)
         # ============= CREATE PROGRAMS END =============
     
     def draw_stage(self, workarea_x, workarea_y):
@@ -40,7 +53,7 @@ class SimulatorWidget(PainterWidget):
 
 
     def cleanup_stage(self):
-        item_keys = self.items.keys()
+        item_keys = self.programs["simple3d"].items.keys()
         
         keys_to_delete = []
         for key in item_keys:
@@ -57,17 +70,18 @@ class SimulatorWidget(PainterWidget):
     def draw_coordinate_system(self, key, tpl_origin):
         self.cs_offsets[key] = tpl_origin
         cskey = "cs" + key
-        if cskey in self.items:
+        
+        if cskey in self.programs["simple3d"].items:
             #update
-            self.items[cskey].set_origin(tpl_origin)
+            self.programs["simple3d"].items[cskey].set_origin(tpl_origin)
         else:
             # create
             self.item_create("CoordSystem", cskey, "simple3d", tpl_origin, 30, 2)
             
         txtkey = "txtcs" + key
-        if txtkey in self.items:
+        if txtkey in self.programs["simple3d"].items:
             #update
-            self.items[txtkey].set_origin(tpl_origin)
+            self.programs["simple3d"].items[txtkey].set_origin(tpl_origin)
         else:
             # create
             text = self.item_create("Text", txtkey, "simple3d", key, tpl_origin, 2, 1, (1,1,1,0.5))
@@ -77,42 +91,42 @@ class SimulatorWidget(PainterWidget):
         
         
     def draw_gcode(self, gcode, cwpos, ccs):
-        if "gcode" in self.items:
+        if "gcode" in self.programs["simple3d"].items:
             # remove old gcode item
             self.item_remove("gcode")
         
         # create a new one
         self.item_create("GcodePath", "gcode", "simple3d", gcode, cwpos, ccs, self.cs_offsets)
-        #self.items["gcode"] = GcodePath("gcode", self.program, gcode, cwpos, ccs, self.cs_offsets)
+        #self.programs["simple3d"].items["gcode"] = GcodePath("gcode", self.program, gcode, cwpos, ccs, self.cs_offsets)
         self.dirty = True
         
         
     def highlight_gcode_line(self, line_number):
-        if "gcode" in self.items:
-            self.items["gcode"].highlight_line(line_number)
+        if "gcode" in self.programs["simple3d"].items:
+            self.programs["simple3d"].items["gcode"].highlight_line(line_number)
         self.dirty = True
             
 
     def put_buffer_marker_at_line(self, line_number):
         #print("putting buffermarker at line {}".format(line_number))
-        if "gcode" in self.items:
-            if 2 * line_number <= self.items["gcode"].elementcount:
-                bufferpos = self.items["gcode"].data["position"][2 * line_number]
+        if "gcode" in self.programs["simple3d"].items:
+            if 2 * line_number <= self.programs["simple3d"].items["gcode"].vertexcount:
+                bufferpos = self.programs["simple3d"].items["gcode"].vdata_pos_col["position"][2 * line_number]
                 
-                if "buffermarker" in self.items:
-                    self.items["buffermarker"].set_origin(tuple(bufferpos))
+                if "buffermarker" in self.programs["simple3d"].items:
+                    self.programs["simple3d"].items["buffermarker"].set_origin(tuple(bufferpos))
             
             self.dirty = True
             
     
     def get_buffer_marker_pos(self):
-        return self.items["buffermarker"].origin
+        return self.programs["simple3d"].items["buffermarker"].origin
         
         
     def draw_tool(self, cmpos):
-        if "tool" in self.items:
+        if "tool" in self.programs["simple3d"].items:
             # if tool was already created, simply move it to cmpos
-            self.items["tool"].set_origin(cmpos)
+            self.programs["simple3d"].items["tool"].set_origin(cmpos)
         else:
             # tool not yet created. create it and move it cmpos
             i = self.item_create("Item", "tool", "simple3d", GL_LINES, 7, (0,0,0), 1, False, 2)
@@ -121,11 +135,11 @@ class SimulatorWidget(PainterWidget):
             i.upload()
             i.set_origin(cmpos)
 
-        if "tracer" in self.items:
+        if "tracer" in self.programs["simple3d"].items:
             # update existing
-            tr = self.items["tracer"]
+            tr = self.programs["simple3d"].items["tracer"]
             tr.append_vertices([[cmpos, (1, 1, 1, 0.2)]])
-            #vertex_nr = tr.elementcount
+            #vertex_nr = tr.vertexcount
             #tr.substitute(vertex_nr, cmpos, )
         else:
             # create new
