@@ -26,7 +26,7 @@ class SimulatorWidget(PainterWidget):
             }
         
         
-    def draw_heightmap(self, pos_col, origin):
+    def draw_heightmap(self, pos_col, dim, origin):
         if "myheightmap" in self.programs["heightmap"].items:
             # update
             i = self.programs["heightmap"].items["myheightmap"]
@@ -35,10 +35,10 @@ class SimulatorWidget(PainterWidget):
             i.upload()
         else:
             # create
-            i = self.item_create("HeightMap", "myheightmap", "heightmap", 100, 100, pos_col, False, origin, 1)
+            i = self.item_create("HeightMap", "myheightmap", "heightmap", dim[0], dim[1], pos_col, False, origin, 1)
 
-        
-        
+    def remove_heightmap(self):
+        self.item_remove("myheightmap")
         
         
     def initializeGL(self):
