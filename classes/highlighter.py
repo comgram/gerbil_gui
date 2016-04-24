@@ -79,12 +79,12 @@ class Highlighter(QtGui.QSyntaxHighlighter):
                 keywordFormat))
 
         singleLineCommentFormat = QtGui.QTextCharFormat()
-        singleLineCommentFormat.setForeground(QtCore.Qt.white)
+        singleLineCommentFormat.setForeground(QtCore.Qt.gray)
         self.highlightingRules.append((QtCore.QRegExp("#[^\n]*"),
                 singleLineCommentFormat))
 
         self.multiLineCommentFormat = QtGui.QTextCharFormat()
-        self.multiLineCommentFormat.setForeground(QtCore.Qt.white)
+        self.multiLineCommentFormat.setForeground(QtCore.Qt.gray)
 
         self.commentStartExpression = QtCore.QRegExp("/\\*")
         self.commentEndExpression = QtCore.QRegExp("\\*/")

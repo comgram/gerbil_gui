@@ -117,7 +117,7 @@ class SimulatorWidget(PainterWidget):
             self.programs["simple3d"].items[txtkey].set_origin(tpl_origin)
         else:
             # create
-            text = self.item_create("Text", txtkey, "simple3d", key, tpl_origin, 2, 1, (1,1,1,0.5))
+            text = self.item_create("Text", txtkey, "simple3d", key, tpl_origin, 2, 1, (1,1,1,0.2))
             text.billboard = True
         
         self.dirty = True

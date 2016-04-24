@@ -1,5 +1,30 @@
+"""
+cnctoolbox - Copyright (c) 2016 Michael Franzl
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+"""
+
 import logging
 import re
+import numpy as np
+from scipy.interpolate import griddata
+
 
 def read(fname):
     with open(fname, 'r') as f:
@@ -62,19 +87,15 @@ def bbox(gcode, move_z=False):
         pass
         
     result += "G0X{:0.1f}Y{:0.1f}\n".format(xmin, ymin)
-    #result += "G4P1\n"
     result += "M0\n"
     
     result += "G0Y{:0.1f}\n".format(ymax)
-    #result += "G4P1\n"
     result += "M0\n"
     
     result += "G0X{:0.1f}\n".format(xmax)
-    #result += "G4P1\n"
     result += "M0\n"
     
     result += "G0Y{:0.1f}\n".format(ymin)
-    #result += "G4P1\n"
     result += "M0\n"
     
     result += "G0X{:0.1f}\n".format(xmin)
@@ -118,6 +139,7 @@ def translate(lines, offsets=[0, 0, 0]):
         result.append(line)
     return result
 
+
 # returns list
 def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
     result = []
@@ -160,6 +182,7 @@ def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
         result.append(line)
     return result
 
+
 # returns list
 def _get_bbox(gcode):
     bbox = []
@@ -176,9 +199,7 @@ def _get_bbox(gcode):
         for i in range(0, 3):
             axis = axes[i]
             cr = contains_regexps[i]
-            
             m = re.match(cr, line)
-
             if m:
                 a = float(m.group(1))
                 min = bbox[i][0]
@@ -187,5 +208,93 @@ def _get_bbox(gcode):
                 max = a if a > max else max
                 bbox[i][0] = min
                 bbox[i][1] = max
-
     return bbox
+
+
+
+def bumpify(gcode_list, cwpos, probe_points, probe_values):
+    logger = logging.getLogger('gerbil')
+    
+    position = list(cwpos)
+
+    axes = ["X", "Y", "Z"]
+    re_allcomments_remove = re.compile(";.*")
+    re_axis_values = []
+    re_axis_replace = []
+    
+    # precompile regular expressions for speed increase
+    for i in range(0, 3):
+        axis = axes[i]
+        re_axis_values.append(re.compile(".*" + axis + "([-.\d]+)"))
+        re_axis_replace.append(re.compile(r"" + axis + "[-.\d]+"))
+    
+    # first, collect xy coords per line, because all of them will be interpolated at once
+    coords_xy = [None]*len(gcode_list)
+    for nr in range(0, len(gcode_list)):
+        line = gcode_list[nr]
+        line = re.sub(re_allcomments_remove, "", line) # replace comments
+        
+        if "G91" in line:
+            logger.error("gcodetools.bumpify: G91 distance mode is not supported. Aborting at line {}".format(line))
+            return
+        
+        if re.match("G(5[4-9]).*", line): 
+            logger.error("gcodetools.bumpify: Switching coordinate systems is not supported. Aborting at line {}".format(line))
+            return
+        
+        for i in range(0, 2): # only loop over x and y
+            axis = axes[i]
+            rv = re_axis_values[i]
+            m = re.match(rv, line)
+            if m:
+                a = float(m.group(1))
+                position[i] = a
+                print("line", nr, line, i, a, position)
+                
+        coords_xy[nr] = [position[0], position[1]]
+                
+    #print("parsed coords", coords_xy)
+                
+    
+    # see http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html
+    interpolated_z = griddata(
+        probe_points,
+        probe_values,
+        coords_xy,
+        method='cubic')
+    
+    z_at_xy_origin = griddata(
+        probe_points,
+        probe_values,
+        [0,0],
+        method='cubic')[0]
+    
+    #print("interpolated", interpolated_z)
+    
+    # next add/substitute Z values
+    current_z = cwpos[2]
+    for nr in range(0, len(gcode_list)):
+        line = gcode_list[nr]
+        line = re.sub(re_allcomments_remove, "", line) # remove comments
+        
+        axis = axes[2]
+        rv = re_axis_values[2]
+        rr = re_axis_replace[2]
+        m = re.match(rv, line)
+        if m:
+            # contains Z, replace
+            current_z = float(m.group(1))
+            new_z = current_z + interpolated_z[nr] - z_at_xy_origin
+            rep = "{}{:0.3f}".format(axis, new_z)
+            rep = rep.rstrip("0").rstrip(".")
+            line = re.sub(rr, rep, line)
+        elif "X" in line or "Y" in line:
+            # add Z
+            new_z = current_z + interpolated_z[nr] - z_at_xy_origin
+            line += "{}{:0.3f}".format(axis, new_z)
+                    
+        gcode_list[nr] = line
+    
+    #print("FINI", gcode_list)
+    return gcode_list
+    

@@ -193,7 +193,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
         ## CS SETUP BEGIN ---------
-        self._cs_names = {
+        self.cs_names = {
             1: "G54",
             2: "G55",
             3: "G56",
@@ -201,9 +201,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             5: "G58",
             6: "G59",
                 }
-        self.pushButton_current_cs_setzero.clicked.connect(self._current_cs_setzero)
+        self.pushButton_current_cs_setzero.clicked.connect(self.current_cs_setzero)
         
-        for key, val in self._cs_names.items():
+        for key, val in self.cs_names.items():
             self.comboBox_coordinate_systems.insertItem(key, val)
         self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
         ## CS SETUP END ---------
@@ -211,18 +211,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sim_dialog = SimulatorDialog(self)
         self.sim_dialog.show()
         
+        
+        # initialize vars needed for heightmap/surface probing
         self.heightmap_gldata = None
         self.heightmap_dim = None
         self.heightmap_llc = None
         self.heightmap_urc = None
-        self.heightmap_probe_points = None
-        self.heightmap_probe_values = None
         self.heightmap_ipolgrid = None
-        self.heightmap_probe_points_count = None
+        self.probe_z_first = None
+        self.probe_z_clear = None
+        self.probe_z_down = None
+        self.probe_feed = None
+        self.probe_points = None
+        self.probe_values = None
+        self.probe_points_count = None
+        
 
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
-        self._add_to_logoutput("=probe_plane(100,100)")
+        self._add_to_logoutput("=probe_plane(100,100,20,-1,10)")
+        self._add_to_logoutput("=probe_done()")
         self._add_to_logoutput("=goto_marker()")
         self._add_to_logoutput("G38.2 Z-10 F50")
         self._add_to_logoutput("G0 X0 Y0")
@@ -251,7 +259,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for row in range(0, 32):
             self.tableWidget_settings.setRowHeight(row, 15)
             
-        with open("examples/scripts/reload-file.py", 'r') as f: c = f.read()
+        with open("examples/scripts/blank.py", 'r') as f: c = f.read()
         self.plainTextEdit_script.setPlainText(c)
         
         ## JOG WIDGET SETUP BEGIN -------------
@@ -314,8 +322,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_target.setCurrentIndex(idx)
         
         
-    # probe_plane(100, 100) # in mm
-    def probe_plane(self, dimx, dimy):
+    def probe_done(self):
+        self.probe_points_count = None
+        
+        with open("probedata.txt", 'w') as f:
+            f.write("{}\n\n{}".format(self.probe_points, self.probe_values))
+            
+        self.log("<b>Probe data available in<br>self.probe_points and self.probe_values<br>and in probedata.txt.</b>", "orange")
+        
+        
+    def probe_plane(self, dimx, dimy, z_clear, z_down, z_feed):
         """
         Probes area.
         
@@ -327,6 +343,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         @param dimy
         Height of area to be probed, as measured into the Y+ direction from the current pos
         """
+        
+        if round(self.wpos[0]) != 0 or round(self.wpos[1]) != 0:
+            self.log("<b>Probe cycle must start at X0 Y0</b>", "red")
+            return
+        
+        self.sim_dialog.simulator_widget.remove_heightmap()
+        
+        self.probe_z_clear = z_clear
+        self.probe_z_down = z_down
+        self.probe_feed = z_feed
         
         dimx = round(dimx)
         dimy = round(dimy)
@@ -348,18 +374,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         grid = np.mgrid[start_x:end_x:steps_x, start_y:end_y:steps_y]
         self.heightmap_ipolgrid = (grid[0], grid[1]) # format required by interpolation
         
-        self.heightmap_probe_points = []
-        self.heightmap_probe_values = []
+        self.probe_points = []
+        self.probe_values = []
         
-        self.heightmap_probe_points_count = 0
-        self.heightmap_probe_points_planned = [ # all corners of area first
+        self.probe_points_count = 0
+        self.probe_points_planned = [ # all corners of area first
             (start_x, start_y),
             (start_x + dimx, start_y),
             (start_x + dimx, start_y + dimy),
             (start_x, start_y + dimy)
         ]
         
-        self.do_probe_point(self.heightmap_probe_points_planned[0])
+        self.do_probe_point(self.probe_points_planned[0])
         
         
     def do_probe_point(self, pos):
@@ -372,9 +398,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print("do_probe_point", pos)
         new_x = pos[0]
         new_y = pos[1]
-        self.grbl.send_immediately("G0 Z10")
+        self.grbl.send_immediately("G0 Z{:0.3f}".format(self.probe_z_clear))
         self.grbl.send_immediately("G0 X{} Y{}".format(new_x, new_y))
-        self.grbl.send_immediately("G38.2 Z-10 F50")
+        self.grbl.send_immediately("G38.2 Z{:0.3f} F{}".format(self.probe_z_down, self.probe_feed))
 
 
     def handle_probe_point(self, mpos):
@@ -383,21 +409,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         3-tuple of machine coordinates
         """
         
-        current_cs_offset = self.state_hash[self._cs_names[self._current_cs]]
+        if self.probe_points_count == None:
+            # set by self.probe_done(). For the user to stop the infinite probing cycle.
+            return
+        
+        current_cs_offset = self.state_hash[self.cs_names[self.current_cs]]
         
         # transform from machine coords into current CS
         probed_pos = np.subtract(mpos, current_cs_offset)
         
         # record probe points for interpolation
-        self.heightmap_probe_points.append([round(probed_pos[0]), round(probed_pos[1])])
-        self.heightmap_probe_values.append(round(probed_pos[2], 2))
+        self.probe_points.append([round(probed_pos[0]), round(probed_pos[1])])
+        self.probe_values.append(round(probed_pos[2], 2))
         
+        if self.probe_points_count == 0:
+            self.probe_z_first = round(probed_pos[2], 2)
+
         # probe next point
-        self.heightmap_probe_points_count += 1
-        planned_points = len(self.heightmap_probe_points_planned)
-        if self.heightmap_probe_points_count < planned_points:
+        self.probe_points_count += 1
+        planned_points = len(self.probe_points_planned)
+        if self.probe_points_count < planned_points:
             # still planned points available
-            nextpoint = self.heightmap_probe_points_planned[self.heightmap_probe_points_count]
+            nextpoint = self.probe_points_planned[self.probe_points_count]
         else:
             nx = random.randint(self.heightmap_llc[0], self.heightmap_urc[0])
             ny = random.randint(self.heightmap_llc[1], self.heightmap_urc[1])
@@ -408,15 +441,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     def draw_heightmap(self):
-        if len(self.heightmap_probe_values) < 4: return # at least 4 for suitable interpol
+        if len(self.probe_values) < 4: return # at least 4 for suitable interpol
         
         # see http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html
         interpolated_z = griddata(
-            self.heightmap_probe_points,
-            self.heightmap_probe_values,
+            self.probe_points,
+            self.probe_values,
             self.heightmap_ipolgrid,
             method='cubic',
-            fill_value=-10)
+            fill_value=-100)
         
         # construct the vertex attributes in the format needed for pyglpainter
         for y in range(0, self.heightmap_dim[1]):
@@ -426,13 +459,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.heightmap_gldata["color"][idx] = (1, 1, 1, 1)
 
 
-        current_cs_offset = self.state_hash[self._cs_names[self._current_cs]]
+        current_cs_offset = self.state_hash[self.cs_names[self.current_cs]]
         origin = (current_cs_offset[0] + self.heightmap_llc[0],
                   current_cs_offset[1] + self.heightmap_llc[1],
-                  current_cs_offset[2]
+                  current_cs_offset[2] - self.probe_z_first
                   )
         
-        print("DRAWING HEIGHTMAP", origin, self.heightmap_probe_points, self.heightmap_probe_values)
+        print("DRAWING HEIGHTMAP", origin, self.probe_points, self.probe_values)
         
         self.sim_dialog.simulator_widget.draw_heightmap(self.heightmap_gldata, self.heightmap_dim, origin)
         
@@ -467,7 +500,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             # current coordinate system
             cs_string = "G" + gps[1]
-            ivd = {v: k for k, v in self._cs_names.items()}
+            ivd = {v: k for k, v in self.cs_names.items()}
             cs_nr = ivd[cs_string]
             self.set_cs(cs_nr)
 
@@ -618,7 +651,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_simulation_finished":
             gcode = data[0]
             cwpos = self.wpos
-            ccs = self._cs_names[self._current_cs]
+            ccs = self.cs_names[self.current_cs]
             self.sim_dialog.simulator_widget.draw_gcode(gcode, cwpos, ccs)
             self._current_grbl_line_number = self.grbl._current_line_nr
             self.spinBox_start_line.setValue(self._current_grbl_line_number)
@@ -666,8 +699,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         if self.state_cs_dirty == True:
             # used to highlight coordinate systems (after $G command)
-            for idx, val in self._cs_names.items():
-                do_highlight = val == self._cs_names[self._current_cs]
+            for idx, val in self.cs_names.items():
+                do_highlight = val == self.cs_names[self.current_cs]
                 cs_item = self.sim_dialog.simulator_widget.programs["simple3d"].items["cs" + val]
                 cs_item.highlight(do_highlight)
                 
@@ -702,7 +735,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 color = "green"
                 self.jogWidget.onIdle()
                 
-                if self.heightmap_probe_points_count == None:
+                if self.probe_points_count == None:
                     # we are currently not probing
                     print("on idle: requesting hash ")
                     self.grbl.hash_state_requested = True
@@ -829,7 +862,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def _start_line_changed(self, nr):
         line_number = int(nr)
-        if line_number < self.grbl._buffer_size:
+        if line_number < self.grbl.buffer_size:
             self.grbl.current_line_number = line_number
             self.sim_dialog.simulator_widget.put_buffer_marker_at_line(line_number)
             self.label_current_gcode.setText(self.grbl._buffer[line_number])
@@ -963,9 +996,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
        
        
     def reset(self):
-        self.heightmap_probe_points_count = None
-        self.sim_dialog.simulator_widget.remove_heightmap()
-        
+        self.probe_points_count = None
         self.grbl.abort()
         
         
@@ -1023,8 +1054,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
  
 
     def _cs_selected(self, idx):
-        self._current_cs = idx + 1
-        self.grbl.send_immediately(self._cs_names[self._current_cs])
+        self.current_cs = idx + 1
+        self.grbl.send_immediately(self.cs_names[self.current_cs])
         self.grbl.hash_state_requested = True
         
     # callback for the drop-down
@@ -1040,8 +1071,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
     
         
-    def _current_cs_setzero(self):
-        self.grbl.send_immediately("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self._current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
+    def current_cs_setzero(self):
+        self.grbl.send_immediately("G10 L2 P{:d} X{:f} Y{:f} Z{:f}".format(self.current_cs, self.mpos[0], self.mpos[1], self.mpos[2]))
         self.grbl.hash_state_requested = True
 
     def _variables_edited(self, row, col):
@@ -1143,8 +1174,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         A convenience function update the UI for CS
         """
-        self._current_cs = nr
-        current_cs_text = self._cs_names[self._current_cs]
+        self.current_cs = nr
+        current_cs_text = self.cs_names[self.current_cs]
         #self.label_current_cs.setText(current_cs_text)
         self.comboBox_coordinate_systems.setCurrentIndex(nr - 1)
         
