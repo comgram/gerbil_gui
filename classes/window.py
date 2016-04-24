@@ -219,6 +219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.heightmap_ipolgrid_x = None
         self.heightmap_ipolgrid_y = None
         self.heightmap_probe_points_count = None
+        self.heightmap_start_offset = None
 
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
@@ -316,16 +317,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     # probe_plane(100, 100) # in mm
     def probe_plane(self, dimx, dimy):
+        """
+        Probes area.
+        
+        Current X and Y pos will be Z=0
+        
+        @param dimx
+        Width of area to be probed, as measured into the X+ direction from the current pos
+        
+        @param dimy
+        Height of area to be probed, as measured into the Y+ direction from the current pos
+        """
+        
+        self.heightmap_start_offset = self.wpos # start relative to cwpos
+        
         self.heightmap_dimx = dimx
         self.heightmap_dimy = dimy
         
         self.heightmap_gldata = np.zeros(dimx * dimy, [("position", np.float32, 3), ("color", np.float32, 4)])
         
-        current_cs_offset = self.state_hash[self._cs_names[self._current_cs]]
-        
-        steps_x = dimx * 1j
-        steps_y = dimy * 1j
-        grid = np.mgrid[0:dimx:steps_x, 0:dimy:steps_y]
+        steps_x = (1 + dimx) * 1j
+        steps_y = (1 + dimy) * 1j
+        grid = np.mgrid[0:dimx:steps_x, 0:dimy:steps_y] # integer grid
         self.heightmap_ipolgrid_x = grid[0]
         self.heightmap_ipolgrid_y = grid[1]
         
@@ -333,16 +346,59 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.heightmap_probe_values = []
         
         self.heightmap_probe_points_count = 0
-        self.heightmap_probe_points_planned = [[0,0],[dimx,0],[dimx,dimy],[0,dimy]]
+        self.heightmap_probe_points_planned = [
+            [0, 0],
+            [dimx, 0],
+            [dimx, dimy],
+            [0, dimy]
+        ]
         
         self.do_probe_point(self.heightmap_probe_points_planned[0])
         
         
     def do_probe_point(self, pos):
+        """
+        Lift probe, go to new point, then probe
+        
+        @param pos
+        2-tuple of relative position on the probe area
+        """
         print("do_probe_point", pos)
+        new_x = pos[0] + self.heightmap_start_offset[0]
+        new_y = pos[1] + self.heightmap_start_offset[1]
         self.grbl.send_immediately("G0 Z10")
-        self.grbl.send_immediately("G0 X{} Y{}".format(pos[0], pos[1]))
+        self.grbl.send_immediately("G0 X{} Y{}".format(new_x, new_y))
         self.grbl.send_immediately("G38.2 Z-10 F50")
+
+
+    def handle_probe_point(self, pos):
+        """
+        @param pos
+        3-tuple of machine coordinates
+        """
+        
+        current_cs_offset = self.state_hash[self._cs_names[self._current_cs]]
+        
+        # transform into coords relative to probe area
+        probed_x = pos[0] - current_cs_offset[0] - self.heightmap_start_offset[0]
+        probed_y = pos[1] - current_cs_offset[1] - self.heightmap_start_offset[1]
+        probed_z = pos[2] - current_cs_offset[2]
+        
+        # record probe points
+        self.heightmap_probe_points.append([round(probed_x), round(probed_y)]) # on probe area, we are doing integer coordinates only
+        self.heightmap_probe_values.append(probed_z)
+        
+        # probe next point
+        self.heightmap_probe_points_count += 1
+        planned_points = len(self.heightmap_probe_points_planned)
+        if self.heightmap_probe_points_count < planned_points:
+            # next planned point
+            nextpoint = self.heightmap_probe_points_planned[self.heightmap_probe_points_count]
+        else:
+            nextpoint = [random.randint(0, self.heightmap_dimx), random.randint(0, self.heightmap_dimy)]
+            
+        self.state_heightmap_dirty = True
+        self.do_probe_point(nextpoint)
         
 
     def draw_heightmap(self):
@@ -358,13 +414,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             method='cubic',
             fill_value=-999)
         
+        # construct the vertex attributes in the format needed for pyglpainter
         for y in range(0, self.heightmap_dimy):
             for x in range(0, self.heightmap_dimx):
                 idx = y * self.heightmap_dimx + x
                 self.heightmap_gldata["position"][idx] = (x, y, interpolated_z[x][y])
                 self.heightmap_gldata["color"][idx] = (1, 1, 1, 1)
 
-        self.sim_dialog.simulator_widget.draw_heightmap(self.heightmap_gldata)
+
+        current_cs_offset = self.state_hash[self._cs_names[self._current_cs]]
+        
+        offset_x = current_cs_offset[0] + self.heightmap_start_offset[0]
+        offset_y = current_cs_offset[1] + self.heightmap_start_offset[1]
+        offset_z = current_cs_offset[2]
+        origin = (offset_x, offset_y, offset_z)
+        self.sim_dialog.simulator_widget.draw_heightmap(self.heightmap_gldata, origin)
         
         
     # CALLBACKS
@@ -384,22 +448,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_probe":
             pos = data[0]
-            
-            self.heightmap_probe_points.append([round(self.wpos[0]), round(self.wpos[1])]) # x and y, we are doing integer coordinates only, grbl may report difference of thousands back
-
-            self.heightmap_probe_values.append(pos[2]) # z
-            
-            self.heightmap_probe_points_count += 1
-            planned_points = len(self.heightmap_probe_points_planned)
-            if self.heightmap_probe_points_count < planned_points:
-                # next planned point
-                nextpoint = self.heightmap_probe_points_planned[self.heightmap_probe_points_count]
-            else:
-                nextpoint = [random.randint(0, self.heightmap_dimx), random.randint(0, self.heightmap_dimy)]
-                
-            self.state_heightmap_dirty = True
             print("ON_PROBE", pos)
-            self.do_probe_point(nextpoint)
+            self.handle_probe_point(pos)
+            
           
                 
         elif event == "on_gcode_parser_stateupdate":
@@ -914,6 +965,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.heightmap_ipolgrid_x = None
         self.heightmap_ipolgrid_y = None
         self.heightmap_probe_points_count = None
+        self.heightmap_start_offset = None
         
         self.grbl.abort()
         
@@ -974,7 +1026,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _cs_selected(self, idx):
         self._current_cs = idx + 1
         self.grbl.send_immediately(self._cs_names[self._current_cs])
-        self.grbl.send_immediately("$#")
         
     # callback for the drop-down
     def _target_selected(self, idx):

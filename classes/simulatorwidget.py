@@ -26,15 +26,16 @@ class SimulatorWidget(PainterWidget):
             }
         
         
-    def draw_heightmap(self, pos_col):
+    def draw_heightmap(self, pos_col, origin):
         if "myheightmap" in self.programs["heightmap"].items:
             # update
             i = self.programs["heightmap"].items["myheightmap"]
             i.set_data(pos_col)
+            i.set_origin(origin)
             i.upload()
         else:
             # create
-            i = self.item_create("HeightMap", "myheightmap", "heightmap", 100, 100, pos_col, False, (0,0,0), 1)
+            i = self.item_create("HeightMap", "myheightmap", "heightmap", 100, 100, pos_col, False, origin, 1)
 
         
         
