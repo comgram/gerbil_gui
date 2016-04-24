@@ -19,9 +19,6 @@ for i in range(0,200,25):
             grbl.write("\n".join(gcode))
 
 
-
-
-# The job will not be sent to Grbl, it will only be simulated. Be careful with the code below when you're sitting at the machine!
 grbl.preprocessor.vars = {"1":0}
 self.set_target("simulator")
 grbl.job_run()
