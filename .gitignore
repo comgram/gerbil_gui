@@ -2,7 +2,6 @@
 tmp
 *.tmp
 *.kate-swp
-gerbil
 *.log
 *.dat
 *.gcode
