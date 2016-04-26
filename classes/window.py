@@ -1045,7 +1045,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     def _show_buffer(self):
-        buf = self.grbl.buffer()
+        buf = self.grbl.buffer
         output = ""
         for i in range(0, len(buf)):
             output += "L{:06d} {}\n".format(i, buf[i])
@@ -1184,7 +1184,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def bbox(self, move_z=False):
         was_incremental = self.checkBox_incremental.isChecked()
-        was_buf = self.grbl.buffer()
+        was_buf = self.grbl.buffer
         
         movements = gcodetools.bbox(was_buf, move_z)
         
