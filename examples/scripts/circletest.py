@@ -20,7 +20,7 @@ input = []
 input.append("G90") # use absolute distances
 
 input.append("F2000") # set feed
-input.append("G0 X0 Y0") # return to origin
+input.append("G0 X0 Y0 Z0") # return to origin
 input.append("G1 X20 Y20 F100") # draw a line
 
 input.append("G17") # select arcs in XY plane
@@ -64,19 +64,7 @@ input.append("G90") # reset to absolute distance mode
 # fractionize above G-Codes and render the line segments in the simulator
 self.set_target("simulator")
 grbl.job_new()
-grbl.preprocessor.do_fractionize_lines = True # this is the default
-grbl.preprocessor.do_fractionize_arcs = True # this is the default
+grbl.preprocessor.do_fractionize_lines = False
+grbl.preprocessor.do_fractionize_arcs = False
 grbl.write(input)
-grbl.job_run() # draw in simulator
-    
-
-# next, send the above G-Codes unmodified to the Grbl controller
-# and see if the traced path matches whatever has been rendered before
-self.set_target("firmware")
-grbl.job_new()
-grbl.preprocessor.do_fractionize_lines = True
-grbl.preprocessor.do_fractionize_arcs = True
-grbl.write(input)
-#grbl.job_run()
-
-grbl.preprocessor.do_fractionize = True # reset to default
+grbl.job_run()
