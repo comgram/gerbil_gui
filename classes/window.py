@@ -602,7 +602,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_progress_percent":
             self._progress_percent = data[0]
             
-        elif event == "on_preprocessor_feed_change":
+        elif event == "on_feed_change":
             feed = data[0]
             if feed == None:
                 self.lcdNumber_feed_current.display("---")
@@ -650,9 +650,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_simulation_finished":
             gcode = data[0]
-            cwpos = self.wpos
             ccs = self.cs_names[self.current_cs]
-            self.sim_dialog.simulator_widget.draw_gcode(gcode, cwpos, ccs)
+            self.sim_dialog.simulator_widget.cs_offsets = self.state_hash
+            self.sim_dialog.simulator_widget.draw_gcode(gcode, self.mpos, ccs)
             self._current_grbl_line_number = self.grbl._current_line_nr
             self.spinBox_start_line.setValue(self._current_grbl_line_number)
             
@@ -865,7 +865,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if line_number < self.grbl.buffer_size:
             self.grbl.current_line_number = line_number
             self.sim_dialog.simulator_widget.put_buffer_marker_at_line(line_number)
-            self.label_current_gcode.setText(self.grbl._buffer[line_number])
+            self.label_current_gcode.setText(self.grbl.buffer[line_number])
     
     def execute_script_clicked(self,item):
         self.grbl.update_preprocessor_position()
@@ -1045,7 +1045,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     def _show_buffer(self):
-        buf = self.grbl.get_buffer()
+        buf = self.grbl.buffer()
         output = ""
         for i in range(0, len(buf)):
             output += "L{:06d} {}\n".format(i, buf[i])
@@ -1184,7 +1184,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def bbox(self, move_z=False):
         was_incremental = self.checkBox_incremental.isChecked()
-        was_buf = self.grbl.get_buffer()
+        was_buf = self.grbl.buffer()
         
         movements = gcodetools.bbox(was_buf, move_z)
         

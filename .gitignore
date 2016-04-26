@@ -24,3 +24,7 @@ log
 *.user
 cnctoolbox.log
 compiler.log
+
+gerbil
+pyglpainter
+gcode_processor

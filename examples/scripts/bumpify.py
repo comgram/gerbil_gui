@@ -13,11 +13,11 @@ for i in range(0,200,20):
         gcode = t.translate(sq, [i, j, 0])
         grbl.write("\n".join(gcode))
 
-probe_points = [[0,0],[300,0],[300,300],[0,300]]
-probe_values = [1,200,3,100]
+#probe_points = [[0,0],[300,0],[300,300],[0,300]]
+#probe_values = [1,200,3,100]
 
-#probe_points = self.probe_points
-#probe_values = self.probe_values
+probe_points = self.probe_points
+probe_values = self.probe_values
 
 grbl.buffer = t.bumpify(grbl.buffer, self.wpos, probe_points, probe_values)
 
