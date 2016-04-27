@@ -19,7 +19,7 @@ probe_values = [1,200,3,100]
 #probe_points = self.probe_points
 #probe_values = self.probe_values
 
-grbl.buffer = t.bumpify2(grbl.buffer, self.wpos, probe_points, probe_values)
+grbl.buffer = t.bumpify(grbl.buffer, self.wpos, probe_points, probe_values)
 
 self.set_target("simulator")
 grbl.job_run()

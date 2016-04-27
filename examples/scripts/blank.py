@@ -6,11 +6,9 @@ grbl = self.grbl
 
 gcodes = []
 
-gcodes.append("G0 X20 Y20")
+gcodes.append(";blah")
+gcodes.append("G0 X20 Y20 Z20 ; nice command")
 gcodes.append("G1 X30")
-gcodes.append("G1 X40")
-gcodes.append("G1 X50")
-gcodes.append("G2 X60 Y30 I5 J5")
 
 self.new_job()
 
