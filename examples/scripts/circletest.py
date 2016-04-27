@@ -20,7 +20,7 @@ input = []
 input.append("G90") # use absolute distances
 
 input.append("F2000") # set feed
-input.append("G0 X0 Y0 Z0") # return to origin
+input.append("G0 X0 Y0") # return to origin
 input.append("G1 X20 Y20 F100") # draw a line
 
 input.append("G17") # select arcs in XY plane

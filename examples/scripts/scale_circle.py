@@ -30,17 +30,8 @@ for i in range(1, 10):
 # fractionize above G-Codes and render the line segments in the simulator
 self.set_target("simulator")
 grbl.job_new()
-grbl.preprocessor.do_fractionize = True # this is the default
+#grbl.preprocessor.position_m = (0,0,0)
+grbl.preprocessor.do_fractionize_arcs = False
 grbl.write(result)
-grbl.job_run() # draw in simulator
+grbl.job_run()
     
-
-# next, send the above G-Codes unmodified to the Grbl controller
-# and see if the traced path matches whatever has been rendered before
-self.set_target("firmware")
-grbl.job_new()
-grbl.preprocessor.do_fractionize = False # to compare with reality
-grbl.write(result)
-#grbl.job_run()
-
-grbl.preprocessor.do_fractionize = True # reset to default

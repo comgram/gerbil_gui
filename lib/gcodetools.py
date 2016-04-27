@@ -213,6 +213,7 @@ def _get_bbox(gcode):
 
 
 def bumpify(gcode_list, cwpos, probe_points, probe_values):
+    print("bumpify start")
     logger = logging.getLogger('gerbil')
     
     position = list(cwpos)
@@ -249,13 +250,13 @@ def bumpify(gcode_list, cwpos, probe_points, probe_values):
             if m:
                 a = float(m.group(1))
                 position[i] = a
-                print("line", nr, line, i, a, position)
                 
         coords_xy[nr] = [position[0], position[1]]
                 
     #print("parsed coords", coords_xy)
                 
     
+    print("bumpify interpol")
     # see http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html
     interpolated_z = griddata(
         probe_points,
@@ -296,5 +297,5 @@ def bumpify(gcode_list, cwpos, probe_points, probe_values):
         gcode_list[nr] = line
     
     #print("FINI", gcode_list)
+    print("bumpify done")
     return gcode_list
-    
