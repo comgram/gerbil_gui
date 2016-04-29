@@ -1,65 +1,39 @@
-# cnctoolbox
+# gerbil_gui - Graphical User Interface for the "grbl" CNC controller
+
+Python scripting and realtime OpenGL 3D visualization of gcode plus
+streaming to the [grbl](https://github.com/grbl/grbl) CNC controller,
+implemented in Python3 with Qt5 bindings.
+
 
 ## Installation
 
-### Dependencies
+Your graphics hardware and drivers need to support at least OpenGL version 3.0 with GLSL version 1.30.
 
-For a Debian Jessie system:
+You also need an Arduino board with a recent version of grbl flashed onto it.
 
-Install Python 3
+Get and install Python3 and git. Then:
 
-    apt-get install python3
+    git clone https://github.com/michaelfranzl/gerbil_gui
+    cd gerbil_gui
+    git clone https://github.com/michaelfranzl/pyglpainter.git
+    git clone https://github.com/michaelfranzl/gcode_machine.git
+    python ./gerbil_gui.py gui --path=/dev/ttyACM0
     
-Install Python 3 modules which are shipped with the Debian Jessie distribution:
+### Dependencies on Windows
 
-    apt-get install python3-pip python3-serial python3-pil python3-numpy python3-pyqt5 python3-pyqt5.qtopengl python3-opengl
+### Dependencies on Debian Jessie
 
-Install Python 3 modules not shipped with the Debian Jessie distribution: 
-    
-    python3 -m pip install svgwrite --user
-    python3 -m pip install doxypy --user
+    apt-get install python3 python3-pip python3-serial python3-pil python3-numpy python3-pyqt5 python3-pyqt5.qtopengl python3-opengl
 
 
-### Get source:
-
-    git clone ...
-    cd cnctoolbox
-    git clone git@github.com:michaelfranzl/pyglpainter.git
-    git clone git@github.com:michaelfranzl/gerbil.git
-    
-Get help on command line options:
-
-    ./cnctoolbox.py -h
-    
-To start the GUI:
-
-    ./cnctoolbox gui --path=/dev/ttyACM0
 
 
-## Development
+## License
 
-Convert Qt .ui file into Python class:
+Copyright (c) 2015 Michael Franzl
 
-    pyuic5 lib/qt/cnctoolbox/mainwindow.ui > lib/qt/cnctoolbox/ui_mainwindow.py
-    
-    
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-Move in machine coordinates: G53 G0 X10 Y10 Z10
-
-Set working coordinate systems 1-6 or G54-G59:
-G10 L2 Px Xblah Yblah Zblah
-G10 L2 P3 X3Y3Z3
-G10 L2 P1 X0Y0Z0
-
-
-Set offset for all 6 coordinate systems, relative from current coordinate system position. Will be zero after reset:
-G92 X11Y11Z11
-
-# TODO
-
-Todo
-
-# Resources
-
-http://www.oberlin.edu/math/faculty/bosch/making-tspart-page.html
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -27,4 +27,4 @@ compiler.log
 
 gerbil
 pyglpainter
-gcode_processor
+gcode_machine

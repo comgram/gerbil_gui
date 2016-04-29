@@ -1,4 +1,4 @@
-from lib.qt.cnctoolbox.ui_simulatordialog import Ui_SimulatorDialog
+from lib.qt.gerbil_gui.ui_simulatordialog import Ui_SimulatorDialog
 
 from .simulatorwidget import SimulatorWidget
 

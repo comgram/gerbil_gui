@@ -33,7 +33,7 @@ def main():
     '''
     #log_format = '%(asctime)s %(levelname)s %(message)s'
     #logging.basicConfig(level=logging.INFO, format=log_format)
-    logger = logging.getLogger('cnctoolbox')
+    logger = logging.getLogger('grbl_gui')
     logger.setLevel(5)
     
     parser = argparse.ArgumentParser(description='This program is a box full of useful CNC tools')
@@ -45,7 +45,7 @@ def main():
     stipple_parser = subparsers.add_parser(
         "stipple",
         help="Creates stippling art for laser-engraving based on files created by third-party C++ programs voronoi_stippler and concorde.",
-        epilog="EXAMPLE: python ./cnctoolbox.py stipple ./data/grace.crd ./data/grace.sol out.svg --weight ./data/grace.wgt"
+        epilog="EXAMPLE: python ./grbl_gui.py stipple ./data/grace.crd ./data/grace.sol out.svg --weight ./data/grace.wgt"
         )
     stipple_parser.add_argument(
         'crd_file',
@@ -72,7 +72,7 @@ def main():
     p2l_parser = subparsers.add_parser(
         "pixel2laser",
         help="Generate optimized Gcode from PNG for laser.",
-        epilog="EXAMPLE: python ./cnctoolbox.py p2l ./data/pixel2laser.png p2l.ngc"
+        epilog="EXAMPLE: python ./grbl_gui.py p2l ./data/pixel2laser.png p2l.ngc"
         )
     p2l_parser.add_argument(
         'in_file',

@@ -22,7 +22,7 @@ from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
 from PyQt5.QtGui import QColor,QPalette
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction, QTableWidgetItem, QDialog
 
-from lib.qt.cnctoolbox.ui_mainwindow import Ui_MainWindow
+from lib.qt.gerbil_gui.ui_mainwindow import Ui_MainWindow
 from lib import gcodetools
 from lib import utility
 from lib import compiler
