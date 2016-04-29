@@ -19,28 +19,49 @@ Get and install Python3 and git for your OS. Then:
     git clone https://github.com/michaelfranzl/pyglpainter.git
     git clone https://github.com/michaelfranzl/gcode_machine.git
     
-Start the GUI (Path to serial port on Windows is like "COM3" etc.)
+Start the GUI (the path to a serial port on Windows is "COMx" where x is a number):
 
     python ./gerbil_gui.py gui --path=/dev/ttyACM0
 
-### Common dependencies
 
-    pip install svgwrite
-    
 ### Dependencies on Windows
 
+    pip install pyserial
+    pip install svgwrite
     pip install PyQt5
     pip install numpy
     pip install PyOpenGL
     pip insatll Pillow
-    pip install pyserial
+    
+The installation of the next two may not work via `pip` because you would
+need to set up all compilation dependencies and compilers on Windows.
+
+    pip install numpy
+    pip install scipy
+    
+If the installation of numpy and scipy via the `pip` method doesn't work, download precompiled packages (matching with your Python version and architecture) from http://www.lfd.uci.edu/~gohlke/pythonlibs. Then do the following instead:
+
+    pip install "numpy-1.11.0+mkl-cp35-cp35m-win_amd64.whl"
+    pip install "scipy-0.17.0-cp35-none-win_amd64.whl"
+    
+This may require an upgrade of pip:
+
+    python -m pip install --upgrade pip
+
+
+    
 
 ### Dependencies on Debian Jessie
 
-    apt-get install python3 python3-pip python3-serial python3-pil python3-numpy python3-pyqt5 python3-pyqt5.qtopengl python3-opengl
-
-
-
+    apt-get install python3 python3-pip python3-serial python3-pil python3-numpy python3-pyqt5 
+    python3-pyqt5.qtopengl python3-opengl
+    
+    pip install svgwrite
+    
+    
+    
+    
+    
 
 ## License
 
