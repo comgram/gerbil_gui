@@ -7,7 +7,6 @@ import collections
 import time
 import re
 
-from scipy.interpolate import griddata
 import random
 
 from classes.highlighter import Highlighter
@@ -442,6 +441,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def draw_heightmap(self):
         if len(self.probe_values) < 4: return # at least 4 for suitable interpol
+    
+        # I put this here to not make it a hard requirement
+        # it is difficult to install on Windows
+        from scipy.interpolate import griddata
         
         # see http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html
         interpolated_z = griddata(

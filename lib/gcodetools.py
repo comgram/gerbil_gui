@@ -23,7 +23,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 import logging
 import re
 import numpy as np
-from scipy.interpolate import griddata
 
 
 def read(fname):
@@ -257,6 +256,11 @@ def bumpify(gcode_list, cwpos, probe_points, probe_values):
                 
     
     print("bumpify interpol")
+    
+    # I put this here to not make it a hard requirement
+    # it is difficult to install on Windows
+    from scipy.interpolate import griddata
+        
     # see http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html
     interpolated_z = griddata(
         probe_points,
