@@ -24,7 +24,7 @@ Start the GUI (the path to a serial port on Windows is "COMx" where x is a numbe
     python ./gerbil_gui.py gui --path=/dev/ttyACM0
 
 
-### Dependencies on Windows
+### Dependencies in Windows
 
     pip install pyserial
     pip install svgwrite
@@ -39,10 +39,9 @@ you want to use the feature that adapts Gcode to an uneven surface via probe cyc
     pip install scipy
     
 
-### Dependencies on Debian Jessie
+### Dependencies in Debian Jessie
 
-    apt-get install python3 python3-pip python3-serial python3-pil python3-numpy python3-pyqt5 
-    python3-pyqt5.qtopengl python3-opengl
+    apt-get install python3 python3-pip python3-serial python3-pil python3-numpy python3-scipy python3-pyqt5 python3-pyqt5.qtopengl python3-opengl
     
     pip install svgwrite
     
