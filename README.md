@@ -9,7 +9,7 @@ implemented in Python3 with Qt5 bindings.
 
 Your graphics hardware and drivers need to support at least OpenGL version 2.1 with GLSL version 1.20.
 
-You also need an Arduino board with a recent version of grbl flashed onto it.
+Ideally, you also need an Arduino board with a recent version of grbl flashed onto it, however the Gcode simulator and scripting will even work without an Arduino board connected.
 
 Get and install Python3 and git for your OS. Then:
 

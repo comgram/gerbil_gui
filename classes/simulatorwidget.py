@@ -77,8 +77,12 @@ class SimulatorWidget(PainterWidget):
         # ============= CREATE PROGRAMS END =============
     
     def draw_stage(self, workarea_x, workarea_y):
+        
         self.item_create("CoordSystem", "csm", "simple3d", (0,0,0), 120, 5)
+        
+        self.item_remove("working_area_grid")
         self.item_create("OrthoLineGrid", "working_area_grid", "simple3d", (0,0), (workarea_x,workarea_y), 10, (-workarea_x,-workarea_y,0))
+        
         self.item_create("Star", "buffermarker", "simple3d", (0,0,0), 2)
         self.dirty = True
 

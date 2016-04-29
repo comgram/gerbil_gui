@@ -36,14 +36,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         _logbuffer_size = 200
         
-        self.grbl = Gerbil("mygrbl", path)
+        self.devicepath = path
         
         self.setupUi(self)
         self.modifyUi()
         self.setupScripting()
         
+        
+        
         # GENERIC SETUP BEGIN -----
-        self.setWindowTitle("cnctoolbox")
+        self.setWindowTitle("gerbil_gui")
         self.lcdNumber_feed_current.display("---")
         # GENERIC SETUP END -----
         
@@ -137,9 +139,57 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_grbl_connect.setEnabled(True)
         ## MENU BAR SETUP END ----------
         
+        ## CS SETUP BEGIN ---------
+        self.cs_names = {
+            1: "G54",
+            2: "G55",
+            3: "G56",
+            4: "G57",
+            5: "G58",
+            6: "G59",
+                }
+        self.pushButton_current_cs_setzero.clicked.connect(self.current_cs_setzero)
+        
+        for key, val in self.cs_names.items():
+            self.comboBox_coordinate_systems.insertItem(key, val)
+        self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
+        ## CS SETUP END ---------
+        
+        self.sim_dialog = SimulatorDialog(self)
+        self.sim_dialog.show()
+        
        
+        # GRBL SETUP BEGIN -----
+        self.grbl = Gerbil(self.on_grbl_event)
+        self.grbl.setup_logging()
+        self.grbl.poll_interval = 0.1
+        #self.grbl.cnect()
+        
         
         ## SIGNALS AND SLOTS BEGIN-------
+        self.comboBox_target.setEnabled(False)
+        self.pushButton_homing.setEnabled(False)
+        self.pushButton_killalarm.setEnabled(False)
+        self.pushButton_job_halt.setEnabled(False)
+        self.pushButton_job_new.setEnabled(False)
+        self.pushButton_hold.setEnabled(False)
+        self.pushButton_resume.setEnabled(False)
+        self.pushButton_abort.setEnabled(False)
+        self.pushButton_check.setEnabled(False)
+        self.pushButton_g0xyorigin.setEnabled(False)
+        self.pushButton_xminus.setEnabled(False)
+        self.pushButton_xplus.setEnabled(False)
+        self.pushButton_yminus.setEnabled(False)
+        self.pushButton_yplus.setEnabled(False)
+        self.pushButton_zminus.setEnabled(False)
+        self.pushButton_zplus.setEnabled(False)
+        self.horizontalSlider_feed_override.setEnabled(False)
+        self.checkBox_feed_override.setEnabled(False)
+        self.checkBox_incremental.setEnabled(False)
+        self.comboBox_coordinate_systems.setEnabled(False)
+        self.pushButton_current_cs_setzero.setEnabled(False)
+        
+        
         self.comboBox_target.currentIndexChanged.connect(self._target_selected)
         self.pushButton_homing.clicked.connect(self.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
@@ -151,8 +201,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_resume.clicked.connect(self.grbl.resume)
         self.pushButton_abort.clicked.connect(self.abort)
         self.pushButton_check.clicked.connect(self.check)
+        
         self.pushButton_clearz.setDisabled(True)
         self.pushButton_clearxy.setDisabled(True)
+        
         self.pushButton_clearz.clicked.connect(self.clearz)
         self.pushButton_clearxy.clicked.connect(self.clearxy)
         self.pushButton_g0xyorigin.clicked.connect(self.g0xyorigin)
@@ -181,6 +233,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         
         
+        
         ## TIMER SETUP BEGIN ----------
         self.timer = QTimer()
         self.timer.timeout.connect(self.refresh)
@@ -191,24 +244,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         
 
-        ## CS SETUP BEGIN ---------
-        self.cs_names = {
-            1: "G54",
-            2: "G55",
-            3: "G56",
-            4: "G57",
-            5: "G58",
-            6: "G59",
-                }
-        self.pushButton_current_cs_setzero.clicked.connect(self.current_cs_setzero)
         
-        for key, val in self.cs_names.items():
-            self.comboBox_coordinate_systems.insertItem(key, val)
-        self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
-        ## CS SETUP END ---------
-        
-        self.sim_dialog = SimulatorDialog(self)
-        self.sim_dialog.show()
         
         
         # initialize vars needed for heightmap/surface probing
@@ -236,11 +272,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.on_job_completed_callback = None
         
-        # GRBL SETUP BEGIN -----
-        self.grbl.setup_logging()
-        self.grbl.poll_interval = 0.1
-        self.grbl.callback = self.on_grbl_event
-        self.grbl.cnect()
+
         
         self.targets = ["firmware", "simulator", "file"]
         self.comboBox_target.insertItem(0, self.targets[0])
@@ -486,6 +518,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
         elif event == "on_hash_stateupdate":
             self.state_hash = data[0]
+            self.sim_dialog.simulator_widget.cs_offsets = self.state_hash
             self.state_hash_dirty = True
             
         elif event == "on_probe":
@@ -616,6 +649,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.grbl.incremental_streaming = True
             
         elif event == "on_boot":
+            self.comboBox_target.setEnabled(True)
+            self.pushButton_homing.setEnabled(True)
+            self.pushButton_killalarm.setEnabled(True)
+            self.pushButton_job_halt.setEnabled(True)
+            self.pushButton_job_new.setEnabled(True)
+            self.pushButton_hold.setEnabled(True)
+            self.pushButton_resume.setEnabled(True)
+            self.pushButton_abort.setEnabled(True)
+            self.pushButton_check.setEnabled(True)
+            self.pushButton_g0xyorigin.setEnabled(True)
+            self.pushButton_xminus.setEnabled(True)
+            self.pushButton_xplus.setEnabled(True)
+            self.pushButton_yminus.setEnabled(True)
+            self.pushButton_yplus.setEnabled(True)
+            self.pushButton_zminus.setEnabled(True)
+            self.pushButton_zplus.setEnabled(True)
+            self.horizontalSlider_feed_override.setEnabled(True)
+            self.checkBox_feed_override.setEnabled(True)
+            self.checkBox_incremental.setEnabled(True)
+            self.comboBox_coordinate_systems.setEnabled(True)
+            self.pushButton_current_cs_setzero.setEnabled(True)
+            
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
             self.lcdNumber_feed_current.display("---")
@@ -1040,7 +1095,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def cnect(self):
         self.action_grbl_connect.setEnabled(False)
-        self.grbl.cnect()
+        self.grbl.cnect(self.devicepath)
         
         
     def disconnect(self):
