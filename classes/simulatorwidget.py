@@ -2,8 +2,6 @@ import os
 import re
 import numpy as np
 
-from scipy.interpolate import griddata
-
 from pyglpainter.classes.painterwidget import PainterWidget
 
 from PyQt5.QtGui import QVector3D

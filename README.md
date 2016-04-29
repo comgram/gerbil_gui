@@ -11,15 +11,29 @@ Your graphics hardware and drivers need to support at least OpenGL version 3.0 w
 
 You also need an Arduino board with a recent version of grbl flashed onto it.
 
-Get and install Python3 and git. Then:
+Get and install Python3 and git for your OS. Then:
 
     git clone https://github.com/michaelfranzl/gerbil_gui
     cd gerbil_gui
+    git clone https://github.com/michaelfranzl/gerbil.git
     git clone https://github.com/michaelfranzl/pyglpainter.git
     git clone https://github.com/michaelfranzl/gcode_machine.git
+    
+Start the GUI (Path to serial port on Windows is like "COM3" etc.)
+
     python ./gerbil_gui.py gui --path=/dev/ttyACM0
+
+### Common dependencies
+
+    pip install svgwrite
     
 ### Dependencies on Windows
+
+    pip install PyQt5
+    pip install numpy
+    pip install PyOpenGL
+    pip insatll Pillow
+    pip install pyserial
 
 ### Dependencies on Debian Jessie
 

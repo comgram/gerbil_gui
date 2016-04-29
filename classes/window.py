@@ -844,7 +844,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         was_incremental = self.checkBox_incremental.isChecked()
         
         self._add_to_loginput("<i>Stashing current buffer</i>")
-        self.grbl.buffer_stash()
+        self.grbl.do_buffer_stash()
         self.grbl.incremental_streaming = True
         self.checkBox_incremental.setChecked(True)
         
@@ -853,10 +853,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<i>Successfully uploaded settings!</i>")
             self.on_job_completed_callback = None
             self._add_to_loginput("<i>Unstashing previous buffer</i>")
-            self.grbl.buffer_unstash()
+            self.grbl.do_buffer_unstash()
         
         self.on_job_completed_callback = settings_upload_complete
         self._add_to_loginput("<i>Sending settings...</i>")
+        self.grbl.current_line_number = 0
+        self.set_target("firmware")
         self.grbl.stream(settings_string)
         
     
