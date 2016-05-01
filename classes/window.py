@@ -959,11 +959,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _pick_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
-        self.grbl.load_file(filename_tuple[0])
+        fname = filename_tuple[0]
+        if fname == "": return
+        self.grbl.load_file(fname)
         
     def _pick_script(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open Script", os.getcwd() + "/examples/scripts", "Python3 Files (*.py)")
         fname = filename_tuple[0]
+        if fname == "": return
         with open(fname, 'r') as content_file: content = content_file.read()
         self.plainTextEdit_script.setPlainText(content)
         self.label_script_filename.setText(fname)
@@ -982,7 +985,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _save_script_as(self):
         filename_tuple = QFileDialog.getSaveFileName(self, "Save Script", os.getcwd())
         fname = filename_tuple[0]
-        #fname = self.label_script_filename.text()
+        if fname == "": return
         with open(fname, 'w') as content_file:
             content_file.write(self.plainTextEdit_script.toPlainText())
         self._add_to_loginput("File {} written.".format(fname))
