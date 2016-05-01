@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/gerbil_gui/mainwindow.ui'
 #
-# Created: Sun May  1 19:47:58 2016
+# Created: Sun May  1 19:54:52 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -109,6 +109,20 @@ class Ui_MainWindow(object):
         self.pushButton_g0x0y0.setFont(font)
         self.pushButton_g0x0y0.setObjectName("pushButton_g0x0y0")
         self.gridLayout_3.addWidget(self.pushButton_g0x0y0, 5, 1, 1, 1)
+        self.pushButton_spindleoff = QtWidgets.QPushButton(self.centralWidget)
+        self.pushButton_spindleoff.setMaximumSize(QtCore.QSize(50, 16777215))
+        font = QtGui.QFont()
+        font.setPointSize(7)
+        self.pushButton_spindleoff.setFont(font)
+        self.pushButton_spindleoff.setObjectName("pushButton_spindleoff")
+        self.gridLayout_3.addWidget(self.pushButton_spindleoff, 7, 0, 1, 1)
+        self.pushButton_spindleon = QtWidgets.QPushButton(self.centralWidget)
+        self.pushButton_spindleon.setMaximumSize(QtCore.QSize(50, 16777215))
+        font = QtGui.QFont()
+        font.setPointSize(7)
+        self.pushButton_spindleon.setFont(font)
+        self.pushButton_spindleon.setObjectName("pushButton_spindleon")
+        self.gridLayout_3.addWidget(self.pushButton_spindleon, 7, 1, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_3, 12, 0, 2, 1)
         self.verticalLayout_xyz = QtWidgets.QVBoxLayout()
         self.verticalLayout_xyz.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
@@ -708,6 +722,8 @@ class Ui_MainWindow(object):
         self.pushButton_g53min.setText(_translate("MainWindow", "LLC"))
         self.pushButton_g53x0y0.setText(_translate("MainWindow", "URC"))
         self.pushButton_g0x0y0.setText(_translate("MainWindow", "Origin"))
+        self.pushButton_spindleoff.setText(_translate("MainWindow", "Sp. off"))
+        self.pushButton_spindleon.setText(_translate("MainWindow", "Sp. max"))
         self.label_9.setText(_translate("MainWindow", "G53"))
         self.pushButton_current_cs_setzero.setText(_translate("MainWindow", "Set Zero"))
         self.plainTextEdit_script.setPlainText(_translate("MainWindow", "# my script"))

@@ -191,6 +191,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_g53z0.setEnabled(False)
         self.pushButton_g53min.setEnabled(False)
         self.pushButton_g53x0y0.setEnabled(False)
+        self.pushButton_spindleon.setEnabled(False)
+        self.pushButton_spindleoff.setEnabled(False)
         
         
         self.comboBox_target.currentIndexChanged.connect(self._target_selected)
@@ -207,6 +209,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_g53z0.clicked.connect(self.g53z0)
         self.pushButton_g53min.clicked.connect(self.g53min)
         self.pushButton_g53x0y0.clicked.connect(self.g53x0y0)
+        self.pushButton_spindleon.clicked.connect(self.spindleon)
+        self.pushButton_spindleoff.clicked.connect(self.spindleoff)
         self.pushButton_g0x0y0.clicked.connect(self.g0x0y0)
         self.pushButton_xminus.clicked.connect(self.xminus)
         self.pushButton_xplus.clicked.connect(self.xplus)
@@ -673,6 +677,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pushButton_g53z0.setEnabled(True)
             self.pushButton_g53min.setEnabled(True)
             self.pushButton_g53x0y0.setEnabled(True)
+            self.pushButton_spindleon.setEnabled(True)
+            self.pushButton_spindleoff.setEnabled(True)
             self.spinBox_start_line.setEnabled(True)
             
             self.action_grbl_disconnect.setEnabled(True)
@@ -1100,6 +1106,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def g53x0y0(self):
         self.grbl.send_immediately("G53 X0 Y0")
         
+    def spindleon(self):
+        self.grbl.send_immediately("M3")
+        self.grbl.send_immediately("S255")
+        
+    def spindleoff(self):
+        self.grbl.send_immediately("S0")
+        self.grbl.send_immediately("M5")
         
     def cnect(self):
         self.action_grbl_connect.setEnabled(False)
