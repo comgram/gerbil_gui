@@ -670,6 +670,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.checkBox_incremental.setEnabled(True)
             self.comboBox_coordinate_systems.setEnabled(True)
             self.pushButton_current_cs_setzero.setEnabled(True)
+            self.spinBox_start_line.setEnabled(True)
             
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
