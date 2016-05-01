@@ -44,13 +44,6 @@
     </item>
     <item row="12" column="0" rowspan="2">
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="4" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton_clearz">
-        <property name="text">
-         <string>Clear Z</string>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="1">
        <widget class="QPushButton" name="pushButton_zplus">
         <property name="maximumSize">
@@ -61,13 +54,6 @@
         </property>
         <property name="text">
          <string>Z↑</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton_g0xyorigin">
-        <property name="text">
-         <string>G0 X0 Y0</string>
         </property>
        </widget>
       </item>
@@ -176,10 +162,75 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QPushButton" name="pushButton_clearxy">
+      <item row="4" column="0">
+       <widget class="QPushButton" name="pushButton_g53z0">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>7</pointsize>
+         </font>
+        </property>
         <property name="text">
-         <string>Clear XY</string>
+         <string>Z max</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QPushButton" name="pushButton_g53min">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>7</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>LLC</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="pushButton_g53x0y0">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>7</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>URC</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QPushButton" name="pushButton_g0x0y0">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>7</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Origin</string>
         </property>
        </widget>
       </item>

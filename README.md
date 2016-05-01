@@ -44,7 +44,14 @@ you want to use the feature that adapts Gcode to an uneven surface via probe cyc
     apt-get install python3 python3-pip python3-serial python3-pil python3-numpy python3-scipy python3-pyqt5 python3-pyqt5.qtopengl python3-opengl
     
     pip install svgwrite
+
     
+## Update Python code from Qt .ui file
+
+Useful for developers only:
+
+    pyuic5 -o lib/qt/gerbil_gui/ui_mainwindow.py lib/qt/gerbil_gui/mainwindow.ui
+
 
 ## License
 

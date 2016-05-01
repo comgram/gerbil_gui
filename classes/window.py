@@ -176,7 +176,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_resume.setEnabled(False)
         self.pushButton_abort.setEnabled(False)
         self.pushButton_check.setEnabled(False)
-        self.pushButton_g0xyorigin.setEnabled(False)
+        self.pushButton_g0x0y0.setEnabled(False)
         self.pushButton_xminus.setEnabled(False)
         self.pushButton_xplus.setEnabled(False)
         self.pushButton_yminus.setEnabled(False)
@@ -188,6 +188,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.checkBox_incremental.setEnabled(False)
         self.comboBox_coordinate_systems.setEnabled(False)
         self.pushButton_current_cs_setzero.setEnabled(False)
+        self.pushButton_g53z0.setEnabled(False)
+        self.pushButton_g53min.setEnabled(False)
+        self.pushButton_g53x0y0.setEnabled(False)
         
         
         self.comboBox_target.currentIndexChanged.connect(self._target_selected)
@@ -201,13 +204,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_resume.clicked.connect(self.grbl.resume)
         self.pushButton_abort.clicked.connect(self.abort)
         self.pushButton_check.clicked.connect(self.check)
-        
-        self.pushButton_clearz.setDisabled(True)
-        self.pushButton_clearxy.setDisabled(True)
-        
-        self.pushButton_clearz.clicked.connect(self.clearz)
-        self.pushButton_clearxy.clicked.connect(self.clearxy)
-        self.pushButton_g0xyorigin.clicked.connect(self.g0xyorigin)
+        self.pushButton_g53z0.clicked.connect(self.g53z0)
+        self.pushButton_g53min.clicked.connect(self.g53min)
+        self.pushButton_g53x0y0.clicked.connect(self.g53x0y0)
+        self.pushButton_g0x0y0.clicked.connect(self.g0x0y0)
         self.pushButton_xminus.clicked.connect(self.xminus)
         self.pushButton_xplus.clicked.connect(self.xplus)
         self.pushButton_yminus.clicked.connect(self.yminus)
@@ -658,7 +658,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pushButton_resume.setEnabled(True)
             self.pushButton_abort.setEnabled(True)
             self.pushButton_check.setEnabled(True)
-            self.pushButton_g0xyorigin.setEnabled(True)
+            self.pushButton_g0x0y0.setEnabled(True)
             self.pushButton_xminus.setEnabled(True)
             self.pushButton_xplus.setEnabled(True)
             self.pushButton_yminus.setEnabled(True)
@@ -670,6 +670,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.checkBox_incremental.setEnabled(True)
             self.comboBox_coordinate_systems.setEnabled(True)
             self.pushButton_current_cs_setzero.setEnabled(True)
+            self.pushButton_g53z0.setEnabled(True)
+            self.pushButton_g53min.setEnabled(True)
+            self.pushButton_g53x0y0.setEnabled(True)
             self.spinBox_start_line.setEnabled(True)
             
             self.action_grbl_disconnect.setEnabled(True)
@@ -1082,19 +1085,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.send_immediately("$C")
         
         
-    def g0xyorigin(self):
+    def g0x0y0(self):
         self.grbl.send_immediately("G0 X0 Y0")
         
         
-    def clearz(self):
-        self.grbl.send_immediately("G53 Z-10")
+    def g53z0(self):
+        self.grbl.send_immediately("G53 Z0")
         
+    def g53min(self):
+        workarea_x = int(float(self.grbl.settings[130]["val"]))
+        workarea_y = int(float(self.grbl.settings[131]["val"]))
+        self.grbl.send_immediately("G53 X{:0.3f} Y{:0.3f}".format(-workarea_x, -workarea_y))
         
-    def clearxy(self):
-        """
-        TODO: Make this configurable. Right now is the approx middle of our machine
-        """
-        self.grbl.send_immediately("G53 X-400 Y-600")
+    def g53x0y0(self):
+        self.grbl.send_immediately("G53 X0 Y0")
         
         
     def cnect(self):
@@ -1283,6 +1287,4 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.logoutput_at_end = True
         
     def homing(self):
-        self.pushButton_clearz.setDisabled(False)
-        self.pushButton_clearxy.setDisabled(False)
         self.grbl.homing()
