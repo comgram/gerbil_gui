@@ -3,16 +3,12 @@ F9000
 G0 X0 Y0 Z0
 
 ; Z max speed test
-G0 Z75
 G0 Z0
-;G0 Z75
-;G0 Z0
-;G0 Z75
-;G0 Z0
+G0 Z-80
 
 ; two straight lines and one diagonal
-G0 X750
-G0 Y750
+G0 X840
+G0 Y840
 G0 X0 Y0
 
 ; draw a circle in XY plane

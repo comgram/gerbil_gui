@@ -1092,7 +1092,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def g0x0y0(self):
+        motion_mode = self.grbl.gps[4] # remember previous
+        self.grbl.send_immediately("G90") # absolute mode
         self.grbl.send_immediately("G0 X0 Y0")
+        self.grbl.send_immediately("G" + motion_mode) # restore
         
         
     def g53z0(self):
