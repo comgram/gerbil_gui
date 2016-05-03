@@ -708,7 +708,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         elif event == "on_job_completed":
             diff = time.time() - self.job_run_timestamp
-            #self._add_to_loginput("JOB COMPLETED in {:.2f} sec".format(diff))
+            self._add_to_loginput("JOB COMPLETED in {:.2f} sec".format(diff))
             if self.on_job_completed_callback:
                 self.on_job_completed_callback()
                 
@@ -803,8 +803,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 color = "green"
                 self.jogWidget.onIdle()
                 
-                if self.probe_points_count == None:
-                    # we are currently not probing
+                if self.probe_points_count == None and self.grbl.streaming_complete == True:
+                    # we are currently not probing, or dwell command is active
                     print("on idle: requesting hash ")
                     self.grbl.hash_state_requested = True
                 
@@ -941,7 +941,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.update_preprocessor_position()
         code = self.plainTextEdit_script.toPlainText()
         try:
-            exec(code)
+            exec(code, globals(), locals())
         except:
             txt = traceback.format_exc()
             txt = re.sub(r"\n", "<br/>", txt)
@@ -1245,7 +1245,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cmd = cmd[1:]
             cmd = "%s.%s" % (kls,cmd)
             try:
-                exec(cmd)
+                exec(cmd, globals())
             except:
                 self._add_to_loginput("Error during dynamic python execution:<br />{}".format(sys.exc_info()))
                 print("Exception in user code:")
