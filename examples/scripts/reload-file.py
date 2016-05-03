@@ -5,10 +5,12 @@ t = gcodetools
 
 self.new_job()
 
-gcode = t.read("examples/gcode/speedtest.ngc")
+gcode = ["M3"]
+gcode += t.read("/mnt/files/output.ngc")
+#gcode = t.read("examples/gcode/speedtest.ngc")
 
-grbl.preprocessor.do_fractionize_lines = False
-grbl.preprocessor.do_fractionize_arcs = False
+grbl.preprocessor.do_fractionize_lines = True
+grbl.preprocessor.do_fractionize_arcs = True
 grbl.write(gcode)
 
 self.set_target("simulator")
