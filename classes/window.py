@@ -1245,7 +1245,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             cmd = cmd[1:]
             cmd = "%s.%s" % (kls,cmd)
             try:
-                exec(cmd, globals())
+                exec(cmd)
             except:
                 self._add_to_loginput("Error during dynamic python execution:<br />{}".format(sys.exc_info()))
                 print("Exception in user code:")
