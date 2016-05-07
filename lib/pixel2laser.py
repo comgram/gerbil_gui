@@ -233,4 +233,4 @@ def do(filename_in, dpmm=1, x_bleed=10, xcorr=0):
     result += "G1 X{:f} S0\n".format(out_x) # last easing out movement
     result += "G0 X0 Y0\n".format(out_x) # last easing out movement
     
-    return result
+    return result.split('\n')
