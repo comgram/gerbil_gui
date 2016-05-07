@@ -268,7 +268,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
-        self._add_to_logoutput("=probe_plane(100,100,20,-1,10)")
+        self._add_to_logoutput("=probe_plane(100,100,20,-1,50)")
         self._add_to_logoutput("=probe_done()")
         self._add_to_logoutput("=goto_marker()")
         self._add_to_logoutput("G38.2 Z-10 F50")
@@ -389,8 +389,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.probe_z_down = z_down
         self.probe_feed = z_feed
         
-        dimx = round(dimx)
-        dimy = round(dimy)
+        dimx = round(dimx) + 1
+        dimy = round(dimy) + 1
         
         self.heightmap_dim = (dimx, dimy)
         self.heightmap_llc = (round(self.wpos[0]), round(self.wpos[1]))
@@ -415,9 +415,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.probe_points_count = 0
         self.probe_points_planned = [ # all corners of area first
             (start_x, start_y),
-            (start_x + dimx, start_y),
-            (start_x + dimx, start_y + dimy),
-            (start_x, start_y + dimy)
+            (start_x + dimx - 1, start_y),
+            (start_x + dimx - 1, start_y + dimy - 1),
+            (start_x, start_y + dimy - 1)
         ]
         
         self.do_probe_point(self.probe_points_planned[0])
@@ -445,7 +445,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         
         if self.probe_points_count == None:
-            # set by self.probe_done(). For the user to stop the infinite probing cycle.
+            # set to None by self.probe_done(). Stop the infinite probing cycle.
             return
         
         current_cs_offset = self.state_hash[self.cs_names[self.current_cs]]
@@ -476,6 +476,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     def draw_heightmap(self):
+        current_cs_offset = self.state_hash[self.cs_names[self.current_cs]]
+        
+        print("DRAWING PROBE POINT")
+        last_probe_x = self.probe_points[-1][0]
+        last_probe_y = self.probe_points[-1][1]
+        last_probe_z = self.probe_values[-1] - self.probe_z_first
+        probepoint_origin = (last_probe_x, last_probe_y, last_probe_z)
+        probepoint_origin = np.add(probepoint_origin, current_cs_offset)
+        self.sim_dialog.simulator_widget.item_create("Star", "probepoint{}".format(len(self.probe_values)), "simple3d", probepoint_origin, 1, 4, (0.6, 0.6, 0.6, 1))
+        
+        
         if len(self.probe_values) < 4: return # at least 4 for suitable interpol
     
         # I put this here to not make it a hard requirement
@@ -497,17 +508,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.heightmap_gldata["position"][idx] = (x, y, interpolated_z[x][y])
                 self.heightmap_gldata["color"][idx] = (1, 1, 1, 1)
 
-
-        current_cs_offset = self.state_hash[self.cs_names[self.current_cs]]
         origin = (current_cs_offset[0] + self.heightmap_llc[0],
                   current_cs_offset[1] + self.heightmap_llc[1],
                   current_cs_offset[2] - self.probe_z_first
                   )
         
         print("DRAWING HEIGHTMAP", origin, self.probe_points, self.probe_values)
-        
         self.sim_dialog.simulator_widget.draw_heightmap(self.heightmap_gldata, self.heightmap_dim, origin)
-        
+
         
     # CALLBACKS
         
@@ -1119,7 +1127,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def cnect(self):
         self.action_grbl_connect.setEnabled(False)
-        self.grbl.cnect(self.devicepath)
+        self.grbl.cnect(self.devicepath, 230400)
         
         
     def disconnect(self):
