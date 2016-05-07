@@ -34,6 +34,8 @@ class SimulatorWidget(PainterWidget):
         else:
             # create
             i = self.item_create("HeightMap", "myheightmap", "heightmap", dim[0], dim[1], pos_col, False, origin, 1)
+            
+        self.dirty = True
 
     def remove_heightmap(self):
         self.item_remove("myheightmap")

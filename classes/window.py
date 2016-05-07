@@ -268,8 +268,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
-        self._add_to_logoutput("=probe_plane(100,100,20,-1,50)")
+        self._add_to_logoutput("=probe_start(100,100,20,-1,50)")
         self._add_to_logoutput("=probe_done()")
+        self._add_to_logoutput("=probe_load()")
         self._add_to_logoutput("=goto_marker()")
         self._add_to_logoutput("G38.2 Z-10 F50")
         self._add_to_logoutput("G0 X0 Y0")
@@ -356,17 +357,103 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         idx = self.targets.index(targetname)
         self.comboBox_target.setCurrentIndex(idx)
         
+    def draw_probepoint(self, xy, z):
+        current_cs_offset = self.state_hash[self.cs_names[self.current_cs]]
+        z = z - self.probe_z_first
+        
+        print("DRAWING PROBE POINT")
+
+        probepoint_origin = (xy[0], xy[1], z)
+        probepoint_origin = np.add(probepoint_origin, current_cs_offset)
+        self.sim_dialog.simulator_widget.item_create("Star", "probepoint_{}".format(len(self.probe_values)), "simple3d", probepoint_origin, 1, 4, (0.6, 0.6, 0.6, 1))
+        
+        
+        
+    def probe_load(self):
+        with open("probedata.txt", 'r') as f:
+            lines = f.read().split("\n")
+        
+        self.sim_dialog.simulator_widget.item_remove("probepoint_.+")
+        
+        self.probe_points_count = 0
+        self.probe_points = []
+        self.probe_values = []
+        max_x = -999999
+        min_x = 999999
+        max_y = -999999
+        min_y = 999999
+        i = 0
+        for line in lines:
+            if (line.strip() == ""): continue
+            m = re.match('(........) (........) (........)', line)
+            x = float(m.group(1))
+            y = float(m.group(2))
+            z = float(m.group(3))
+            self.probe_points.append([x, y])
+            self.probe_values.append(z)
+            self.probe_points_count += 1
+            if (x > max_x): max_x = x
+            if (x < min_x): min_x = x
+            if (y > max_y): max_y = y
+            if (y < min_y): min_y = y
+            if (i == 0): self.probe_z_first = z
+            
+            self.draw_probepoint(self.probe_points[-1], self.probe_values[-1])
+            i += 1
+            
+        if (len(self.probe_values) == 0):
+            self.log("probedata.txt was empty!", "red")
+            return
+            
+        print("LLC", self.heightmap_llc)
+        print("URC", self.heightmap_urc)
+        print("DIM", self.heightmap_dim)
+        print("POINTS", self.probe_points)
+        print("VALUES", self.probe_values)
+        
+        self._init_heightmap(max_x, max_y)
+        
+      
+        
+        self.state_heightmap_dirty = True
+        
+               
         
     def probe_done(self):
-        self.probe_points_count = None
-        
         with open("probedata.txt", 'w') as f:
-            f.write("{}\n\n{}".format(self.probe_points, self.probe_values))
+            for i in range(0, len(self.probe_points)):
+                f.write("{:8.03f} {:8.03f} {:8.03f}\n".format(self.probe_points[i][0], self.probe_points[i][1], self.probe_values[i]))
+            
+        self.probe_points_count = None
             
         self.log("<b>Probe data available in<br>self.probe_points and self.probe_values<br>and in probedata.txt.</b>", "orange")
         
         
-    def probe_plane(self, dimx, dimy, z_clear, z_down, z_feed):
+    def _init_heightmap(self, dimx, dimy):
+        self.sim_dialog.simulator_widget.remove_heightmap()
+        
+        dimx = round(dimx) + 1
+        dimy = round(dimy) + 1
+        
+        self.heightmap_dim = (dimx, dimy)
+        self.heightmap_llc = (0, 0)
+        self.heightmap_urc = (dimx, dimy)
+        
+        self.heightmap_gldata = np.zeros(dimx * dimy, [("position", np.float32, 3), ("color", np.float32, 4)])
+        
+        start_x = self.heightmap_llc[0]
+        end_x = self.heightmap_urc[0]
+        steps_x = (1 + dimx) * 1j
+        
+        start_y = self.heightmap_llc[1]
+        end_y = self.heightmap_urc[1]
+        steps_y = (1 + dimy) * 1j
+        
+        grid = np.mgrid[start_x:end_x:steps_x, start_y:end_y:steps_y]
+        self.heightmap_ipolgrid = (grid[0], grid[1]) # format required by interpolation
+        
+        
+    def probe_start(self, dimx, dimy, z_clear, z_down, z_feed):
         """
         Probes area.
         
@@ -383,41 +470,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.log("<b>Probe cycle must start at X0 Y0</b>", "red")
             return
         
-        self.sim_dialog.simulator_widget.remove_heightmap()
-        
-        self.probe_z_clear = z_clear
-        self.probe_z_down = z_down
-        self.probe_feed = z_feed
-        
-        dimx = round(dimx) + 1
-        dimy = round(dimy) + 1
-        
-        self.heightmap_dim = (dimx, dimy)
-        self.heightmap_llc = (round(self.wpos[0]), round(self.wpos[1]))
-        self.heightmap_urc = (round(self.wpos[0]) + dimx, round(self.wpos[1]) + dimy)
-        
-        self.heightmap_gldata = np.zeros(dimx * dimy, [("position", np.float32, 3), ("color", np.float32, 4)])
-        
-        start_x = self.heightmap_llc[0]
-        end_x = self.heightmap_urc[0]
-        steps_x = (1 + dimx) * 1j
-        
-        start_y = self.heightmap_llc[1]
-        end_y = self.heightmap_urc[1]
-        steps_y = (1 + dimy) * 1j
-        
-        grid = np.mgrid[start_x:end_x:steps_x, start_y:end_y:steps_y]
-        self.heightmap_ipolgrid = (grid[0], grid[1]) # format required by interpolation
+
+        self._init_heightmap(dimx, dimy)
         
         self.probe_points = []
         self.probe_values = []
         
         self.probe_points_count = 0
+        
+        self.probe_z_clear = z_clear
+        self.probe_z_down = z_down
+        self.probe_feed = z_feed
+        
+        
         self.probe_points_planned = [ # all corners of area first
-            (start_x, start_y),
-            (start_x + dimx - 1, start_y),
-            (start_x + dimx - 1, start_y + dimy - 1),
-            (start_x, start_y + dimy - 1)
+            (0, 0),
+            (dimx, 0),
+            (dimx, dimy),
+            (0, dimy)
         ]
         
         self.do_probe_point(self.probe_points_planned[0])
@@ -470,23 +540,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             nx = random.randint(self.heightmap_llc[0], self.heightmap_urc[0])
             ny = random.randint(self.heightmap_llc[1], self.heightmap_urc[1])
             nextpoint = [nx, ny]
-            
+        
         self.state_heightmap_dirty = True
         self.do_probe_point(nextpoint)
         
 
     def draw_heightmap(self):
         current_cs_offset = self.state_hash[self.cs_names[self.current_cs]]
-        
-        print("DRAWING PROBE POINT")
-        last_probe_x = self.probe_points[-1][0]
-        last_probe_y = self.probe_points[-1][1]
-        last_probe_z = self.probe_values[-1] - self.probe_z_first
-        probepoint_origin = (last_probe_x, last_probe_y, last_probe_z)
-        probepoint_origin = np.add(probepoint_origin, current_cs_offset)
-        self.sim_dialog.simulator_widget.item_create("Star", "probepoint{}".format(len(self.probe_values)), "simple3d", probepoint_origin, 1, 4, (0.6, 0.6, 0.6, 1))
-        
-        
+
         if len(self.probe_values) < 4: return # at least 4 for suitable interpol
     
         # I put this here to not make it a hard requirement
@@ -767,8 +828,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             workarea_y = int(float(self.grbl.settings[131]["val"]))
             self.sim_dialog.simulator_widget.draw_stage(workarea_x, workarea_y)
             self.state_stage_dirty = False
-            
+
+
         if self.state_heightmap_dirty == True:
+            self.draw_probepoint(self.probe_points[-1], self.probe_values[-1])
             self.draw_heightmap()
             self.state_heightmap_dirty = False
             
