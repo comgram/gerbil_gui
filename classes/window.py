@@ -596,7 +596,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         elif event == "on_probe":
             pos = data[0]
-            print("ON_PROBE", pos)
+            self.log("Probe: <b>{}</b>".format(pos[2]))
             self.handle_probe_point(pos)
             
           
