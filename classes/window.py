@@ -222,7 +222,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.checkBox_feed_override.stateChanged.connect(self._feedoverride_changed)
         self.checkBox_incremental.stateChanged.connect(self._incremental_changed)
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
-        self.verticalLayout_cmd.addWidget(self.lineEdit_cmdline)
+        self.gridLayout_right.addWidget(self.lineEdit_cmdline, 7, 0, 1, 0)
         self.listWidget_logoutput.itemDoubleClicked.connect(self._on_logoutput_item_double_clicked)
         self.listWidget_logoutput.itemClicked.connect(self._on_logoutput_item_clicked)
         self.listWidget_logoutput.currentItemChanged.connect(self._on_logoutput_current_item_changed)
