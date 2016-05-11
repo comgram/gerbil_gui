@@ -270,7 +270,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
-        self._add_to_logoutput("=probe_start(100,100,20,-1,50)")
+        self._add_to_logoutput("=probe_start(100,100)")
         self._add_to_logoutput("=probe_done()")
         self._add_to_logoutput("=probe_load()")
         self._add_to_logoutput("=goto_marker()")
@@ -455,22 +455,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.heightmap_ipolgrid = (grid[0], grid[1]) # format required by interpolation
         
         
-    def probe_start(self, dimx, dimy, z_clear, z_down, z_feed):
+    def probe_start(self, dimx, dimy, z_feed=200, z_clear=10):
         """
-        Probes area.
+        Probes area. Probe must be almost touching the surface.
         
-        Current X and Y pos will be Z=0
+        Current X and Y pos will be Z=0 of resulting probe plane which can be used to offset Gcode.
         
         @param dimx
         Width of area to be probed, as measured into the X+ direction from the current pos
         
         @param dimy
         Height of area to be probed, as measured into the Y+ direction from the current pos
+        
+        @param z_feed
+        The probe feed towards the workpiece.
+        
+        @param z_clear
+        Millimeters to lift before next probing starts
         """
         
         if round(self.wpos[0]) != 0 or round(self.wpos[1]) != 0:
             self.log("<b>Probe cycle must start at X0 Y0</b>", "red")
             return
+        
+        if z_clear < 2:
+            self.log("<b>z_clear shouldn't be smaller than 2 mm.</b>", "red")
+            return
+            
         
 
         self._init_heightmap(dimx, dimy)
@@ -481,7 +492,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.probe_points_count = 0
         
         self.probe_z_clear = z_clear
-        self.probe_z_down = z_down
+        
         self.probe_feed = z_feed
         
         
@@ -497,17 +508,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def do_probe_point(self, pos):
         """
-        Lift probe, go to new point, then probe
+        Lift, go to new point, then probe
         
         @param pos
         tuple or list of xy coordinates relative to the current CS
         """
-        print("do_probe_point", pos)
         new_x = pos[0]
         new_y = pos[1]
-        self.grbl.send_immediately("G0 Z{:0.3f}".format(self.probe_z_clear))
+        current_z = self.wpos[2]
+        self.grbl.send_immediately("G0 Z{:0.3f}".format(current_z + self.probe_z_clear))
         self.grbl.send_immediately("G0 X{} Y{}".format(new_x, new_y))
-        self.grbl.send_immediately("G38.2 Z{:0.3f} F{}".format(self.probe_z_down, self.probe_feed))
+        self.grbl.send_immediately("G38.2 Z{:0.3f} F{}".format(current_z - 10, self.probe_feed)) # Go down max. 10mm below current point before it is considered an error.
+        # There is no safe value; if the probe fails to signal, we have a probe crash.
 
 
     def handle_probe_point(self, mpos):
