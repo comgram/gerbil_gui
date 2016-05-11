@@ -409,7 +409,7 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="11" rowspan="19">
+    <item row="0" column="11" rowspan="20">
      <layout class="QGridLayout" name="gridLayout_11">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
@@ -730,7 +730,7 @@
       </item>
      </layout>
     </item>
-    <item row="16" column="0" colspan="3">
+    <item row="17" column="0" colspan="3">
      <widget class="QSlider" name="horizontalSlider_feed_override">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
@@ -1087,7 +1087,7 @@
       </item>
      </layout>
     </item>
-    <item row="15" column="0" colspan="3">
+    <item row="16" column="0" colspan="3">
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="QCheckBox" name="checkBox_feed_override">
@@ -1141,7 +1141,7 @@
       </item>
      </layout>
     </item>
-    <item row="18" column="0" colspan="3">
+    <item row="19" column="0" colspan="3">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QProgressBar" name="progressBar_buffer">
@@ -1193,7 +1193,7 @@
       </item>
      </layout>
     </item>
-    <item row="18" column="13" colspan="4">
+    <item row="19" column="13" colspan="4">
      <widget class="QLabel" name="label_current_gcode">
       <property name="minimumSize">
        <size>
@@ -1223,7 +1223,7 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="13" rowspan="18" colspan="2">
+    <item row="0" column="13" rowspan="19" colspan="2">
      <widget class="QScrollArea" name="scrollArea_loginput">
       <property name="sizePolicy">
        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
@@ -1273,7 +1273,7 @@
       </widget>
      </widget>
     </item>
-    <item row="0" column="15" rowspan="18" colspan="2">
+    <item row="0" column="15" rowspan="19" colspan="2">
      <layout class="QGridLayout" name="gridLayout_right">
       <item row="1" column="0">
        <widget class="QLabel" name="label_bufsize">
@@ -1410,6 +1410,25 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item row="15" column="0" colspan="3">
+     <widget class="QSlider" name="horizontalSlider_spindle_factor">
+      <property name="maximum">
+       <number>100</number>
+      </property>
+      <property name="value">
+       <number>100</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="tickPosition">
+       <enum>QSlider::TicksAbove</enum>
+      </property>
+      <property name="tickInterval">
+       <number>10</number>
+      </property>
+     </widget>
     </item>
    </layout>
    <widget class="QLabel" name="label_grbl">

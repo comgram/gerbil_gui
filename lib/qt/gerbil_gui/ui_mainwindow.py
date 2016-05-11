@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/gerbil_gui/mainwindow.ui'
 #
-# Created: Tue May 10 10:06:26 2016
+# Created: Wed May 11 21:18:02 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -298,7 +298,7 @@ class Ui_MainWindow(object):
         self.gridLayout_13.addWidget(self.tableWidget_settings, 1, 0, 1, 2)
         self.tabWidget.addTab(self.tab_2, "")
         self.gridLayout_11.addWidget(self.tabWidget, 1, 0, 2, 1)
-        self.gridLayout.addLayout(self.gridLayout_11, 0, 11, 19, 1)
+        self.gridLayout.addLayout(self.gridLayout_11, 0, 11, 20, 1)
         self.gridLayout_4 = QtWidgets.QGridLayout()
         self.gridLayout_4.setSpacing(0)
         self.gridLayout_4.setObjectName("gridLayout_4")
@@ -349,7 +349,7 @@ class Ui_MainWindow(object):
         self.horizontalSlider_feed_override.setTickPosition(QtWidgets.QSlider.TicksAbove)
         self.horizontalSlider_feed_override.setTickInterval(10)
         self.horizontalSlider_feed_override.setObjectName("horizontalSlider_feed_override")
-        self.gridLayout.addWidget(self.horizontalSlider_feed_override, 16, 0, 1, 3)
+        self.gridLayout.addWidget(self.horizontalSlider_feed_override, 17, 0, 1, 3)
         self.gridLayout_12 = QtWidgets.QGridLayout()
         self.gridLayout_12.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
         self.gridLayout_12.setObjectName("gridLayout_12")
@@ -559,7 +559,7 @@ class Ui_MainWindow(object):
         self.lcdNumber_feed_current.setSegmentStyle(QtWidgets.QLCDNumber.Flat)
         self.lcdNumber_feed_current.setObjectName("lcdNumber_feed_current")
         self.horizontalLayout_3.addWidget(self.lcdNumber_feed_current)
-        self.gridLayout.addLayout(self.horizontalLayout_3, 15, 0, 1, 3)
+        self.gridLayout.addLayout(self.horizontalLayout_3, 16, 0, 1, 3)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.progressBar_buffer = QtWidgets.QProgressBar(self.centralWidget)
@@ -588,7 +588,7 @@ class Ui_MainWindow(object):
         self.progressBar_job.setProperty("value", 0)
         self.progressBar_job.setObjectName("progressBar_job")
         self.verticalLayout_2.addWidget(self.progressBar_job)
-        self.gridLayout.addLayout(self.verticalLayout_2, 18, 0, 1, 3)
+        self.gridLayout.addLayout(self.verticalLayout_2, 19, 0, 1, 3)
         self.label_current_gcode = QtWidgets.QLabel(self.centralWidget)
         self.label_current_gcode.setMinimumSize(QtCore.QSize(200, 0))
         self.label_current_gcode.setMaximumSize(QtCore.QSize(16777215, 16777215))
@@ -600,7 +600,7 @@ class Ui_MainWindow(object):
         self.label_current_gcode.setFont(font)
         self.label_current_gcode.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByKeyboard|QtCore.Qt.TextSelectableByMouse)
         self.label_current_gcode.setObjectName("label_current_gcode")
-        self.gridLayout.addWidget(self.label_current_gcode, 18, 13, 1, 4)
+        self.gridLayout.addWidget(self.label_current_gcode, 19, 13, 1, 4)
         self.scrollArea_loginput = QtWidgets.QScrollArea(self.centralWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -624,7 +624,7 @@ class Ui_MainWindow(object):
         self.scrollAreaWidgetContents.setFont(font)
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.scrollArea_loginput.setWidget(self.scrollAreaWidgetContents)
-        self.gridLayout.addWidget(self.scrollArea_loginput, 0, 13, 18, 2)
+        self.gridLayout.addWidget(self.scrollArea_loginput, 0, 13, 19, 2)
         self.gridLayout_right = QtWidgets.QGridLayout()
         self.gridLayout_right.setObjectName("gridLayout_right")
         self.label_bufsize = QtWidgets.QLabel(self.centralWidget)
@@ -690,7 +690,15 @@ class Ui_MainWindow(object):
         self.label_current_line_number.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_current_line_number.setObjectName("label_current_line_number")
         self.gridLayout_right.addWidget(self.label_current_line_number, 1, 1, 1, 1)
-        self.gridLayout.addLayout(self.gridLayout_right, 0, 15, 18, 2)
+        self.gridLayout.addLayout(self.gridLayout_right, 0, 15, 19, 2)
+        self.horizontalSlider_spindle_factor = QtWidgets.QSlider(self.centralWidget)
+        self.horizontalSlider_spindle_factor.setMaximum(100)
+        self.horizontalSlider_spindle_factor.setProperty("value", 100)
+        self.horizontalSlider_spindle_factor.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_spindle_factor.setTickPosition(QtWidgets.QSlider.TicksAbove)
+        self.horizontalSlider_spindle_factor.setTickInterval(10)
+        self.horizontalSlider_spindle_factor.setObjectName("horizontalSlider_spindle_factor")
+        self.gridLayout.addWidget(self.horizontalSlider_spindle_factor, 15, 0, 1, 3)
         self.label_grbl = QtWidgets.QLabel(self.centralWidget)
         self.label_grbl.setGeometry(QtCore.QRect(279, 493, 334, 31))
         self.label_grbl.setText("")

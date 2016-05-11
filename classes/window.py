@@ -184,6 +184,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_zminus.setEnabled(False)
         self.pushButton_zplus.setEnabled(False)
         self.horizontalSlider_feed_override.setEnabled(False)
+        self.horizontalSlider_spindle_factor.setEnabled(False)
         self.checkBox_feed_override.setEnabled(False)
         self.checkBox_incremental.setEnabled(False)
         self.comboBox_coordinate_systems.setEnabled(False)
@@ -219,6 +220,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_zminus.clicked.connect(self.zminus)
         self.pushButton_zplus.clicked.connect(self.zplus)
         self.horizontalSlider_feed_override.valueChanged.connect(self._feedoverride_value_changed)
+        self.horizontalSlider_spindle_factor.valueChanged.connect(self._spindle_factor_value_changed)
         self.checkBox_feed_override.stateChanged.connect(self._feedoverride_changed)
         self.checkBox_incremental.stateChanged.connect(self._incremental_changed)
         self.lineEdit_cmdline = CommandLineEdit(self, self._cmd_line_callback)
@@ -739,6 +741,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pushButton_zminus.setEnabled(True)
             self.pushButton_zplus.setEnabled(True)
             self.horizontalSlider_feed_override.setEnabled(True)
+            self.horizontalSlider_spindle_factor.setEnabled(True)
             self.checkBox_feed_override.setEnabled(True)
             self.checkBox_incremental.setEnabled(True)
             self.comboBox_coordinate_systems.setEnabled(True)
@@ -753,7 +756,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
             self.lcdNumber_feed_current.display("---")
-            self.horizontalSlider_feed_override.setValue(25) #179
+            self.horizontalSlider_feed_override.setValue(25)
+            self.horizontalSlider_spindle_factor.setValue(100)
             self.grbl.send_immediately("F179")
             self.grbl.poll_start()
             
@@ -1121,6 +1125,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lcdNumber_feed_override.display(val)
         self.grbl.request_feed(val)
         
+    def _spindle_factor_value_changed(self):
+        val = self.horizontalSlider_spindle_factor.value() # 0..100
+        self.grbl.preprocessor.spindle_factor = val / 100
         
     def _feedoverride_changed(self, val):
         val = False if val == 0 else True
