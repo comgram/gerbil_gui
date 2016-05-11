@@ -1190,7 +1190,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def cnect(self):
         self.action_grbl_connect.setEnabled(False)
-        self.grbl.cnect(self.devicepath, 230400)
+        self.grbl.cnect(self.devicepath, 115200)
         
         
     def disconnect(self):
