@@ -15,6 +15,8 @@ gcodes.append("G0X0Y0")
 
 gcodes.append("F500")
 
+gcodes.append("G1")
+
 
 self.new_job()
 
@@ -43,9 +45,9 @@ self.grbl.preprocessor.do_fractionize_lines = False
 
 dir = 1
 for z in range(1,10):
-    dir *= -1
     gcodes += spiral(0, 0, 0, 30, 10, dir)
     gcodes.append("G0 Z{} S0".format(z/10))
+    dir *= -1
     
 
 self.grbl.write(gcodes)
