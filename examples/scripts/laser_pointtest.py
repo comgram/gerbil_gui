@@ -4,10 +4,10 @@ c = compiler
 t = gcodetools
 grbl = self.grbl
 
-focus_range = 20
+focus_range = 80
 dir = 1
-width = 100
-point_distance = 5
+width = 30
+point_distance = 3
 points_per_line = int(width/point_distance)
 
 self.new_job()
@@ -18,11 +18,9 @@ gcodes.append("G91") # relative distances
 gcodes.append("S0")
 gcodes.append("M3")
 
-gcodes.append("G0 Z{}".format(-focus_range / 2)) # first movement down
 
-# first row = 50 ms, each row plus 50ms
-for dwell in range(0, 10000, 500):
-    dwell += 500
+# first row = 10 ms, each row plus 100ms
+for dwell in range(100, 10000, 1000):
     gcodes.append("S255")
     gcodes.append("G4 P{:0.2f}".format(dwell/10000))
     gcodes.append("S0")
