@@ -76,6 +76,9 @@ def find_row_ranges(pix, width, height):
 
 def do(filename_in, dpmm=1, x_bleed=10, xcorr=0):
     # 300 dpi = 11.8 dpmm
+    # 254 dpi = 10 dpmm (100µm pixels)
+    # 127 dpi = 5 dpmm (200µm pixels)
+    # 76.2 dpi = 3 dpmm (333µm pixels)
     logging.info("Opening image %s", filename_in)
     
     unit_length = 1 / dpmm
