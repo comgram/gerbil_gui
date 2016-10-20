@@ -185,7 +185,15 @@ def main():
     gui_parser.add_argument(
         '--path',
         metavar='PATH',
+        default='/dev/ttyACM0',
         help='e.g. /dev/ttyACM0'
+        )
+    
+    gui_parser.add_argument(
+        '--baud',
+        metavar='BAUD',
+        help='e.g. 9600',
+        default=115200
         )
 
     args = parser.parse_args()
@@ -244,7 +252,7 @@ def main():
         #styles = [line.strip() for line in open("stylesheet.css")]
         #styles = " ".join(styles)
         #app.setStyleSheet(styles)
-        window = MainWindow(args.path)
+        window = MainWindow(args.path, int(args.baud))
         #ui = Ui_MainWindow()
         #ui.setupUi(window)
         #window = Window()

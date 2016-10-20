@@ -30,13 +30,14 @@ from lib import pixel2laser
         
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, path):
+    def __init__(self, path, baud):
         super(MainWindow, self).__init__()
         self.logger = logging.getLogger('cnctoolbox.window')
         
         _logbuffer_size = 200
         
         self.devicepath = path
+        self.devicebaud = baud
         
         self.setupUi(self)
         self.modifyUi()
@@ -1209,7 +1210,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def cnect(self):
         self.action_grbl_connect.setEnabled(False)
-        self.grbl.cnect(self.devicepath, 115200)
+        self.grbl.cnect(self.devicepath, self.devicebaud)
         
         
     def disconnect(self):
