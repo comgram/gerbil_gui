@@ -887,6 +887,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # simulator update
             self.sim_dialog.simulator_widget.draw_tool(self.mpos)
             
+            color = "black"
+            
             if self.state == "Idle":
                 color = "green"
                 self.jogWidget.onIdle()
@@ -1190,7 +1192,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def g53z0(self):
-        self.grbl.send_immediately("G53 Z0")
+        # one millimeter below the limit switch
+        self.grbl.send_immediately("G53 Z-1")
         
     def g53min(self):
         workarea_x = int(float(self.grbl.settings[130]["val"]))
