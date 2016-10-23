@@ -261,8 +261,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.heightmap_urc = None
         self.heightmap_ipolgrid = None
         self.probe_z_first = None
-        self.probe_z_clear = None
-        self.probe_z_down = None
+        self.probe_z_at_probestart = None
+        self.probe_z_expected_deviation = None
         self.probe_feed = None
         self.probe_points = None
         self.probe_values = None
@@ -456,9 +456,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.heightmap_ipolgrid = (grid[0], grid[1]) # format required by interpolation
         
         
-    def probe_start(self, dimx, dimy, z_feed=200, z_clear=10):
+    def probe_start(self, dimx, dimy, z_feed=50, z_expected_deviation=10):
         """
-        Probes area. Probe must be almost touching the surface.
+        Probes area. Probe must almost touching the surface.
         
         Current X and Y pos will be Z=0 of resulting probe plane which can be used to offset Gcode.
         
@@ -471,38 +471,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         @param z_feed
         The probe feed towards the workpiece.
         
-        @param z_clear
-        Millimeters to lift before next probing starts
+        @param z_expected_deviation
+        Approximate difference in mm between the lowest Z and highest Z of the warped workpiece surface
         """
         
         if round(self.wpos[0]) != 0 or round(self.wpos[1]) != 0:
             self.log("<b>Probe cycle must start at X0 Y0</b>", "red")
             return
         
-        if z_clear < 2:
-            self.log("<b>z_clear shouldn't be smaller than 2 mm.</b>", "red")
+        if z_expected_deviation < 5 or z_expected_deviation > 10:
+            self.log("<b>For safety reasons, z_expected_deviation shouldn't be smaller than 5 or larger than 10 mm.</b>", "red")
             return
-            
-        
 
         self._init_heightmap(dimx, dimy)
         
         self.probe_points = []
         self.probe_values = []
-        
         self.probe_points_count = 0
-        
-        self.probe_z_clear = z_clear
-        
+        self.probe_z_expected_deviation = z_expected_deviation
         self.probe_feed = z_feed
         
-        
-        self.probe_points_planned = [ # all corners of area first
+        self.probe_points_planned = [ # all corners of area are pre-planned
             (0, 0),
             (dimx, 0),
             (dimx, dimy),
             (0, dimy)
         ]
+        
+        self.probe_z_at_probestart = self.wpos[2]
+        
+        self.grbl.send_immediately("G90") # absolute mode
         
         self.do_probe_point(self.probe_points_planned[0])
         
@@ -516,11 +514,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         new_x = pos[0]
         new_y = pos[1]
-        current_z = self.wpos[2]
-        self.grbl.send_immediately("G0 Z{:0.3f}".format(current_z + self.probe_z_clear))
+        
+        # fast lift by z_clear from last probe trigger point
+        lift_security_margin = 2
+        lift_z = self.probe_z_at_probestart + self.probe_z_expected_deviation + lift_security_margin
+        self.grbl.send_immediately("G0 Z{:0.3f}".format(lift_z))
+        
+        # probe is now clear of any obstacles. do fast move to new probe coord.
         self.grbl.send_immediately("G0 X{} Y{}".format(new_x, new_y))
-        self.grbl.send_immediately("G38.2 Z{:0.3f} F{}".format(current_z - 10, self.probe_feed)) # Go down max. 10mm below current point before it is considered an error.
-        # There is no safe value; if the probe fails to signal, we have a probe crash.
+        
+        # the actual probing
+        probe_goto_z = self.probe_z_at_probestart - self.probe_z_expected_deviation
+        
+        self.grbl.send_immediately("G38.2 Z{:0.3f} F{}".format(probe_goto_z, self.probe_feed))
+        
 
 
     def handle_probe_point(self, mpos):
