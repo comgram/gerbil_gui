@@ -5,9 +5,13 @@ t = gcodetools
 
 self.new_job()
 
-gcode = ["M3"]
+gcode = []
 gcode += t.read("/mnt/files/output.ngc")
-#gcode = t.read("examples/gcode/speedtest.ngc")
+
+grbl.write("M3") # laser off
+grbl.write("S0") # laser min
+grbl.write(t.bbox(gcode))
+grbl.write("M5") # laser on
 
 grbl.preprocessor.do_fractionize_lines = True
 grbl.preprocessor.do_fractionize_arcs = True

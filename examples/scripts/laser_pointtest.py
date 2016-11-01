@@ -4,11 +4,10 @@ c = compiler
 t = gcodetools
 grbl = self.grbl
 
-focus_range = 80
-dir = 1
+focus_range = 50
 width = 30
 point_distance = 3
-points_per_line = int(width/point_distance)
+
 
 self.new_job()
 gcodes = []
@@ -19,6 +18,8 @@ gcodes.append("S0")
 gcodes.append("M3")
 
 
+dir = 1
+points_per_line = int(width/point_distance)
 # first row = 10 ms, each row plus 100ms
 for dwell in range(100, 10000, 1000):
     gcodes.append("S255")

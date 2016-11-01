@@ -69,10 +69,7 @@ def scale_into(gcode, width, height, depth, scale_zclear=False):
     
 # returns string
 def bbox(gcode, move_z=False):
-    result = "F1000\n"
-    #result = "G0X0Y0\n"
-    #result += "G4P1\n"
-    #result += "M0\n"
+    result = ""
     
     bbox = _get_bbox(gcode)
     xmin = bbox[0][0]
@@ -98,6 +95,8 @@ def bbox(gcode, move_z=False):
     result += "M0\n"
     
     result += "G0X{:0.1f}\n".format(xmin)
+    result += "M0\n"
+    
     return result
     
 

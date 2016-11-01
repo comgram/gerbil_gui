@@ -458,9 +458,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def probe_start(self, dimx, dimy, z_feed=50, z_expected_deviation=10):
         """
-        Probes area. Probe must almost touching the surface.
+        Probes area.
         
-        Current X and Y pos will be Z=0 of resulting probe plane which can be used to offset Gcode.
+        Probe must almost touch the surface. First movement is up.
+        Current X and Y pos will be Z=0 of resulting probe plane,
+        which can be used to offset Gcode.
         
         @param dimx
         Width of area to be probed, as measured into the X+ direction from the current pos
@@ -1213,10 +1215,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def spindleon(self):
         self.grbl.send_immediately("M3")
         self.grbl.send_immediately("S255")
+        self.grbl.gcode_parser_state_requested = True
         
     def spindleoff(self):
         self.grbl.send_immediately("S0")
         self.grbl.send_immediately("M5")
+        self.grbl.gcode_parser_state_requested = True
         
     def cnect(self):
         self.action_grbl_connect.setEnabled(False)
