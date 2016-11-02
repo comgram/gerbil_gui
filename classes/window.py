@@ -1372,23 +1372,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     def bbox(self, move_z=False):
-        was_incremental = self.checkBox_incremental.isChecked()
-        was_buf = self.grbl.buffer
-        
-        movements = gcodetools.bbox(was_buf, move_z)
-        
-        self.grbl.job_new()
-        
-        self.grbl.incremental_streaming = True
-        self.checkBox_incremental.setChecked(True)
-        
-        self.grbl.stream(movements)
-        
-        #self.grbl.set_incremental_streaming(was_incremental)
-        #self.checkBox_incremental.setChecked(was_incremental)
-        
-        #self.grbl.job_new()
-        #self.grbl.write("\n".join(was_buf))
+        lines = gcodetools.bbox(self.grbl.buffer, move_z).split("\n")
+        for line in lines:
+            self.grbl.send_immediately(line)
         
     def _render_logbuffer(self):
         self.label_loginput.setText("<br />".join(self.logbuffer))

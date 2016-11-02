@@ -11,8 +11,8 @@ grbl.buffer = []
 
 self.new_job()
 
-#gcode = p2l.do("examples/patterntest.png", 10, 20, 0)
-gcode = p2l.do("examples/gradient.png", 10, 20, 0)
+gcode = p2l.do("examples/patterntest.png", 10, 20, 0)
+#gcode = p2l.do("examples/gradient.png", 10, 20, 0)
 
 grbl.preprocessor.do_fractionize_lines = False
 grbl.preprocessor.do_fractionize_arcs = False

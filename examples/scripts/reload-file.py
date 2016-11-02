@@ -8,10 +8,6 @@ self.new_job()
 gcode = []
 gcode += t.read("/mnt/files/output.ngc")
 
-grbl.write("M3") # laser off
-grbl.write("S0") # laser min
-grbl.write(t.bbox(gcode))
-grbl.write("M5") # laser on
 
 grbl.preprocessor.do_fractionize_lines = True
 grbl.preprocessor.do_fractionize_arcs = True

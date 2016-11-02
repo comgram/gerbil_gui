@@ -85,16 +85,16 @@ def bbox(gcode, move_z=False):
     result += "G0X{:0.1f}Y{:0.1f}\n".format(xmin, ymin)
     result += "M0\n"
     
-    result += "G0Y{:0.1f}\n".format(ymax)
-    result += "M0\n"
-    
     result += "G0X{:0.1f}\n".format(xmax)
     result += "M0\n"
     
-    result += "G0Y{:0.1f}\n".format(ymin)
+    result += "G0Y{:0.1f}\n".format(ymax)
     result += "M0\n"
     
     result += "G0X{:0.1f}\n".format(xmin)
+    result += "M0\n"
+    
+    result += "G0Y{:0.1f}\n".format(ymin)
     result += "M0\n"
     
     return result
