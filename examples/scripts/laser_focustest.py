@@ -6,8 +6,8 @@ grbl = self.grbl
 
 
 focus_range = 50
-width = 100
-line_spacing = 1
+width = 200
+line_spacing = 0.5
 
 self.new_job()
 gcodes = []

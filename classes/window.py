@@ -204,7 +204,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_job_halt.clicked.connect(self.job_halt)
         self.pushButton_job_new.clicked.connect(self.new_job)
         self.pushButton_show_buffer.clicked.connect(self._show_buffer)
-        self.pushButton_hold.clicked.connect(self.grbl.hold)
+        self.pushButton_hold.clicked.connect(self.hold)
         self.pushButton_resume.clicked.connect(self.grbl.resume)
         self.pushButton_abort.clicked.connect(self.abort)
         self.pushButton_check.clicked.connect(self.check)
@@ -824,6 +824,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             line_str = data[1]
             self.sim_dialog.simulator_widget.highlight_gcode_line(line_number)
             self.sim_dialog.simulator_widget.put_buffer_marker_at_line(line_number)
+            
+        elif event == "on_standstill":
+            self.log("Machine is standing still")
+            if (self.grbl.gps[7] == "3" and
+            self.grbl.preprocessor.current_spindle_speed > 1):
+                self.log("Laser Watchdog: Machine standstill but laser on. Turning off...", "red")
+                self.spindleoff()
+                
+            
+        elif event == "on_movement":
+            pass
         
         else:
             self._add_to_loginput("Grbl event {} not yet implemented".format(event))
@@ -1170,6 +1181,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.reset()
        
        
+    def hold(self):
+        self.grbl.hold()
+       
+       
     def reset(self):
         self.probe_points_count = None
         self.grbl.abort()
@@ -1183,7 +1198,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def job_halt(self):
         self.grbl.job_halt()
-        
+        self.grbl.gcode_parser_state_requested = True
     
     def stream_play(self):
         self.grbl.job_run()

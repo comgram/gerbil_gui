@@ -109,7 +109,7 @@ def do(filename_in, dpmm=1, x_bleed=10, xcorr=0):
     
     result += "S0\n"
     result += "G0 X{:f} Y{:f}\n".format(first_x * unit_length - first_direction * x_bleed, first_y * unit_length)
-    result += "G1\n"
+    result += "G0\n"
     result += "X{:f}\n".format(first_x * unit_length + xcorr * first_direction)
     
     last_x = first_x
@@ -153,7 +153,7 @@ def do(filename_in, dpmm=1, x_bleed=10, xcorr=0):
             new_s = s
             
             gcodeline = ""
-            # Only write changes to coords, leads to less gcode which is still precise.
+            # Only write changes to coords
             x2 = new_x * unit_length + direction * xcorr
             y2 = new_y * unit_length
             z2 = new_z * unit_length
@@ -220,9 +220,9 @@ def do(filename_in, dpmm=1, x_bleed=10, xcorr=0):
         #result += "G{:g} X{:g} Y{:g} R{:f} S0\n".format(arcmode, x_clear, middle_y * unit_length, arc_radius_out * unit_length)
         #result += "G{:g} X{:g} Y{:g} R{:f} S0\n".format(arcmode, (nxs + direction) * unit_length, ny * unit_length, arc_radius_in * unit_length)
         result += ";_gerbil bleed begin\n"
-        result += "G1 X{:g} Y{:g} S0\n".format(x_clear, middle_y * unit_length)
+        result += "G0 X{:g} Y{:g} S0\n".format(x_clear, middle_y * unit_length)
         offset = 1 if direction == 1 else 0
-        result += "G1 X{:g} Y{:g} S0\n".format(direction * xcorr + (nxs + offset) * unit_length, ny * unit_length)
+        result += "G0 X{:g} Y{:g} S0\n".format(direction * xcorr + (nxs + offset) * unit_length, ny * unit_length)
         result += ";_gerbil bleed end\n"
         
         last_s = None # invalidate last S for next row processing
@@ -233,7 +233,6 @@ def do(filename_in, dpmm=1, x_bleed=10, xcorr=0):
 
     # gcode postamble
     out_x = float(unit_length * last_x + direction * x_bleed)
-    result += "G1 X{:f} S0\n".format(out_x) # last easing out movement
-    result += "G0 X0 Y0\n".format(out_x) # last easing out movement
+    result += "G0 X{:f} S0\n".format(out_x) # last easing out movement
     
     return result.split('\n')
