@@ -1247,6 +1247,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.grbl.disconnect()
         
         
+    def draw_gcode(self, gcode, do_fractionize_arcs=True):
+        ccs = self.cs_names[self.current_cs]
+        self.sim_dialog.simulator_widget.cs_offsets = self.state_hash
+        self.sim_dialog.simulator_widget.draw_gcode(gcode, self.mpos, ccs, do_fractionize_arcs)
+        
 
     def _show_buffer(self):
         buf = self.grbl.buffer
@@ -1387,7 +1392,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
     def bbox(self, move_z=False):
-        lines = gcodetools.bbox(self.grbl.buffer, move_z).split("\n")
+        lines = gcodetools.bbox_draw(self.grbl.buffer, move_z).split("\n")
         for line in lines:
             self.grbl.send_immediately(line)
         

@@ -34,14 +34,14 @@ def write(fname, contents):
         f.write(contents)
 
 def to_origin(gcode):
-    bbox = _get_bbox(gcode)
+    bbox = bbox(gcode)
     xmin = bbox[0][0]
     ymin = bbox[1][0]
     translated_gcode = translate(gcode, [-xmin, -ymin, 0])
     return translated_gcode
 
 def scale_into(gcode, width, height, depth, scale_zclear=False):
-    bbox = _get_bbox(gcode)
+    bbox = bbox(gcode)
     xmin = bbox[0][0]
     xmax = bbox[0][1]
     ymin = bbox[1][0]
@@ -68,10 +68,10 @@ def scale_into(gcode, width, height, depth, scale_zclear=False):
     return scaled_gcode
     
 # returns string
-def bbox(gcode, move_z=False):
+def bbox_draw(gcode, move_z=False):
     result = ""
     
-    bbox = _get_bbox(gcode)
+    bbox = bbox(gcode)
     xmin = bbox[0][0]
     xmax = bbox[0][1]
     ymin = bbox[1][0]
@@ -139,7 +139,7 @@ def translate(lines, offsets=[0, 0, 0]):
 
 
 # returns list
-def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
+def scale_factor(lines, facts=[1, 1, 1], scale_zclear=False):
     result = []
     
     logger = logging.getLogger('gerbil')
@@ -182,7 +182,7 @@ def scale_factor(lines, facts=[0, 0, 0], scale_zclear=False):
 
 
 # returns list
-def _get_bbox(gcode):
+def bbox(gcode):
     bbox = []
     
     axes = ["X", "Y", "Z"]

@@ -127,13 +127,13 @@ class SimulatorWidget(PainterWidget):
         self.dirty = True
         
         
-    def draw_gcode(self, gcode, cmpos, ccs):
+    def draw_gcode(self, gcode, cmpos, ccs, do_fractionize_arcs=True):
         if "gcode" in self.programs["simple3d"].items:
             # remove old gcode item
             self.item_remove("gcode")
         
         # create a new one
-        self.item_create("GcodePath", "gcode", "simple3d", gcode, cmpos, ccs, self.cs_offsets)
+        self.item_create("GcodePath", "gcode", "simple3d", gcode, cmpos, ccs, self.cs_offsets, do_fractionize_arcs)
         #self.programs["simple3d"].items["gcode"] = GcodePath("gcode", self.program, gcode, cwpos, ccs, self.cs_offsets)
         self.dirty = True
         
