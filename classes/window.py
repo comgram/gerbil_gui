@@ -784,6 +784,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.grbl.send_immediately("F179")
             self.grbl.poll_start()
             
+            self.spinBox_start_line.setValue(1)
+            self.spinBox_start_line.setValue(0) # trigger change
+            
         elif event == "on_disconnected":
             self.action_grbl_disconnect.setEnabled(False)
             self.action_grbl_connect.setEnabled(True)
