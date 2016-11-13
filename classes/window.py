@@ -831,7 +831,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if (self.grbl.gps[7] == "3" and
             self.grbl.preprocessor.current_spindle_speed > 1):
                 self.log("Laser Watchdog: Machine standstill but laser on. Turning off...", "red")
-                self.spindleoff()
+                self.grbl.abort()
                 
             
         elif event == "on_movement":
