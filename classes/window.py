@@ -18,8 +18,8 @@ from gerbil.callbackloghandler import CallbackLogHandler
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer, QSettings
-from PyQt5.QtGui import QColor,QPalette
-from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction, QTableWidgetItem, QDialog
+from PyQt5.QtGui import QColor, QPalette, QKeySequence
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction, QTableWidgetItem, QDialog, QShortcut
 
 from lib.qt.gerbil_gui.ui_mainwindow import Ui_MainWindow
 from lib import gcodetools
@@ -248,6 +248,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ## TIMER SETUP END ----------
         
         
+        ## Keyboard shortcuts BEGIN ----------
+        self._shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_S), self)
+        self._shortcut.activated.connect(self._save_script)
+        
+        self._shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_O), self)
+        self._shortcut.activated.connect(self._pick_script)
+        
+        self._shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_R), self)
+        self._shortcut.activated.connect(self.reset)
+        
+        self._shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_K), self)
+        self._shortcut.activated.connect(self.grbl.killalarm)
+        
+        self._shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_H), self)
+        self._shortcut.activated.connect(self.homing)
+        
+        self._shortcut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_E), self)
+        self._shortcut.activated.connect(self.execute_script_clicked)
+        ## Keyboard shortcuts END ----------
 
         
 
@@ -809,8 +828,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.grbl.send_immediately("F179")
             self.grbl.poll_start()
             
-            self.spinBox_start_line.setValue(1)
-            self.spinBox_start_line.setValue(0) # trigger change
+            self.spinBox_start_line.setValue(0)
+            self._start_line_changed(0)
 
             self.grbl.send_immediately(self.cs_names[self._last_cs])
             
@@ -1079,7 +1098,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.sim_dialog.simulator_widget.put_buffer_marker_at_line(line_number)
             self.label_current_gcode.setText(self.grbl.buffer[line_number])
     
-    def execute_script_clicked(self,item):
+    def execute_script_clicked(self):
         self.grbl.update_preprocessor_position()
         code = self.plainTextEdit_script.toPlainText()
         self.statusBar.showMessage("Executing script. Please wait...")
@@ -1317,6 +1336,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.current_target = self.targets[idx]
         self.grbl.target = self.current_target
         self.pushButton_job_run.setText("➾ {}".format(self.current_target))
+        self.spinBox_start_line.setValue(0)
+        self._start_line_changed(0)
         if self.current_target == "firmware":
             self.pushButton_job_run.setText("⚒ RUN MACHINE ⚠")
             self.pushButton_job_run.setStyleSheet("background-color: rgb(198,31,31); color: white;")
