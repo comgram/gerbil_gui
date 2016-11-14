@@ -724,9 +724,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<b>◀ {}</b>".format(data[0]), "red")
             if data[2] > -1:
                 self._add_to_loginput("<b>✗ Error was in line {}: {}</b>".format(data[2], data[1]), "red")
-            # turn spindle/laser off
-            self.grbl.send_immediately("M5")
-            self.grbl.send_immediately("S0")
+            self.reset()
             
         elif event == "on_alarm":
             self._add_to_loginput("☹ " + data[0], "orange")
