@@ -1046,8 +1046,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # UI SLOTS
     
     def settings_save_into_file(self):
-        filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "")
+        filename_tuple = QFileDialog.getSaveFileName(self, "Save File", os.getcwd(), "")
         filepath = filename_tuple[0]
+        if filepath == "": return
        
         settings_string = self.settings_table_to_str()
         with open(filepath, 'w') as f:
@@ -1057,7 +1058,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def settings_load_from_file(self):
         filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "")
         filepath = filename_tuple[0]
-        
+        if filepath == "": return
+    
         settings = {}
         with open(filepath, 'r') as f:
             for line in f:
