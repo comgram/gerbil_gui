@@ -827,8 +827,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             self.lcdNumber_feed_current.display("---")
             self.horizontalSlider_feed_override.setValue(30)
+            self._feedoverride_value_changed()
             
             self.horizontalSlider_spindle_factor.setValue(100)
+            self._spindle_factor_value_changed()
             
             self.grbl.send_immediately(self.cs_names[self._last_cs])
             
