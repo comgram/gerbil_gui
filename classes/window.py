@@ -17,7 +17,7 @@ from gerbil.gerbil import Gerbil
 from gerbil.callbackloghandler import CallbackLogHandler
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer
+from PyQt5.QtCore import pyqtSignal, QPoint, QSize, Qt, QCoreApplication, QTimer, QSettings
 from PyQt5.QtGui import QColor,QPalette
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMessageBox, QSlider, QLabel, QPushButton, QWidget, QDialog, QMainWindow, QFileDialog, QLineEdit, QSpacerItem, QListWidgetItem, QMenuBar, QMenu, QAction, QTableWidgetItem, QDialog
 
@@ -79,13 +79,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.label_loginput.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
         font = QtGui.QFont()
         font.setFamily("DejaVu Sans Mono")
-        font.setPointSize(8)
+        font.setPointSize(7)
         #self.label_loginput.setStyleSheet("font: 8pt")
         self.label_loginput.setFont(font)
         
         font = QtGui.QFont()
         font.setFamily("DejaVu Sans Mono")
-        font.setPointSize(8)
+        font.setPointSize(7)
         self.label_current_gcode.setFont(font)
         ## LOGGING SETUP END ------       
         
@@ -306,12 +306,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.gridLayout_jog_container.addWidget(self.jogWidget)
         ## JOG WIDGET SETUP END -------------
         
+        self.statusBar.showMessage("Ready", 3000)
+        
+        
+        self.settings = QSettings("gerbil_gui.ini", QSettings.IniFormat)
+
+        self._open_script_location = self.settings.value("open_script_location")
+        if self._open_script_location == None:
+            self._open_script_location = os.getcwd() + "/examples/scripts"
+            self.settings.setValue("open_script_location", self._open_script_location)
+            
+        self._open_gcode_location = self.settings.value("open_gcode_location")
+        if self._open_gcode_location == None:
+            self._open_gcode_location = os.getcwd() + "/examples/gcode"
+            self.settings.setValue("open_gcode_location", self._open_gcode_location)
+        
+        self.current_script_filepath = None
+        
         
     def closeEvent(self, event):
         """
         Overloaded Qt function
         """
-        print("GRACEFUL EXIT")
+        print("Exiting normally...")
         self.grbl.disconnect()
         self.sim_dialog.close()
         #event.ignore()
@@ -1054,13 +1071,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def execute_script_clicked(self,item):
         self.grbl.update_preprocessor_position()
         code = self.plainTextEdit_script.toPlainText()
+        self.statusBar.showMessage("Executing script. Please wait...")
         try:
             exec(code, globals(), locals())
         except:
             txt = traceback.format_exc()
             txt = re.sub(r"\n", "<br/>", txt)
             self._add_to_loginput(txt)
-        #compiler.evaluate(code)
+            
+        self.statusBar.showMessage("Executing script done!", 3000)
     
     def _on_logoutput_item_double_clicked(self, item):
         self._exec_cmd(item.text())
@@ -1068,6 +1087,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def _on_logoutput_item_clicked(self, item):
         self.lineEdit_cmdline.setText(item.text())
+        self.lineEdit_cmdline.setFocus()
         
         
     def _on_logoutput_current_item_changed(self, item_current, item_previous):
@@ -1081,38 +1101,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def _pick_file(self):
-        filename_tuple = QFileDialog.getOpenFileName(self, "Open File", os.getcwd(), "GCode Files (*.ngc *.gcode *.nc)")
-        fname = filename_tuple[0]
-        if fname == "": return
-        self.grbl.load_file(fname)
+        filename_tuple = QFileDialog.getOpenFileName(self, "Open File",self._open_gcode_location, "GCode Files (*.ngc *.gcode *.nc)")
+        fpath = filename_tuple[0]
+        if fpath == "": return
+        self.grbl.load_file(fpath)
+        self._open_gcode_location = os.path.dirname(fpath)
+        self.settings.setValue("open_gcode_location", self._open_gcode_location)
         
     def _pick_script(self):
-        filename_tuple = QFileDialog.getOpenFileName(self, "Open Script", os.getcwd() + "/examples/scripts", "Python3 Files (*.py)")
-        fname = filename_tuple[0]
-        if fname == "": return
-        with open(fname, 'r') as content_file: content = content_file.read()
+        filename_tuple = QFileDialog.getOpenFileName(self, "Open Script", self._open_script_location, "Python3 Files (*.py)")
+        
+        fpath = filename_tuple[0]
+        if fpath == "": return
+        with open(fpath, 'r') as content_file: content = content_file.read()
         self.plainTextEdit_script.setPlainText(content)
-        self.label_script_filename.setText(fname)
+        self.label_script_filename.setText(os.path.basename(fpath))
+        self.current_script_filepath = fpath
+        
+        self._open_script_location = os.path.dirname(fpath)
+        self.settings.setValue("open_script_location", self._open_script_location)
+        
         
     def _save_script(self):
-        fname = self.label_script_filename.text()
-        if fname == "New file":
+        fname = self.current_script_filepath
+        if fname == None:
             self._save_script_as()
             return
         
         with open(fname, 'w') as content_file:
             content_file.write(self.plainTextEdit_script.toPlainText())
         self._add_to_loginput("File {} written.".format(fname))
-        self.label_script_filename.setText(fname)
+        
         
     def _save_script_as(self):
-        filename_tuple = QFileDialog.getSaveFileName(self, "Save Script", os.getcwd())
+        filename_tuple = QFileDialog.getSaveFileName(self, "Save Script", self._open_script_location)
         fname = filename_tuple[0]
         if fname == "": return
         with open(fname, 'w') as content_file:
             content_file.write(self.plainTextEdit_script.toPlainText())
         self._add_to_loginput("File {} written.".format(fname))
-        self.label_script_filename.setText(fname)
+        self.label_script_filename.setText(os.path.basename(fpath))
         
 
     

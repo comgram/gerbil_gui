@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/gerbil_gui/mainwindow.ui'
 #
-# Created: Wed May 11 21:18:02 2016
+# Created: Mon Nov 14 10:38:22 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1240, 686)
+        MainWindow.resize(1154, 643)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -226,12 +226,21 @@ class Ui_MainWindow(object):
         self.plainTextEdit_script.setFont(font)
         self.plainTextEdit_script.setObjectName("plainTextEdit_script")
         self.gridLayout_5.addWidget(self.plainTextEdit_script, 0, 0, 1, 3)
-        self.label_script_filename = QtWidgets.QLabel(self.tab_script)
-        self.label_script_filename.setObjectName("label_script_filename")
-        self.gridLayout_5.addWidget(self.label_script_filename, 1, 0, 1, 2)
         self.pushButton_script_run = QtWidgets.QPushButton(self.tab_script)
         self.pushButton_script_run.setObjectName("pushButton_script_run")
         self.gridLayout_5.addWidget(self.pushButton_script_run, 1, 2, 1, 1)
+        self.label_script_filename = QtWidgets.QLabel(self.tab_script)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_script_filename.sizePolicy().hasHeightForWidth())
+        self.label_script_filename.setSizePolicy(sizePolicy)
+        self.label_script_filename.setMaximumSize(QtCore.QSize(300, 16777215))
+        font = QtGui.QFont()
+        font.setPointSize(8)
+        self.label_script_filename.setFont(font)
+        self.label_script_filename.setObjectName("label_script_filename")
+        self.gridLayout_5.addWidget(self.label_script_filename, 1, 0, 1, 2)
         self.tabWidget.addTab(self.tab_script, "")
         self.tab_preprocessor = QtWidgets.QWidget()
         self.tab_preprocessor.setObjectName("tab_preprocessor")
@@ -594,7 +603,7 @@ class Ui_MainWindow(object):
         self.label_current_gcode.setMaximumSize(QtCore.QSize(16777215, 16777215))
         font = QtGui.QFont()
         font.setFamily("DejaVu Sans Mono")
-        font.setPointSize(7)
+        font.setPointSize(6)
         font.setBold(True)
         font.setWeight(75)
         self.label_current_gcode.setFont(font)
@@ -617,7 +626,7 @@ class Ui_MainWindow(object):
         self.scrollArea_loginput.setWidgetResizable(True)
         self.scrollArea_loginput.setObjectName("scrollArea_loginput")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 575))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 285, 542))
         font = QtGui.QFont()
         font.setFamily("DejaVu Sans Mono")
         font.setPointSize(9)
@@ -709,6 +718,7 @@ class Ui_MainWindow(object):
         self.mainToolBar.setObjectName("mainToolBar")
         MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.mainToolBar)
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
+        self.statusBar.setMaximumSize(QtCore.QSize(16777215, 16))
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
 
@@ -734,8 +744,8 @@ class Ui_MainWindow(object):
         self.label_9.setText(_translate("MainWindow", "G53"))
         self.pushButton_current_cs_setzero.setText(_translate("MainWindow", "Set Zero"))
         self.plainTextEdit_script.setPlainText(_translate("MainWindow", "# my script"))
-        self.label_script_filename.setText(_translate("MainWindow", "New file"))
         self.pushButton_script_run.setText(_translate("MainWindow", "Execute"))
+        self.label_script_filename.setText(_translate("MainWindow", "New file"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_script), _translate("MainWindow", "Scripting"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_preprocessor), _translate("MainWindow", "Preprocessor"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_jog), _translate("MainWindow", "Jogging"))

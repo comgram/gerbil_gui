@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1240</width>
-    <height>686</height>
+    <width>1154</width>
+    <height>643</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -467,17 +467,34 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="QLabel" name="label_script_filename">
-            <property name="text">
-             <string>New file</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="2">
            <widget class="QPushButton" name="pushButton_script_run">
             <property name="text">
              <string>Execute</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QLabel" name="label_script_filename">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>300</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>New file</string>
             </property>
            </widget>
           </item>
@@ -1210,7 +1227,7 @@
       <property name="font">
        <font>
         <family>DejaVu Sans Mono</family>
-        <pointsize>7</pointsize>
+        <pointsize>6</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -1261,7 +1278,7 @@
          <x>0</x>
          <y>0</y>
          <width>285</width>
-         <height>575</height>
+         <height>542</height>
         </rect>
        </property>
        <property name="font">
@@ -1459,7 +1476,14 @@
     <bool>false</bool>
    </attribute>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>16</height>
+    </size>
+   </property>
+  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
