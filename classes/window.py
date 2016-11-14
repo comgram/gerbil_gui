@@ -163,7 +163,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # GRBL SETUP BEGIN -----
         self.grbl = Gerbil(self.on_grbl_event)
         self.grbl.setup_logging()
-        self.grbl.poll_interval = 0.1
+        self.grbl.poll_interval = 0.15
         #self.grbl.cnect()
         
         
@@ -653,7 +653,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.state = data[0]
             self.mpos = data[1]
             self.wpos = data[2]
-            
+
             if self.grbl.connected:
                 self.changed_state = True
                 
@@ -724,7 +724,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<b>◀ {}</b>".format(data[0]), "red")
             if data[2] > -1:
                 self._add_to_loginput("<b>✗ Error was in line {}: {}</b>".format(data[2], data[1]), "red")
-            self.spindleoff()
+            self.reset()
             
         elif event == "on_alarm":
             self._add_to_loginput("☹ " + data[0], "orange")
@@ -791,6 +791,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.grbl.incremental_streaming = True
             
         elif event == "on_boot":
+            self.grbl.poll_start()
+            
             self.comboBox_target.setEnabled(True)
             self.pushButton_homing.setEnabled(True)
             self.pushButton_killalarm.setEnabled(True)
@@ -822,17 +824,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             self.action_grbl_disconnect.setEnabled(True)
             self.action_grbl_connect.setEnabled(False)
+            
             self.lcdNumber_feed_current.display("---")
-            self.horizontalSlider_feed_override.setValue(25)
+            self.horizontalSlider_feed_override.setValue(30)
+            
             self.horizontalSlider_spindle_factor.setValue(100)
-            self.grbl.send_immediately("F179")
-            self.grbl.poll_start()
+            
+            self.grbl.send_immediately(self.cs_names[self._last_cs])
             
             self.spinBox_start_line.setValue(0)
             self._start_line_changed(0)
-
-            self.grbl.send_immediately(self.cs_names[self._last_cs])
             
+            
+
+
             
         elif event == "on_disconnected":
             self.action_grbl_disconnect.setEnabled(False)
@@ -846,6 +851,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.label_state.setText("disconnected")
             self._add_to_loginput("<i>Successfully disconnected!</i>")
             self._add_to_loginput("")
+            self.state = None
             
         elif event == "on_settings_downloaded":
             settings = data[0] #self.grbl.get_settings()
@@ -1221,6 +1227,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         val = int(math.exp((val+100)/23)-50) # nice exponential growth between 20 and 6000
         self.lcdNumber_feed_override.display(val)
         self.grbl.request_feed(val)
+        if self.state == "Idle":
+            self.grbl.send_immediately("F{:d}".format(val))
         
     def _spindle_factor_value_changed(self):
         val = self.horizontalSlider_spindle_factor.value() # 0..100
