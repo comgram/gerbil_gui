@@ -322,7 +322,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._open_gcode_location = os.getcwd() + "/examples/gcode"
             self.settings.setValue("open_gcode_location", self._open_gcode_location)
         
-        self._last_cs = self.settings.value("last_cs")
+        self._last_cs = int(self.settings.value("last_cs"))
         if self._last_cs == None:
             self._last_cs = 1
             self.settings.setValue("last_cs", self._last_cs)
@@ -811,7 +811,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             self.spinBox_start_line.setValue(1)
             self.spinBox_start_line.setValue(0) # trigger change
-            
+
             self.grbl.send_immediately(self.cs_names[self._last_cs])
             
             
