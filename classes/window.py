@@ -724,7 +724,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<b>◀ {}</b>".format(data[0]), "red")
             if data[2] > -1:
                 self._add_to_loginput("<b>✗ Error was in line {}: {}</b>".format(data[2], data[1]), "red")
-            self.reset()
+            # turn spindle/laser off
+            self.grbl.send_immediately("M5")
+            self.grbl.send_immediately("S0")
             
         elif event == "on_alarm":
             self._add_to_loginput("☹ " + data[0], "orange")
@@ -831,8 +833,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             self.horizontalSlider_spindle_factor.setValue(100)
             self._spindle_factor_value_changed()
-            
-            self.grbl.send_immediately(self.cs_names[self._last_cs])
             
             self.spinBox_start_line.setValue(0)
             self._start_line_changed(0)
@@ -1419,7 +1419,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tableWidget_settings.setItem(row, 0, cell_a)
             self.tableWidget_settings.setItem(row, 1, cell_b)
             self.tableWidget_settings.setItem(row, 2, cell_c)
-            self.tableWidget_settings.setRowHeight(row, 15)
+            self.tableWidget_settings.setRowHeight(row, 20)
             row += 1
     
     def settings_table_to_str(self):
