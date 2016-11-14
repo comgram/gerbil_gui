@@ -309,6 +309,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusBar.showMessage("Ready", 3000)
         
         
+        ## SETTINGS SETUP BEGIN ---------------------
         self.settings = QSettings("gerbil_gui.ini", QSettings.IniFormat)
 
         self._open_script_location = self.settings.value("open_script_location")
@@ -320,6 +321,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self._open_gcode_location == None:
             self._open_gcode_location = os.getcwd() + "/examples/gcode"
             self.settings.setValue("open_gcode_location", self._open_gcode_location)
+        
+        self._last_cs = self.settings.value("last_cs")
+        if self._last_cs == None:
+            self._last_cs = 1
+            self.settings.setValue("last_cs", self._last_cs)
+        ## SETTINGS SETUP END ---------------------
+
         
         self.current_script_filepath = None
         
@@ -803,6 +811,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             self.spinBox_start_line.setValue(1)
             self.spinBox_start_line.setValue(0) # trigger change
+            
+            self.grbl.send_immediately(self.cs_names[self._last_cs])
+            
             
         elif event == "on_disconnected":
             self.action_grbl_disconnect.setEnabled(False)
@@ -1296,6 +1307,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _cs_selected(self, idx):
         self.current_cs = idx + 1
+        self._last_cs = self.current_cs
+        self.settings.setValue("last_cs", self._last_cs)
         self.grbl.send_immediately(self.cs_names[self.current_cs])
         self.grbl.hash_state_requested = True
         
