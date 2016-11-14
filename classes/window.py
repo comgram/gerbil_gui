@@ -861,6 +861,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_job_completed":
             diff = time.time() - self.job_run_timestamp
             self._add_to_loginput("JOB COMPLETED in {:.2f} sec".format(diff))
+            self.grbl.current_line_number = 0
             if self.on_job_completed_callback:
                 self.on_job_completed_callback()
                 
@@ -984,8 +985,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif self.state == "Run":
                 color = "blue"
                 self.spinBox_start_line.setEnabled(False)
-                #self.lineEdit_cmdline.setEnabled(False) #xxx
-                #self.listWidget_logoutput.setEnabled(False)
+                self.lineEdit_cmdline.setEnabled(False)
+                self.listWidget_logoutput.setEnabled(False)
                 
             elif self.state == "Check":
                 color = "orange"
