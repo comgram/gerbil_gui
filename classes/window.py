@@ -153,7 +153,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         for key, val in self.cs_names.items():
             self.comboBox_coordinate_systems.insertItem(key, val)
-        self.comboBox_coordinate_systems.currentIndexChanged.connect(self._cs_selected)
+        self.comboBox_coordinate_systems.activated.connect(self._cs_selected)
         ## CS SETUP END ---------
         
         self.sim_dialog = SimulatorDialog(self)
@@ -168,35 +168,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
         ## SIGNALS AND SLOTS BEGIN-------
-        self.comboBox_target.setEnabled(False)
-        self.pushButton_homing.setEnabled(False)
-        self.pushButton_killalarm.setEnabled(False)
-        self.pushButton_job_halt.setEnabled(False)
-        self.pushButton_job_new.setEnabled(False)
-        self.pushButton_hold.setEnabled(False)
-        self.pushButton_resume.setEnabled(False)
-        self.pushButton_abort.setEnabled(False)
-        self.pushButton_check.setEnabled(False)
-        self.pushButton_g0x0y0.setEnabled(False)
-        self.pushButton_xminus.setEnabled(False)
-        self.pushButton_xplus.setEnabled(False)
-        self.pushButton_yminus.setEnabled(False)
-        self.pushButton_yplus.setEnabled(False)
-        self.pushButton_zminus.setEnabled(False)
-        self.pushButton_zplus.setEnabled(False)
-        self.horizontalSlider_feed_override.setEnabled(False)
-        self.horizontalSlider_spindle_factor.setEnabled(False)
-        self.checkBox_feed_override.setEnabled(False)
-        self.checkBox_incremental.setEnabled(False)
-        self.comboBox_coordinate_systems.setEnabled(False)
-        self.pushButton_current_cs_setzero.setEnabled(False)
-        self.pushButton_g53z0.setEnabled(False)
-        self.pushButton_g53min.setEnabled(False)
-        self.pushButton_g53x0y0.setEnabled(False)
-        self.pushButton_spindleon.setEnabled(False)
-        self.pushButton_spindleoff.setEnabled(False)
-        
-        
         self.comboBox_target.currentIndexChanged.connect(self._target_selected)
         self.pushButton_homing.clicked.connect(self.homing)
         self.pushButton_killalarm.clicked.connect(self.grbl.killalarm)
@@ -238,7 +209,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ## SIGNALS AND SLOTS END-------
         
 
-        
+        self._startup_disable_inputs()
         
         
         ## TIMER SETUP BEGIN ----------
@@ -852,6 +823,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._add_to_loginput("<i>Successfully disconnected!</i>")
             self._add_to_loginput("")
             self.state = None
+            self._startup_disable_inputs()
             
         elif event == "on_settings_downloaded":
             settings = data[0] #self.grbl.get_settings()
@@ -889,6 +861,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.grbl.preprocessor.current_spindle_speed > 1):
                 self.log("Laser Watchdog: Machine standstill but laser on. Turning off...", "red")
                 self.grbl.abort()
+                
+            # restore previous CS
+            self.comboBox_coordinate_systems.setCurrentIndex(self._last_cs - 1)
+            self._cs_selected(self._last_cs - 1)
                 
             
         elif event == "on_movement":
@@ -1015,6 +991,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self._progress_percent_last = self._progress_percent
     
     
+    def _startup_disable_inputs(self):
+        self.comboBox_target.setEnabled(False)
+        self.pushButton_homing.setEnabled(False)
+        self.pushButton_killalarm.setEnabled(False)
+        self.pushButton_job_halt.setEnabled(False)
+        self.pushButton_job_new.setEnabled(False)
+        self.pushButton_hold.setEnabled(False)
+        self.pushButton_resume.setEnabled(False)
+        self.pushButton_abort.setEnabled(False)
+        self.pushButton_check.setEnabled(False)
+        self.pushButton_g0x0y0.setEnabled(False)
+        self.pushButton_xminus.setEnabled(False)
+        self.pushButton_xplus.setEnabled(False)
+        self.pushButton_yminus.setEnabled(False)
+        self.pushButton_yplus.setEnabled(False)
+        self.pushButton_zminus.setEnabled(False)
+        self.pushButton_zplus.setEnabled(False)
+        self.horizontalSlider_feed_override.setEnabled(False)
+        self.horizontalSlider_spindle_factor.setEnabled(False)
+        self.checkBox_feed_override.setEnabled(False)
+        self.checkBox_incremental.setEnabled(False)
+        self.comboBox_coordinate_systems.setEnabled(False)
+        self.pushButton_current_cs_setzero.setEnabled(False)
+        self.pushButton_g53z0.setEnabled(False)
+        self.pushButton_g53min.setEnabled(False)
+        self.pushButton_g53x0y0.setEnabled(False)
+        self.pushButton_spindleon.setEnabled(False)
+        self.pushButton_spindleoff.setEnabled(False)
+        
     def _cmd_line_callback(self, data):
         if data == "Enter":
             cmd = self.lineEdit_cmdline.text()
