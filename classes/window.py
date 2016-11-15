@@ -862,9 +862,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.log("Laser Watchdog: Machine standstill but laser on. Turning off...", "red")
                 self.grbl.abort()
                 
-            # restore previous CS
-            self.comboBox_coordinate_systems.setCurrentIndex(self._last_cs - 1)
-            self._cs_selected(self._last_cs - 1)
+            if self.state == "Idle":
+                # restore previous CS
+                self.comboBox_coordinate_systems.setCurrentIndex(self._last_cs - 1)
+                self._cs_selected(self._last_cs - 1)
                 
             
         elif event == "on_movement":

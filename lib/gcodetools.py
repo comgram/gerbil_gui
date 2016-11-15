@@ -71,13 +71,13 @@ def scale_into(gcode, width, height, depth, scale_zclear=False):
 def bbox_draw(gcode, move_z=False):
     result = ""
     
-    bbox = bbox(gcode)
-    xmin = bbox[0][0]
-    xmax = bbox[0][1]
-    ymin = bbox[1][0]
-    ymax = bbox[1][1]
-    zmin = bbox[2][0]
-    zmax = bbox[2][1]
+    b = bbox(gcode)
+    xmin = b[0][0]
+    xmax = b[0][1]
+    ymin = b[1][0]
+    ymax = b[1][1]
+    zmin = b[2][0]
+    zmax = b[2][1]
     
     if move_z:
         pass
