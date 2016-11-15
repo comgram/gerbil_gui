@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'lib/qt/gerbil_gui/mainwindow.ui'
 #
-# Created: Mon Nov 14 10:38:22 2016
+# Created: Tue Nov 15 13:09:41 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -541,9 +541,9 @@ class Ui_MainWindow(object):
         self.label_time = QtWidgets.QLabel(self.centralWidget)
         self.label_time.setObjectName("label_time")
         self.gridLayout_12.addWidget(self.label_time, 9, 1, 1, 1)
-        self.label_7 = QtWidgets.QLabel(self.centralWidget)
-        self.label_7.setObjectName("label_7")
-        self.gridLayout_12.addWidget(self.label_7, 9, 0, 1, 1)
+        self.label_eta = QtWidgets.QLabel(self.centralWidget)
+        self.label_eta.setObjectName("label_eta")
+        self.gridLayout_12.addWidget(self.label_eta, 9, 0, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_12, 0, 1, 11, 2)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
@@ -781,7 +781,7 @@ class Ui_MainWindow(object):
         self.label_3.setText(_translate("MainWindow", "Feed"))
         self.label_5.setText(_translate("MainWindow", "Program"))
         self.label_time.setText(_translate("MainWindow", "00:00:00"))
-        self.label_7.setText(_translate("MainWindow", "ETA"))
+        self.label_eta.setText(_translate("MainWindow", "ETA"))
         self.checkBox_feed_override.setText(_translate("MainWindow", "Feed override"))
         self.label_current_gcode.setText(_translate("MainWindow", "; current_gcode_line"))
         self.label_bufsize.setText(_translate("MainWindow", "0"))

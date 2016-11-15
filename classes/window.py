@@ -14,6 +14,7 @@ from classes.jogwidget import JogWidget
 from classes.commandlineedit import CommandLineEdit
 from classes.simulatordialog import SimulatorDialog
 from gerbil.gerbil import Gerbil
+from gcode_machine.gcode_machine import GcodeMachine
 from gerbil.callbackloghandler import CallbackLogHandler
 
 from PyQt5 import QtCore, QtGui
@@ -259,6 +260,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.probe_points_count = None
         
 
+        self._add_to_logoutput("=calc_eta()")
         self._add_to_logoutput("=bbox()")
         self._add_to_logoutput("=remove_tracer()")
         self._add_to_logoutput("=probe_start(100,100)")
@@ -681,16 +683,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif event == "on_line_number_change":
             self._current_grbl_line_number = int(data[0])
             
-        elif event == "on_eta_change":
-            secs = int(data[0])
-            hours = math.floor(secs / 3600)
-            secs = secs - hours * 3600
-            
-            mins = math.floor(secs / 60)
-            secs = secs - mins * 60
-            
-            self.label_time.setText("{:02d}:{:02d}:{:02d}".format(hours, mins, secs))
-            
         elif event == "on_error":
             self._add_to_loginput("<b>◀ {}</b>".format(data[0]), "red")
             if data[2] > -1:
@@ -962,8 +954,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif self.state == "Run":
                 color = "blue"
                 self.spinBox_start_line.setEnabled(False)
-                self.lineEdit_cmdline.setEnabled(False)
-                self.listWidget_logoutput.setEnabled(False)
                 
             elif self.state == "Check":
                 color = "orange"
@@ -1296,15 +1286,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
     def g53z0(self):
         # one millimeter below the limit switch
-        self.grbl.send_immediately("G53 Z-1")
+        self.grbl.send_immediately("G53 G0 Z-1")
         
     def g53min(self):
         workarea_x = int(float(self.grbl.settings[130]["val"]))
         workarea_y = int(float(self.grbl.settings[131]["val"]))
-        self.grbl.send_immediately("G53 X{:0.3f} Y{:0.3f}".format(-workarea_x, -workarea_y))
+        self.grbl.send_immediately("G53 G0 X{:0.3f} Y{:0.3f}".format(-workarea_x, -workarea_y))
         
     def g53x0y0(self):
-        self.grbl.send_immediately("G53 X0 Y0")
+        self.grbl.send_immediately("G53 G0 X0 Y0")
         
     def spindleon(self):
         self.grbl.send_immediately("M3")
@@ -1473,6 +1463,54 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.state_cs_dirty = True
         
+        
+    def calc_eta(self):
+        proc = GcodeMachine()
+        proc.cs_offsets = self.grbl.settings_hash
+        proc.position_m = [0, 0, 0]
+        
+        dists_by_feed = {}
+        
+        g0_feed = float(self.grbl.settings[110]["val"])
+        feed_is_overridden = self.checkBox_feed_override.isChecked()
+        
+        for line in self.grbl.buffer:
+            proc.set_line(line)
+            proc.parse_state()
+            proc.override_feed()
+            cf = proc.current_feed
+            cmm = proc.current_motion_mode
+            if cmm == None:
+                continue
+            elif cmm == 0:
+                cf = g0_feed
+            else:
+                # G1, G2, G3
+                if feed_is_overridden:
+                    cf = self.grbl.preprocessor.request_feed
+            
+                
+            if cf in dists_by_feed:
+                dists_by_feed[cf] += proc.dist
+            else:
+                dists_by_feed[cf] = proc.dist
+                
+            proc.done()
+
+        mins = 0
+        for feed, dist in dists_by_feed.items():
+            mins += dist / feed
+        
+        s = mins * 60
+        
+        secs = int(s)
+        hours = math.floor(secs / 3600)
+        secs = secs - hours * 3600
+        
+        mins = math.floor(secs / 60)
+        secs = secs - mins * 60
+        
+        self.label_time.setText("{:02d}:{:02d}:{:02d}".format(hours, mins, secs))
 
     def bbox(self, move_z=False):
         lines = gcodetools.bbox_draw(self.grbl.buffer, move_z).split("\n")
