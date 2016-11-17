@@ -11,8 +11,8 @@ from OpenGL.GL import *
 
 
 class SimulatorWidget(PainterWidget):
-    def __init__(self, parent=None):
-        super(SimulatorWidget, self).__init__(parent)
+    def __init__(self, parent, refresh_rate = 20):
+        super(SimulatorWidget, self).__init__(parent, refresh_rate)
 
         self.cs_offsets = {
             "G54": (0, 0, 0),

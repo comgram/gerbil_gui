@@ -155,7 +155,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox_coordinate_systems.activated.connect(self._cs_selected)
         ## CS SETUP END ---------
         
-        self.sim_dialog = SimulatorDialog(self)
+        
+        refresh_rate = 20
+        self.sim_dialog = SimulatorDialog(self, refresh_rate)
         self.sim_dialog.show()
         
        
