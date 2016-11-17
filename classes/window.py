@@ -61,8 +61,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.wpos = (0, 0, 0)
         self.mpos = (0, 0, 0)
         
-        self.job_run_timestamp = time.time()
-        
         ## LOGGING SETUP BEGIN ------
         # setup ring buffer for logging
         self.changed_loginput = False
@@ -206,7 +204,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_settings_save_file.clicked.connect(self.settings_save_into_file)
         self.pushButton_settings_load_file.clicked.connect(self.settings_load_from_file)
         self.pushButton_settings_upload_grbl.clicked.connect(self.settings_upload_to_grbl)
-        self.pushButton_bbox.click.connect(self.bbox)
+        self.pushButton_bbox.clicked.connect(self.bbox)
         self.tableWidget_variables.cellChanged.connect(self._variables_edited)
         ## SIGNALS AND SLOTS END-------
         
@@ -216,8 +214,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         ## TIMER SETUP BEGIN ----------
         self.timer = QTimer()
-        self.timer.timeout.connect(self.refresh)
-        self.timer.start(20)
+        self.timer.timeout.connect(self.on_timer)
+        self.timer.start(150)
+        
+        self.timer_second = QTimer()
+        self.timer_second.timeout.connect(self.on_second_tick)
+        self.timer_second.start(1000)
         ## TIMER SETUP END ----------
         
         
@@ -321,6 +323,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.settings.setValue("last_cs", self._last_cs)
         ## SETTINGS SETUP END ---------------------
 
+        self._put_buffer_marker_at_line_nr = None
+        self.job_run_timestamp = time.time()
+        self.job_current_eta = 0
         
         self.current_script_filepath = None
         
@@ -343,6 +348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def new_job(self):
+        self.job_run_timestamp = time.time()
         self.grbl.job_new()
         self.spinBox_start_line.setValue(0)
         self.sim_dialog.simulator_widget.cleanup_stage()
@@ -813,6 +819,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lcdNumber_wy.display("{:0.3f}".format(8888.888))
             self.lcdNumber_wz.display("{:0.3f}".format(8888.888))
             self.label_state.setText("disconnected")
+            self.label_state.setStyleSheet("background-color: 'transparent'; color: 'black';")
             self._add_to_loginput("<i>Successfully disconnected!</i>")
             self._add_to_loginput("")
             self.state = None
@@ -824,8 +831,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.state_stage_dirty = True
         
         elif event == "on_job_completed":
-            diff = time.time() - self.job_run_timestamp
-            self._add_to_loginput("JOB COMPLETED in {:.2f} sec".format(diff))
+            self._add_to_loginput("JOB COMPLETED")
             self.grbl.current_line_number = 0
             if self.on_job_completed_callback:
                 self.on_job_completed_callback()
@@ -846,7 +852,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             line_number = data[0]
             line_str = data[1]
             self.sim_dialog.simulator_widget.highlight_gcode_line(line_number)
-            self.sim_dialog.simulator_widget.put_buffer_marker_at_line(line_number)
+            self._put_buffer_marker_at_line_nr = line_number
             
         elif event == "on_standstill":
             self.log("Machine is standing still")
@@ -877,8 +883,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._add_to_logoutput("G1 G53 X{:0.3f} Y{:0.3f} Z{:0.3f}".format(pos[0], pos[1], pos[2]))
         
         
-    def refresh(self):
+    def on_second_tick(self):
+        if self.grbl.job_finished == False:
+            self.label_runningtime.setText(self._secs_to_timestring(time.time() - self.job_run_timestamp))
+            self.label_eta.setText(self._secs_to_timestring(self.job_current_eta - time.time()))
+        else:
+            self.label_runningtime.setText("---")
+            self.label_eta.setText("---")
+        
+        
+    def on_timer(self):
         self.label_current_line_number.setText(str(self._current_grbl_line_number))
+        
+        if self._put_buffer_marker_at_line_nr != None:
+            self.sim_dialog.simulator_widget.put_buffer_marker_at_line(self._put_buffer_marker_at_line_nr)
+            self._put_buffer_marker_at_line_nr = None
         
         if self.state_hash_dirty == True:
             # used to draw/update origins of coordinate systems (after $# command)
@@ -935,10 +954,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # simulator update
             self.sim_dialog.simulator_widget.draw_tool(self.mpos)
             
+            bgcolor = "transparent"
             color = "black"
             
             if self.state == "Idle":
-                color = "green"
+                bgcolor = "green"
+                color = "white"
                 self.jogWidget.onIdle()
                 
                 if self.probe_points_count == None and self.grbl.streaming_complete == True:
@@ -953,19 +974,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.spinBox_start_line.setEnabled(True)
                 
             elif self.state == "Run":
-                color = "blue"
+                bgcolor = "blue"
+                color = "white"
                 self.spinBox_start_line.setEnabled(False)
                 
             elif self.state == "Check":
-                color = "orange"
+                bgcolor = "orange"
+                color = "white"
                 
             elif self.state == "Hold":
-                color = "yellow"
+                bgcolor = "yellow"
+                color = "black"
                 
             elif self.state == "Alarm":
-                color = "red"
+                bgcolor = "red"
+                color = "white"
                 
-            self.label_state.setText("<span style='color: {}'>{}</span>".format(color, self.state))
+            self.label_state.setText(self.state)
+            self.label_state.setStyleSheet("background-color: '{}'; color: '{}';".format(bgcolor, color))
             
             self.changed_state = False
             
@@ -1261,8 +1287,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
     def job_run(self):
-        line_nr = self.spinBox_start_line.value()
         self.job_run_timestamp = time.time()
+        line_nr = self.spinBox_start_line.value()
         self.grbl.job_run(line_nr)
     
     
@@ -1331,6 +1357,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
         self.plainTextEdit_job.setPlainText(output)
  
+    def _secs_to_timestring(self, secs):
+        if secs < 0: return ""
+        secs = int(secs)
+        hours = math.floor(secs / 3600)
+        secs = secs - hours * 3600
+        mins = math.floor(secs / 60)
+        secs = secs - mins * 60
+        result = "{:02d}:{:02d}:{:02d}".format(hours, mins, secs)
+        return result
 
     def _cs_selected(self, idx):
         self.current_cs = idx + 1
@@ -1475,7 +1510,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         g0_feed = float(self.grbl.settings[110]["val"])
         feed_is_overridden = self.checkBox_feed_override.isChecked()
         
-        for line in self.grbl.buffer:
+        for line in self.grbl.buffer[self.grbl.current_line_number:]:
             proc.set_line(line)
             proc.parse_state()
             proc.override_feed()
@@ -1501,17 +1536,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mins = 0
         for feed, dist in dists_by_feed.items():
             mins += dist / feed
+
+        self.job_current_eta = time.time() + mins * 60
+        self.label_jobtime.setText(self._secs_to_timestring(mins * 60))
         
-        s = mins * 60
-        
-        secs = int(s)
-        hours = math.floor(secs / 3600)
-        secs = secs - hours * 3600
-        
-        mins = math.floor(secs / 60)
-        secs = secs - mins * 60
-        
-        self.label_time.setText("{:02d}:{:02d}:{:02d}".format(hours, mins, secs))
 
     def bbox(self, move_z=False):
         lines = gcodetools.bbox_draw(self.grbl.buffer, move_z).split("\n")
