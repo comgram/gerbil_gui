@@ -206,6 +206,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_settings_save_file.clicked.connect(self.settings_save_into_file)
         self.pushButton_settings_load_file.clicked.connect(self.settings_load_from_file)
         self.pushButton_settings_upload_grbl.clicked.connect(self.settings_upload_to_grbl)
+        self.pushButton_bbox.click.connect(self.bbox)
         self.tableWidget_variables.cellChanged.connect(self._variables_edited)
         ## SIGNALS AND SLOTS END-------
         
@@ -356,8 +357,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_hold.setStyleSheet("background-color: rgb(219,213,50);")
         self.pushButton_check.setStyleSheet("background-color: rgb(235,122,9);")
         
-        self.pushButton_homing.setText("⌂ Run Homing")
-        self.pushButton_abort.setText("☠ ABORT/RESET")
+        self.pushButton_homing.setText("⌂ Homing")
+        self.pushButton_abort.setText("☠ ABRT/RST")
         self.pushButton_killalarm.setText("⚐ Kill Alarm")
         self.pushButton_job_new.setText("✧ New")
         self.pushButton_job_halt.setText("⌛ Pause")
