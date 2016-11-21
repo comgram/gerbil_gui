@@ -144,7 +144,6 @@ def translate(lines, offsets=[0, 0, 0]):
     return result
 
 
-
 def rotate2D(lines, anchor, angle):
     
     angle = math.radians(angle)
@@ -152,6 +151,8 @@ def rotate2D(lines, anchor, angle):
     result = []
     _re_motion_mode = re.compile("(G[0123])([^\d]|$)")
     _current_motion_mode = None
+    
+    re_allcomments_remove = re.compile(";.*")
     
     words = ["X", "Y", "I", "J"]
     contains_regexps = []
@@ -164,6 +165,8 @@ def rotate2D(lines, anchor, angle):
     x = 0
     y = 0
     for line in lines:
+        line = re.sub(re_allcomments_remove, "", line) # replace comments
+        
         m = re.match(_re_motion_mode, line)
         if m:
             _current_motion_mode = m.group(1)
