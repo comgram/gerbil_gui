@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """
 cnctoolbox - Copyright (c) 2016 Michael Franzl
 
@@ -23,6 +25,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 import logging
 import re
 import numpy as np
+import math
+
+from . import hersheydata
+#import hersheydata
 
 
 def read(fname):
@@ -137,6 +143,58 @@ def translate(lines, offsets=[0, 0, 0]):
         result.append(line)
     return result
 
+
+
+def rotate2D(lines, anchor, angle):
+    
+    angle = math.radians(angle)
+    
+    result = []
+    _re_motion_mode = re.compile("(G[0123])([^\d]|$)")
+    _current_motion_mode = None
+    
+    words = ["X", "Y", "I", "J"]
+    contains_regexps = []
+    replace_regexps = []
+    for i in range(0, 3):
+        word = words[i]
+        contains_regexps.append(re.compile(".*" + word + "([-.\d]+)"))
+        replace_regexps.append(re.compile(r"" + word + "[-.\d]+"))
+    
+    x = 0
+    y = 0
+    for line in lines:
+        m = re.match(_re_motion_mode, line)
+        if m:
+            _current_motion_mode = m.group(1)
+        
+        match_x = re.match(contains_regexps[0], line)
+        if match_x:
+            x = float(match_x.group(1))
+            
+        match_y = re.match(contains_regexps[1], line)
+        if match_y:
+            y = float(match_y.group(1))
+        
+        rot_x = math.cos(angle) * (x-anchor[0]) - math.sin(angle) * (y-anchor[1]) + anchor[0]
+        rot_y = math.sin(angle) * (x-anchor[0]) + math.cos(angle) * (y-anchor[1]) + anchor[1]
+        
+        rep_x = "X{:0.3f}".format(rot_x)
+        rep_y = "Y{:0.3f}".format(rot_y)
+        
+        rep_x = rep_x.rstrip("0").rstrip(".")
+        rep_y = rep_y.rstrip("0").rstrip(".")
+        
+        line = re.sub(replace_regexps[0], rep_x, line)
+        line = re.sub(replace_regexps[1], rep_y, line)
+
+        if not match_x: line += rep_x
+        if not match_y: line += rep_y
+
+        result.append(line)
+    return result
+    
+    
 
 # returns list
 def scale_factor(lines, facts=[1, 1, 1], scale_zclear=False):
@@ -302,3 +360,121 @@ def bumpify(gcode_list, cwpos, probe_points, probe_values):
     #print("FINI", gcode_list)
     print("bumpify done")
     return gcode_list
+
+
+
+"""
+Fonts available in hershedata.py:
+
+standard    Standard
+
+futural     Sans 1-stroke
+futuram     Sans bold
+
+gothiceng   Gothic English
+gothicger   Gothic German
+gothicita   Gothic Italian
+
+greek       Greek 1-stroke
+timesg      Greek medium
+japanese    Japanese
+cyrillic    Cyrillic
+
+astrology   Astrology
+markers     Markers
+mathlow     Math (lower)
+mathupp     Math (upper)
+meteorology Meteorology
+music       Music
+symbolic    Symbolic
+
+cursive     Script 1-stroke (alt)
+scriptc     Script medium
+scripts     Script 1-stroke
+
+timesi      Serif medium italic
+timesib     Serif bold italic
+timesr      Serif medium
+timesrb     Serif bold
+"""
+
+def hersheyToGcode(string, font='standard', z_depth=0, z_safe=3):
+    fontdata = eval('hersheydata.' + font)
+    
+    #regexp = re.compile("([ML].+?)")
+    
+    letter_vals = [ord(q) - 32 for q in string]
+    
+    gcodelist = []
+    offset_x = 0
+    
+    for i in letter_vals:
+        # Ignore unavailable Letters except german umlaute
+        #if (q == 164 or q == 182 or q == 188 or q == 191 or q == 196 or q == 214 or q == 220 or 0 <= q < 93):
+        char_path = fontdata[i]
+        
+        size_match = re.match('^([-0-9.]+) ([-0-9.]+)', char_path)
+        size1 = float(size_match.groups(0)[0])
+        size2 = float(size_match.groups(0)[1])
+        print("SIZE", size1, size2)
+            
+        
+        offset_x -= size1
+        
+        parts = re.findall('[ML][-0-9. ]+', char_path)
+        current_motion_mode = None
+        for cmd in parts:
+            gcode = ""
+            
+            m = re.match('([ML]) ([-0-9.]+) ([-0-9.]+)', cmd)
+            print(m, m.groups(0))
+            mm = m.groups(0)[0]
+            x = float(m.groups(0)[1])
+            y = float(m.groups(0)[2])
+            
+            if mm == "M":
+                if current_motion_mode != 0:
+                    if z_depth != 0:
+                        g_z_safe = "G0S0Z{}; z_safe".format(z_safe)
+                        gcodelist.append(g_z_safe)
+                    
+                    gcode += "G0S0"
+                current_motion_mode = 0
+                
+            else:
+                if current_motion_mode != 1:
+                    if z_depth != 0:
+                        g_plunge = "G1Z{}; plunge".format(z_depth)
+                        gcodelist.append(g_plunge)
+                    
+                    gcode += "G1S255"
+                current_motion_mode = 1
+                
+            mv_x = "X{:0.3f}".format(x + offset_x)
+            mv_x = mv_x.rstrip("0").rstrip(".")
+            gcode += mv_x
+            
+            mv_y = "Y{:0.3f}".format(-y)
+            mv_y = mv_y.rstrip("0").rstrip(".")
+            gcode += mv_y
+
+            gcodelist.append(gcode)
+            
+        offset_x += size2
+    return gcodelist
+        
+
+
+if __name__ == "__main__":
+    
+    #string = "Michael"
+    #with open('/tmp/test.ngc', 'w') as f: f.write("\n".join(hersheyToGcode(string, 'scriptc')))
+    
+    rotated = []
+    gcode = ["G0X0Y0", "G1X100", "G1Y20"]
+    for angle in range(0, 95, 5):
+        rotated += rotate2D(gcode, [20,10], math.radians(angle))
+    #print(rotated)
+    with open('/tmp/test.ngc', 'w') as f: f.write("\n".join(rotated))
+    
+    
