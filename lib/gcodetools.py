@@ -28,7 +28,6 @@ import numpy as np
 import math
 
 from . import hersheydata
-#import hersheydata
 
 
 def read(fname):
@@ -40,20 +39,20 @@ def write(fname, contents):
         f.write(contents)
 
 def to_origin(gcode):
-    bbox = bbox(gcode)
-    xmin = bbox[0][0]
-    ymin = bbox[1][0]
+    bb = bbox(gcode)
+    xmin = bb[0][0]
+    ymin = bb[1][0]
     translated_gcode = translate(gcode, [-xmin, -ymin, 0])
     return translated_gcode
 
 def scale_into(gcode, width, height, depth, scale_zclear=False):
-    bbox = bbox(gcode)
-    xmin = bbox[0][0]
-    xmax = bbox[0][1]
-    ymin = bbox[1][0]
-    ymax = bbox[1][1]
-    zmin = bbox[2][0]
-    zmax = bbox[2][1]
+    bb = bbox(gcode)
+    xmin = bb[0][0]
+    xmax = bb[0][1]
+    ymin = bb[1][0]
+    ymax = bb[1][1]
+    zmin = bb[2][0]
+    zmax = bb[2][1]
     translated_gcode = translate(gcode, [-xmin, -ymin, 0])
     
     if width > 0:
@@ -77,13 +76,13 @@ def scale_into(gcode, width, height, depth, scale_zclear=False):
 def bbox_draw(gcode, move_z=False):
     result = ""
     
-    b = bbox(gcode)
-    xmin = b[0][0]
-    xmax = b[0][1]
-    ymin = b[1][0]
-    ymax = b[1][1]
-    zmin = b[2][0]
-    zmax = b[2][1]
+    bb = bbox(gcode)
+    xmin = bb[0][0]
+    xmax = bb[0][1]
+    ymin = bb[1][0]
+    ymax = bb[1][1]
+    zmin = bb[2][0]
+    zmax = bb[2][1]
     
     if move_z:
         pass
@@ -244,7 +243,7 @@ def scale_factor(lines, facts=[1, 1, 1], scale_zclear=False):
 
 # returns list
 def bbox(gcode):
-    bbox = []
+    bb = []
     
     axes = ["X", "Y", "Z"]
     contains_regexps = []
@@ -252,7 +251,7 @@ def bbox(gcode):
     for i in range(0, 3):
         axis = axes[i]
         contains_regexps.append(re.compile(".*" + axis + "([-.\d]+)"))
-        bbox.append([9999, -9999])
+        bb.append([9999, -9999])
     
     for line in gcode:
         for i in range(0, 3):
@@ -261,13 +260,13 @@ def bbox(gcode):
             m = re.match(cr, line)
             if m:
                 a = float(m.group(1))
-                min = bbox[i][0]
-                max = bbox[i][1]
+                min = bb[i][0]
+                max = bb[i][1]
                 min = a if a < min else min
                 max = a if a > max else max
-                bbox[i][0] = min
-                bbox[i][1] = max
-    return bbox
+                bb[i][0] = min
+                bb[i][1] = max
+    return bb
 
 
 
@@ -469,15 +468,10 @@ def hersheyToGcode(string, font='standard', z_depth=0, z_safe=3):
 
 
 if __name__ == "__main__":
-    
-    #string = "Michael"
-    #with open('/tmp/test.ngc', 'w') as f: f.write("\n".join(hersheyToGcode(string, 'scriptc')))
-    
     rotated = []
     gcode = ["G0X0Y0", "G1X100", "G1Y20"]
     for angle in range(0, 95, 5):
         rotated += rotate2D(gcode, [20,10], math.radians(angle))
-    #print(rotated)
     with open('/tmp/test.ngc', 'w') as f: f.write("\n".join(rotated))
     
     

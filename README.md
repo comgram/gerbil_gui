@@ -4,6 +4,19 @@ Python scripting and realtime OpenGL 3D visualization of gcode plus
 streaming to the [grbl](https://github.com/grbl/grbl) CNC controller,
 implemented in Python3 with Qt5 bindings.
 
+![The main window](screenshots/helloworldgui.jpg)
+
+![The simulator window](screenshots/helloworldsim.jpg)
+
+![The simulator window](screenshots/bumpifysim.jpg)
+
+![The simulator window](screenshots/circletestsim.jpg)
+
+![The simulator window](screenshots/lasercutsim.jpg)
+
+![The simulator window](screenshots/pixeltolasersim.jpg)
+
+
 
 ## Installation
 
@@ -55,7 +68,7 @@ Useful for developers only:
 
 ## License
 
-Copyright (c) 2015 Michael Franzl
+Copyright (c) 2015 Michael Karl Franzl
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
